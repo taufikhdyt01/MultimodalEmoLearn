@@ -1,6 +1,94 @@
-# Uninstall current PyTorch
+Error ini terjadi karena ada konflik kompatibilitas antara PyTorch 2.4.1+cpu dengan torch-directml. Mari kita perbaiki dengan beberapa solusi:
+🔧 Solusi 1: Clean Install torch-directml (Recommended)
+bash# Uninstall PyTorch yang ada
+pip uninstall torch torchvision torchaudio
+
+# Install torch-directml (ini akan install PyTorch yang kompatibel)
+pip install torch-directml
+
+# Verify installation
+python -c "import torch_directml; print('DirectML installed successfully')"
+🔧 Solusi 2: Downgrade PyTorch
+Jika solusi 1 tidak berhasil, coba downgrade PyTorch:
+bash# Uninstall current PyTorch
 pip uninstall torch torchvision torchaudio torch-directml
 
 # Install specific compatible versions
 pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cpu
 pip install torch-directml
+🔧 Solusi 3: Buat Environment Baru
+Cara paling aman adalah membuat environment baru:
+bash# Create new environment
+conda create -n vit-amd python=3.9
+conda activate vit-amd
+
+# Install dependencies dalam urutan yang benar
+pip install torch-directml
+pip install transformers datasets accelerate
+pip install scikit-learn matplotlib seaborn pillow numpy pandas
+🔧 Solusi 4: Fallback ke CPU dengan Notebook Modification
+Jika semua solusi di atas tidak berhasil, mari kita modifikasi notebook untuk handle error ini:finetune_vit_amd_notebook.jsonKode ∙ Versi 3     "# Check DirectML availability dengan error handling\n",
+    "DIRECTML_AVAILABLE = False\n",
+    "try:\n",
+    "    import torch_directml\n",
+    "    DIRECTML_AVAILABLE = True\n",
+    "    print(f\"✅ DirectML available for AMD GPU acceleration\"Strategized error handling for AMD GPU DirectML integration2 dtkSaya sudah update notebook untuk handle error DirectML dengan lebih baik. Sekarang mari saya update juga bagian setup_amd_device untuk handle error ini.finetune_vit_amd_notebook.jsonKode ∙ Versi 4     "    try:\n",
+    "        # Check if DirectML was imported successfully\n",
+    "        if not DIRECTML_AVAILABLE:\n",
+    "            raise ImportError(\"DirectML not available\")\n",
+    "            \n",
+    "        # Try DirectML untuk AMDiagnosed DirectML import error and prepared solution strategy.1 dtkBagus, saya sudah update notebook untuk handle error DirectML dengan lebih baik. Sekarang mari saya berikan instruksi lengkap untuk mengatasi masalah ini.🎯 Quick Fix: Jalankan Command Ini
+Berdasarkan error yang Anda alami, coba langkah-langkah ini:
+Step 1: Clean Install
+bash# Keluar dari environment dan masuk lagi
+conda deactivate
+conda activate emotion-finetune
+
+# Uninstall semua PyTorch packages
+pip uninstall torch torchvision torchaudio torch-directml -y
+
+# Install torch-directml yang akan include PyTorch compatible
+pip install torch-directml
+
+# Verify
+python -c "import torch_directml; print('Success!')"
+Step 2: Jika Step 1 Gagal
+bash# Buat environment baru dari scratch
+conda create -n vit-amd-new python=3.9 -y
+conda activate vit-amd-new
+
+# Install dalam urutan yang benar
+pip install torch-directml
+pip install transformers datasets accelerate
+pip install scikit-learn matplotlib seaborn pillow numpy pandas ipykernel
+
+# Add kernel ke Jupyter
+python -m ipykernel install --user --name vit-amd-new --display-name "VIT AMD"
+Step 3: Test DirectML
+python# Test script untuk verify DirectML
+try:
+    import torch_directml
+    device = torch_directml.device()
+    x = torch.randn(10, 10).to(device)
+    print(f"✅ DirectML working: {x.device}")
+except Exception as e:
+    print(f"❌ Error: {e}")
+🔄 Jika Masih Error, Gunakan CPU Mode
+Notebook sudah saya update untuk otomatis fallback ke CPU jika DirectML bermasalah. Dengan CPU mode:
+
+Training akan lebih lambat (~2-3x)
+Batch size akan otomatis dikurangi (4 vs 10)
+Tetap bisa training ViT dengan baik
+
+🎮 Cek Versi yang Kompatibel
+Error ini sering terjadi karena versi mismatch. Versi yang tested:
+bash# Versi yang paling stabil
+pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+pip install torch-directml==0.2.0.dev230426
+📋 Troubleshooting Checklist
+✅ Windows 10/11 updated?
+✅ AMD Adrenalin drivers latest?
+✅ Visual C++ Redistributable installed?
+✅ Clean conda environment?
+✅ No other PyTorch versions installed?
+Coba Step 1 dulu, biasanya itu yang paling efektif untuk mengatasi TypeError DirectML ini! 🚀
