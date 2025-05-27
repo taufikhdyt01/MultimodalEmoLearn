@@ -1,29 +1,6 @@
-PyTorch version: 2.4.1+cpu
----------------------------------------------------------------------------
-TypeError                                 Traceback (most recent call last)
-Cell In[4], line 30
-     28 # Check DirectML availability
-     29 try:
----> 30     import torch_directml
-     31     print(f"✅ DirectML available for AMD GPU acceleration")
-     32 except ImportError:
+# Uninstall current PyTorch
+pip uninstall torch torchvision torchaudio torch-directml
 
-File ~\miniconda3\envs\emotion-finetune\lib\site-packages\torch_directml\__init__.py:27
-     24 from .functions import *
-     26 # # Register backend to support AMP
----> 27 class PrivateUse1Module:
-     28     @staticmethod
-     29     def is_available() -> bool:
-     30         r"""Returns a bool indicating if DML is currently available."""
-
-File ~\miniconda3\envs\emotion-finetune\lib\site-packages\torch_directml\__init__.py:74, in PrivateUse1Module()
-     69 @staticmethod
-     70 def disable_tiled_resources(is_disabled):
-     71     torch_directml_native.disable_tiled_resources(is_disabled)
-     73 @staticmethod
----> 74 def has_float64_support(device_id = default_device()):
-     75     return torch_directml_native.has_float64_support(device_id)
-     77 @staticmethod
-     78 def gpu_memory(device_id = default_device(), mb_per_tile = 1):
-
-TypeError: 'staticmethod' object is not callable
+# Install specific compatible versions
+pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+pip install torch-directml
