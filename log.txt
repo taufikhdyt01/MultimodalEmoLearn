@@ -1,32 +1,29 @@
-Perbaikan di fungsi prepare_final_datasets:
-Ganti bagian ini:
-python# Create dataset info file
-info_file = os.path.join(final_dir, 'dataset_info.txt')
-with open(info_file, 'w') as f:
-Menjadi:
-python# Create dataset info file
-info_file = os.path.join(final_dir, 'dataset_info.txt')
-with open(info_file, 'w', encoding='utf-8') as f:
-Dan juga di fungsi generate_augmentation_report:
-Ganti:
-pythonwith open(report_path, 'w') as f:
-Menjadi:
-pythonwith open(report_path, 'w', encoding='utf-8') as f:
-Alternatif: Jika masih error, ganti karakter Unicode dengan ASCII:
-Ganti bagian tree structure dari:
-pythonf.write("    ├── X_train_balanced.npy  # Augmented image data\n")
-f.write("    ├── y_train_balanced.npy  # Corresponding labels\n")
-f.write("    ├── X_val_balanced.npy    # Validation images\n")
-f.write("    ├── y_val_balanced.npy    # Validation labels\n")
-f.write("    ├── X_test_balanced.npy   # Test images\n")
-f.write("    └── y_test_balanced.npy   # Test labels\n\n")
-Menjadi:
-pythonf.write("    |-- X_train_balanced.npy  # Augmented image data\n")
-f.write("    |-- y_train_balanced.npy  # Corresponding labels\n")
-f.write("    |-- X_val_balanced.npy    # Validation images\n")
-f.write("    |-- y_val_balanced.npy    # Validation labels\n")
-f.write("    |-- X_test_balanced.npy   # Test images\n")
-f.write("    +-- y_test_balanced.npy   # Test labels\n\n")
-Solusi paling simple: Tambahkan encoding='utf-8' ke semua operasi open() file untuk menulis.
+PyTorch version: 2.4.1+cpu
+---------------------------------------------------------------------------
+TypeError                                 Traceback (most recent call last)
+Cell In[4], line 30
+     28 # Check DirectML availability
+     29 try:
+---> 30     import torch_directml
+     31     print(f"✅ DirectML available for AMD GPU acceleration")
+     32 except ImportError:
 
-https://us05web.zoom.us/j/8800984680?pwd=o1N4k7xLDfQGhCA4PavDWhkpjOWMIl.1
+File ~\miniconda3\envs\emotion-finetune\lib\site-packages\torch_directml\__init__.py:27
+     24 from .functions import *
+     26 # # Register backend to support AMP
+---> 27 class PrivateUse1Module:
+     28     @staticmethod
+     29     def is_available() -> bool:
+     30         r"""Returns a bool indicating if DML is currently available."""
+
+File ~\miniconda3\envs\emotion-finetune\lib\site-packages\torch_directml\__init__.py:74, in PrivateUse1Module()
+     69 @staticmethod
+     70 def disable_tiled_resources(is_disabled):
+     71     torch_directml_native.disable_tiled_resources(is_disabled)
+     73 @staticmethod
+---> 74 def has_float64_support(device_id = default_device()):
+     75     return torch_directml_native.has_float64_support(device_id)
+     77 @staticmethod
+     78 def gpu_memory(device_id = default_device(), mb_per_tile = 1):
+
+TypeError: 'staticmethod' object is not callable
