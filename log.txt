@@ -1,94 +1,91 @@
-Error ini terjadi karena ada konflik kompatibilitas antara PyTorch 2.4.1+cpu dengan torch-directml. Mari kita perbaiki dengan beberapa solusi:
-🔧 Solusi 1: Clean Install torch-directml (Recommended)
-bash# Uninstall PyTorch yang ada
-pip uninstall torch torchvision torchaudio
+--------------------------------------------------------
+ValueError             Traceback (most recent call last)
+Cell In[11], line 54
+      5     training_args = TrainingArguments(
+      6         output_dir=os.path.join(MODEL_SAVE_PATH, 'vit-emotion-amd-rx6600le'),
+      7         
+   (...)
+     49         ignore_data_skip=True,
+     50     )
+     52     return training_args
+---> 54 training_args = get_amd_training_args()
+     56 print(f"🚀 AMD RX 6600 LE Training Configuration:")
+     57 print(f"   Epochs: {training_args.num_train_epochs}")
 
-# Install torch-directml (ini akan install PyTorch yang kompatibel)
-pip install torch-directml
+Cell In[11], line 5, in get_amd_training_args()
+      2 def get_amd_training_args():
+      3     """Get training arguments optimized untuk AMD RX 6600 LE"""
+----> 5     training_args = TrainingArguments(
+      6         output_dir=os.path.join(MODEL_SAVE_PATH, 'vit-emotion-amd-rx6600le'),
+      7         
+      8         # Training config optimized untuk 8GB VRAM
+      9         num_train_epochs=12,  # Reasonable untuk testing
+     10         per_device_train_batch_size=TRAIN_BATCH_SIZE,
+     11         per_device_eval_batch_size=EVAL_BATCH_SIZE,
+     12         gradient_accumulation_steps=GRADIENT_ACCUMULATION,
+     13         
+     14         # Learning config
+     15         learning_rate=3e-5,  # Slightly higher untuk AMD
+     16         warmup_steps=200,
+     17         weight_decay=0.01,
+     18         lr_scheduler_type="cosine",
+     19         
+     20         # Evaluation optimized untuk DirectML
+     21         evaluation_strategy="steps",
+     22         eval_steps=100,  # More frequent untuk monitoring
+     23         save_strategy="steps",
+     24         save_steps=100,
+     25         save_total_limit=2,  # Conserve disk space
+     26         load_best_model_at_end=True,
+     27         metric_for_best_model="balanced_accuracy",
+     28         greater_is_better=True,
+     29         
+     30         # AMD DirectML optimizations
+     31         fp16=use_fp16,
+     32         dataloader_num_workers=NUM_WORKERS,
+     33         dataloader_pin_memory=False,  # DirectML handles memory
+     34         remove_unused_columns=False,
+     35         dataloader_drop_last=True,
+     36         
+     37         # Logging
+     38         logging_steps=25,
+     39         logging_dir=os.path.join(MODEL_SAVE_PATH, 'amd_logs'),
+     40         report_to="none",  # Disable external logging
+     41         
+     42         # Reproducibility
+     43         seed=42,
+     44         data_seed=42,
+     45         
+     46         # Compatibility
+     47         push_to_hub=False,
+     48         skip_memory_metrics=True,
+     49         ignore_data_skip=True,
+     50     )
+     52     return training_args
 
-# Verify installation
-python -c "import torch_directml; print('DirectML installed successfully')"
-🔧 Solusi 2: Downgrade PyTorch
-Jika solusi 1 tidak berhasil, coba downgrade PyTorch:
-bash# Uninstall current PyTorch
-pip uninstall torch torchvision torchaudio torch-directml
+File <string>:117, in __init__(self, output_dir, overwrite_output_dir, do_train, do_eval, do_predict, evaluation_strategy, prediction_loss_only, per_device_train_batch_size, per_device_eval_batch_size, per_gpu_train_batch_size, per_gpu_eval_batch_size, gradient_accumulation_steps, eval_accumulation_steps, eval_delay, learning_rate, weight_decay, adam_beta1, adam_beta2, adam_epsilon, max_grad_norm, num_train_epochs, max_steps, lr_scheduler_type, warmup_ratio, warmup_steps, log_level, log_level_replica, log_on_each_node, logging_dir, logging_strategy, logging_first_step, logging_steps, logging_nan_inf_filter, save_strategy, save_steps, save_total_limit, save_safetensors, save_on_each_node, no_cuda, use_cpu, use_mps_device, seed, data_seed, jit_mode_eval, use_ipex, bf16, fp16, fp16_opt_level, half_precision_backend, bf16_full_eval, fp16_full_eval, tf32, local_rank, ddp_backend, tpu_num_cores, tpu_metrics_debug, debug, dataloader_drop_last, eval_steps, dataloader_num_workers, past_index, run_name, disable_tqdm, remove_unused_columns, label_names, load_best_model_at_end, metric_for_best_model, greater_is_better, ignore_data_skip, fsdp, fsdp_min_num_params, fsdp_config, fsdp_transformer_layer_cls_to_wrap, deepspeed, label_smoothing_factor, optim, optim_args, adafactor, group_by_length, length_column_name, report_to, ddp_find_unused_parameters, ddp_bucket_cap_mb, ddp_broadcast_buffers, dataloader_pin_memory, skip_memory_metrics, use_legacy_prediction_loop, push_to_hub, resume_from_checkpoint, hub_model_id, hub_strategy, hub_token, hub_private_repo, hub_always_push, gradient_checkpointing, gradient_checkpointing_kwargs, include_inputs_for_metrics, fp16_backend, push_to_hub_model_id, push_to_hub_organization, push_to_hub_token, mp_parameters, auto_find_batch_size, full_determinism, torchdynamo, ray_scope, ddp_timeout, torch_compile, torch_compile_backend, torch_compile_mode, dispatch_batches, split_batches, include_tokens_per_second, neftune_noise_alpha)
 
-# Install specific compatible versions
-pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cpu
-pip install torch-directml
-🔧 Solusi 3: Buat Environment Baru
-Cara paling aman adalah membuat environment baru:
-bash# Create new environment
-conda create -n vit-amd python=3.9
-conda activate vit-amd
+File ~\miniconda3\envs\emotion-finetune\lib\site-packages\transformers\training_args.py:1448, in TrainingArguments.__post_init__(self)
+   1437         raise ValueError("--optim adamw_torch_fused with --fp16 requires PyTorch>2.0")
+   1439 if (
+   1440     self.framework == "pt"
+   1441     and is_torch_available()
+   (...)
+   1446     and (self.fp16 or self.fp16_full_eval)
+   1447 ):
+-> 1448     raise ValueError(
+   1449         "FP16 Mixed precision training with AMP or APEX (`--fp16`) and FP16 half precision evaluation"
+   1450         " (`--fp16_full_eval`) can only be used on CUDA or NPU devices or certain XPU devices (with IPEX)."
+   1451     )
+   1453 if (
+   1454     self.framework == "pt"
+   1455     and is_torch_available()
+   (...)
+   1462     and (self.bf16 or self.bf16_full_eval)
+   1463 ):
+   1464     raise ValueError(
+   1465         "BF16 Mixed precision training with AMP (`--bf16`) and BF16 half precision evaluation"
+   1466         " (`--bf16_full_eval`) can only be used on CUDA, XPU (with IPEX), NPU or CPU/TPU/NeuronCore devices."
+   1467     )
 
-# Install dependencies dalam urutan yang benar
-pip install torch-directml
-pip install transformers datasets accelerate
-pip install scikit-learn matplotlib seaborn pillow numpy pandas
-🔧 Solusi 4: Fallback ke CPU dengan Notebook Modification
-Jika semua solusi di atas tidak berhasil, mari kita modifikasi notebook untuk handle error ini:finetune_vit_amd_notebook.jsonKode ∙ Versi 3     "# Check DirectML availability dengan error handling\n",
-    "DIRECTML_AVAILABLE = False\n",
-    "try:\n",
-    "    import torch_directml\n",
-    "    DIRECTML_AVAILABLE = True\n",
-    "    print(f\"✅ DirectML available for AMD GPU acceleration\"Strategized error handling for AMD GPU DirectML integration2 dtkSaya sudah update notebook untuk handle error DirectML dengan lebih baik. Sekarang mari saya update juga bagian setup_amd_device untuk handle error ini.finetune_vit_amd_notebook.jsonKode ∙ Versi 4     "    try:\n",
-    "        # Check if DirectML was imported successfully\n",
-    "        if not DIRECTML_AVAILABLE:\n",
-    "            raise ImportError(\"DirectML not available\")\n",
-    "            \n",
-    "        # Try DirectML untuk AMDiagnosed DirectML import error and prepared solution strategy.1 dtkBagus, saya sudah update notebook untuk handle error DirectML dengan lebih baik. Sekarang mari saya berikan instruksi lengkap untuk mengatasi masalah ini.🎯 Quick Fix: Jalankan Command Ini
-Berdasarkan error yang Anda alami, coba langkah-langkah ini:
-Step 1: Clean Install
-bash# Keluar dari environment dan masuk lagi
-conda deactivate
-conda activate emotion-finetune
-
-# Uninstall semua PyTorch packages
-pip uninstall torch torchvision torchaudio torch-directml -y
-
-# Install torch-directml yang akan include PyTorch compatible
-pip install torch-directml
-
-# Verify
-python -c "import torch_directml; print('Success!')"
-Step 2: Jika Step 1 Gagal
-bash# Buat environment baru dari scratch
-conda create -n vit-amd-new python=3.9 -y
-conda activate vit-amd-new
-
-# Install dalam urutan yang benar
-pip install torch-directml
-pip install transformers datasets accelerate
-pip install scikit-learn matplotlib seaborn pillow numpy pandas ipykernel
-
-# Add kernel ke Jupyter
-python -m ipykernel install --user --name vit-amd-new --display-name "VIT AMD"
-Step 3: Test DirectML
-python# Test script untuk verify DirectML
-try:
-    import torch_directml
-    device = torch_directml.device()
-    x = torch.randn(10, 10).to(device)
-    print(f"✅ DirectML working: {x.device}")
-except Exception as e:
-    print(f"❌ Error: {e}")
-🔄 Jika Masih Error, Gunakan CPU Mode
-Notebook sudah saya update untuk otomatis fallback ke CPU jika DirectML bermasalah. Dengan CPU mode:
-
-Training akan lebih lambat (~2-3x)
-Batch size akan otomatis dikurangi (4 vs 10)
-Tetap bisa training ViT dengan baik
-
-🎮 Cek Versi yang Kompatibel
-Error ini sering terjadi karena versi mismatch. Versi yang tested:
-bash# Versi yang paling stabil
-pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cpu
-pip install torch-directml==0.2.0.dev230426
-📋 Troubleshooting Checklist
-✅ Windows 10/11 updated?
-✅ AMD Adrenalin drivers latest?
-✅ Visual C++ Redistributable installed?
-✅ Clean conda environment?
-✅ No other PyTorch versions installed?
-Coba Step 1 dulu, biasanya itu yang paling efektif untuk mengatasi TypeError DirectML ini! 🚀
+ValueError: FP16 Mixed precision training with AMP or APEX (`--fp16`) and FP16 half precision evaluation (`--fp16_full_eval`) can only be used on CUDA or NPU devices or certain XPU devices (with IPEX).
