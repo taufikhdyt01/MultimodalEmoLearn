@@ -70,8 +70,8 @@ else:
     print(f"💻 CPU Mode: Batch size {BATCH_SIZE}, {EPOCHS} epochs")
 
 # Paths
-BASE_PATH = 'D:/research/2025_iris_taufik/MultimodalEmoLearn-CNN-LSTM/data/'
-MODEL_PATH = 'D:/research/2025_iris_taufik/MultimodalEmoLearn-CNN-LSTM/models/'
+BASE_PATH = 'D:/research/2025_iris_taufik/MultimodalEmoLearn/data/'
+MODEL_PATH = 'D:/research/2025_iris_taufik/MultimodalEmoLearn/models/'
 
 # ============================
 # LOAD DATA

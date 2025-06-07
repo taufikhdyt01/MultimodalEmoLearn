@@ -42,8 +42,8 @@ gpu_available, num_gpus = setup_amd_gpu()
 # ============================
 # PATHS AND CONFIGURATIONS
 # ============================
-BASE_PATH = 'D:/research/2025_iris_taufik/MultimodalEmoLearn-CNN-LSTM/data/'
-MODEL_PATH = 'D:/research/2025_iris_taufik/MultimodalEmoLearn-CNN-LSTM/models/'
+BASE_PATH = 'D:/research/2025_iris_taufik/MultimodalEmoLearn/data/'
+MODEL_PATH = 'D:/research/2025_iris_taufik/MultimodalEmoLearn/models/'
 
 # Batch size for inference
 BATCH_SIZE = 64 if gpu_available else 32

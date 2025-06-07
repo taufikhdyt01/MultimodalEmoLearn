@@ -5,6 +5,7 @@ import os
 def generate_emotion_labels_from_faceapi(excel_path, output_dir):
     """
     Mengekstrak label emosi dari data Face API JS dan membuat ground truth.
+    Versi yang dimodifikasi untuk tidak memfilter berdasarkan tantangan/challenge.
     
     Args:
         excel_path: Path ke file Excel yang berisi data Face API JS
@@ -79,45 +80,52 @@ def generate_emotion_labels_from_faceapi(excel_path, output_dir):
                 percent = (count / valid_frames * 100) if valid_frames > 0 else 0
                 f.write(f"{emotion}: {count} ({percent:.2f}%)\n")
         
-        # Analisis emosi berdasarkan sampel dan tantangan
-        if 'user_id' in df.columns and 'page' in df.columns:
-            print("\nAnalyzing emotions by sample and challenge...")
+        # Analisis emosi berdasarkan sampel saja (tanpa tantangan)
+        if 'user_id' in df.columns:
+            print("\nAnalyzing emotions by sample...")
             
-            # Ekstrak informasi tantangan dari kolom page
-            def extract_challenge(page):
-                if pd.isna(page) or not isinstance(page, str):
-                    return "Unknown"
-                if '/tantangan/' in page:
-                    parts = page.split('/')
-                    try:
-                        tantangan_index = parts.index('tantangan')
-                        if tantangan_index + 1 < len(parts) and parts[tantangan_index + 1]:
-                            return parts[tantangan_index + 1]
-                    except ValueError:
-                        pass
-                return "Unknown"
-            
-            high_confidence_df['Challenge'] = high_confidence_df['page'].apply(extract_challenge)
-            
-            # Analisis per sampel dan tantangan
-            sample_challenge_stats = high_confidence_df.groupby(['user_id', 'Challenge']).agg({
+            # Analisis per sampel saja
+            sample_stats = high_confidence_df.groupby('user_id').agg({
                 'Dominant_Emotion': lambda x: x.value_counts().to_dict(),
-                'id': 'count'  # Gunakan kolom 'id' untuk menghitung jumlah frame
+                'id': 'count'  # Gunakan kolom 'id' untuk menghitung jumlah frame, atau ganti dengan kolom yang sesuai
             }).reset_index()
             
-            sample_challenge_stats.columns = ['user_id', 'Challenge', 'Emotion_Counts', 'Frame_Count']
+            sample_stats.columns = ['user_id', 'Emotion_Counts', 'Frame_Count']
             
             # Simpan ke Excel
-            sample_stats_path = os.path.join(output_dir, "emotion_by_sample_challenge.xlsx")
+            sample_stats_path = os.path.join(output_dir, "emotion_by_sample.xlsx")
             
             # Konversi dictionary ke format yang bisa disimpan di Excel
             def format_emotion_counts(counts_dict):
                 return ', '.join([f"{emotion}: {count}" for emotion, count in counts_dict.items()])
             
-            sample_challenge_stats['Emotion_Distribution'] = sample_challenge_stats['Emotion_Counts'].apply(format_emotion_counts)
-            sample_challenge_stats.drop(columns=['Emotion_Counts']).to_excel(sample_stats_path, index=False)
+            sample_stats['Emotion_Distribution'] = sample_stats['Emotion_Counts'].apply(format_emotion_counts)
+            sample_stats.drop(columns=['Emotion_Counts']).to_excel(sample_stats_path, index=False)
             
-            print(f"Saved sample and challenge analysis to {sample_stats_path}")
+            print(f"Saved sample analysis to {sample_stats_path}")
+            
+            # Analisis tambahan: distribusi emosi per sampel
+            sample_emotion_summary = []
+            for user_id in high_confidence_df['user_id'].unique():
+                if pd.notna(user_id):
+                    user_data = high_confidence_df[high_confidence_df['user_id'] == user_id]
+                    emotion_counts = user_data['Dominant_Emotion'].value_counts()
+                    total_frames_user = len(user_data)
+                    
+                    summary_row = {'user_id': user_id, 'total_frames': total_frames_user}
+                    
+                    # Tambahkan count untuk setiap emosi
+                    for emotion in emotion_columns:
+                        summary_row[f'{emotion}_count'] = emotion_counts.get(emotion, 0)
+                        summary_row[f'{emotion}_percent'] = (emotion_counts.get(emotion, 0) / total_frames_user * 100) if total_frames_user > 0 else 0
+                    
+                    sample_emotion_summary.append(summary_row)
+            
+            # Simpan summary detail
+            summary_df = pd.DataFrame(sample_emotion_summary)
+            summary_detail_path = os.path.join(output_dir, "sample_emotion_summary.xlsx")
+            summary_df.to_excel(summary_detail_path, index=False)
+            print(f"Saved detailed sample emotion summary to {summary_detail_path}")
         
         return high_confidence_df
     else:
@@ -126,6 +134,6 @@ def generate_emotion_labels_from_faceapi(excel_path, output_dir):
 
 # Contoh penggunaan
 if __name__ == "__main__":
-    excel_path = "D:/Preprocessing/Cleaned/all_cleaned_data.xlsx"  # Path ke file Excel gabungan setelah dibersihkan
-    output_dir = "D:/Preprocessing/Emotion_Labels"
+    excel_path = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/processed/all_cleaned_data.xlsx"  # Path ke file Excel gabungan setelah dibersihkan
+    output_dir = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/Emotion_Labels"
     labeled_data = generate_emotion_labels_from_faceapi(excel_path, output_dir)

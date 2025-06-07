@@ -127,8 +127,8 @@ def split_dataset(labeled_data_path, output_dir, train_size=0.8, val_size=0.1, t
 
 # Contoh penggunaan
 if __name__ == "__main__":
-    labeled_data_path = "D:/Preprocessing/Emotion_Labels/labeled_data.xlsx"
-    output_dir = "D:/Preprocessing/Dataset_Split"
+    labeled_data_path = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/Emotion_Labels/ckplus_labeled_data.xlsx"
+    output_dir = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/split"
     train_set, val_set, test_set = split_dataset(
         labeled_data_path, 
         output_dir, 

@@ -26,65 +26,21 @@ def extract_time_from_timestamp(timestamp):
         print(f"Error parsing timestamp {timestamp}: {e}")
         return None
 
-# Identify which problem/challenge a record belongs to
-def identify_problem(row, problem_identifier_column='page'):
-    """
-    Identify which problem/challenge a record belongs to based on the page URL.
-    
-    Args:
-        row: The DataFrame row
-        problem_identifier_column: Column name that identifies the problem (default: 'page')
-        
-    Returns:
-        A problem identifier (e.g., "penjumlahan-dua-angka", "status-http")
-    """
-    if problem_identifier_column in row and pd.notna(row[problem_identifier_column]):
-        page_url = str(row[problem_identifier_column])
-        
-        # Skip if it's just the root tantangan path
-        if page_url == '/tantangan':
-            return "Other"
-        
-        # Check if it's a challenge page
-        if '/tantangan/' in page_url:
-            # Extract the challenge name from the URL
-            parts = page_url.split('/')
-            
-            # Find the index of 'tantangan' in the URL parts
-            try:
-                tantangan_index = parts.index('tantangan')
-                
-                # Get the challenge name (next part after 'tantangan')
-                if tantangan_index + 1 < len(parts) and parts[tantangan_index + 1]:
-                    challenge_name = parts[tantangan_index + 1]
-                    
-                    # Return the challenge name
-                    return challenge_name
-            except ValueError:
-                # 'tantangan' not found in parts
-                pass
-            
-        # If we get here, it's some other page
-        return "Other"
-    else:
-        # If page column is empty or doesn't exist
-        return "Unknown"
-
-# Function to process a single sample with problem separation
+# Function to process a single sample without problem separation
 def process_sample(sample_num, user_id, df_all, base_dir, output_base_dir):
     # Filter dataframe for this user_id
     df_sample = df_all[df_all['user_id'] == user_id].copy()
     
     if df_sample.empty:
         print(f"No data found for Sample {sample_num} (user_id: {user_id})")
-        return pd.DataFrame(), [], {}
+        return pd.DataFrame(), []
     
     # Define source directory for frames
     frames_dir = os.path.join(base_dir, f"Sample {sample_num}", "frames")
     
     if not os.path.exists(frames_dir):
         print(f"Frames directory not found for Sample {sample_num}: {frames_dir}")
-        return pd.DataFrame(), [], {}
+        return pd.DataFrame(), []
     
     # Get all frame files in the directory
     frame_files = {}
@@ -94,49 +50,30 @@ def process_sample(sample_num, user_id, df_all, base_dir, output_base_dir):
             time_parts = filename.replace('frame_', '').replace('.jpg', '')
             frame_files[time_parts] = filename
     
-    # Group records by problem
-    problem_groups = {}
+    # Create output directory for this sample (without problem separation)
+    sample_output_dir = os.path.join(output_base_dir, f"Sample {sample_num}", "cleaned_frames")
+    os.makedirs(sample_output_dir, exist_ok=True)
+    
+    # Process all records for this sample
+    matched_indices = []
+    matched_times = set()
+    unmatched_frames = []
+    
+    print(f"\n  Processing all records for Sample {sample_num}...")
+    
+    # Process all records without grouping by problem
     for index, row in df_sample.iterrows():
-        problem = identify_problem(row)
-        
-        # Skip records that are just '/tantangan' or 'Other'/'Unknown'
-        if problem in ["Other", "Unknown"]:
+        time_key = extract_time_from_timestamp(row['timestamp'])
+        if not time_key:
             continue
+        
+        # Check if we have a matching frame
+        if time_key in frame_files:
+            # Check confidence (if confidence columns exist)
+            emotion_columns = ['neutral', 'happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised']
             
-        if problem not in problem_groups:
-            problem_groups[problem] = []
-        problem_groups[problem].append(index)
-    
-    # If no valid problems identified, print warning and return
-    if not problem_groups:
-        print(f"Warning: No valid problems identified for Sample {sample_num}")
-        return pd.DataFrame(), [], {}
-    
-    # Process each problem group
-    all_matched_indices = []
-    all_unmatched_frames = []
-    problem_stats = {}
-    
-    for problem, indices in problem_groups.items():
-        print(f"\n  Processing problem: {problem}")
-        
-        # Create output directory for this problem
-        problem_output_dir = os.path.join(output_base_dir, f"Sample {sample_num}", problem, "cleaned_frames")
-        os.makedirs(problem_output_dir, exist_ok=True)
-        
-        matched_indices = []
-        matched_times = set()
-        
-        # Process records for this problem
-        for index in indices:
-            row = df_sample.loc[index]
-            time_key = extract_time_from_timestamp(row['timestamp'])
-            if not time_key:
-                continue
-            
-            # Check if we have a matching frame
-            if time_key in frame_files:
-                # Check confidence
+            # Check if emotion columns exist in the dataframe
+            if all(col in df_sample.columns for col in emotion_columns):
                 max_confidence = max(
                     float(row['neutral']), float(row['happy']), float(row['sad']), 
                     float(row['angry']), float(row['fearful']), 
@@ -144,59 +81,43 @@ def process_sample(sample_num, user_id, df_all, base_dir, output_base_dir):
                 )
                 
                 is_valid = (max_confidence >= 0.5 and 
-                           (pd.isna(row['Classification']) or row['Classification'] != 'Low Confidence'))
+                           (pd.isna(row.get('Classification', '')) or row.get('Classification', '') != 'Low Confidence'))
+            else:
+                # If emotion columns don't exist, just include the record
+                is_valid = True
+            
+            if is_valid:
+                # Keep this record and copy the corresponding frame
+                matched_indices.append(index)
+                matched_times.add(time_key)
                 
-                if is_valid:
-                    # Keep this record and copy the corresponding frame
-                    matched_indices.append(index)
-                    matched_times.add(time_key)
-                    
-                    src_path = os.path.join(frames_dir, frame_files[time_key])
-                    dst_path = os.path.join(problem_output_dir, frame_files[time_key])
-                    shutil.copy2(src_path, dst_path)
-        
-        # Add to overall matched indices
-        all_matched_indices.extend(matched_indices)
-        problem_matched_df = df_sample.loc[matched_indices].copy() if matched_indices else pd.DataFrame()
-        
-        # Save problem-specific Excel
-        if not problem_matched_df.empty:
-            problem_excel_dir = os.path.join(output_base_dir, f"Sample {sample_num}", problem)
-            problem_excel_path = os.path.join(problem_excel_dir, f"cleaned_data.xlsx")
-            problem_matched_df.to_excel(problem_excel_path, index=False)
-        
-        problem_stats[problem] = {
-            'records': len(indices),
-            'matched': len(matched_indices)
-        }
-        
-        print(f"    - Records: {len(indices)}")
-        print(f"    - Valid matched records: {len(matched_indices)}")
+                src_path = os.path.join(frames_dir, frame_files[time_key])
+                dst_path = os.path.join(sample_output_dir, frame_files[time_key])
+                shutil.copy2(src_path, dst_path)
     
-    # Find frames that don't match any record across all problems
-    all_matched_times = set()
-    for idx in all_matched_indices:
-        if idx in df_sample.index:
-            time_str = extract_time_from_timestamp(df_sample.loc[idx, 'timestamp'])
-            if time_str:
-                all_matched_times.add(time_str)
-    
+    # Find frames that don't match any record
     for time_key, filename in frame_files.items():
-        if time_key not in all_matched_times:
-            all_unmatched_frames.append(filename)
+        if time_key not in matched_times:
+            unmatched_frames.append(filename)
     
-    # Create combined DataFrame with all matched records
-    matched_df = df_sample.loc[all_matched_indices].copy() if all_matched_indices else pd.DataFrame()
+    # Create DataFrame with all matched records
+    matched_df = df_sample.loc[matched_indices].copy() if matched_indices else pd.DataFrame()
+    
+    # Save sample-specific Excel
+    if not matched_df.empty:
+        sample_excel_dir = os.path.join(output_base_dir, f"Sample {sample_num}")
+        os.makedirs(sample_excel_dir, exist_ok=True)
+        sample_excel_path = os.path.join(sample_excel_dir, f"cleaned_data.xlsx")
+        matched_df.to_excel(sample_excel_path, index=False)
     
     # Print summary for this sample
     print(f"\nSample {sample_num} (user_id: {user_id}) Summary:")
     print(f"  - Total records in Excel: {len(df_sample)}")
     print(f"  - Total valid matched records: {len(matched_df)}")
-    print(f"  - Total frames without valid records: {len(all_unmatched_frames)}")
-    for problem, stats in problem_stats.items():
-        print(f"  - {problem}: {stats['matched']}/{stats['records']} records matched")
+    print(f"  - Total frames without valid records: {len(unmatched_frames)}")
+    print(f"  - Records processed without problem filtering")
     
-    return matched_df, all_unmatched_frames, problem_stats
+    return matched_df, unmatched_frames
 
 # Main function to process all samples
 def process_all_samples(excel_path, base_dir, output_base_dir, sample_mapping):
@@ -210,7 +131,7 @@ def process_all_samples(excel_path, base_dir, output_base_dir, sample_mapping):
         if 'timestamp' in df_all.columns and not pd.api.types.is_datetime64_any_dtype(df_all['timestamp']):
             df_all['timestamp'] = pd.to_datetime(df_all['timestamp'], errors='coerce')
             
-        # Print the column names to help identify problem/challenge identifier
+        # Print the column names to help identify available columns
         print("\nAvailable columns:", df_all.columns.tolist())
             
     except Exception as e:
@@ -226,7 +147,7 @@ def process_all_samples(excel_path, base_dir, output_base_dir, sample_mapping):
     
     for sample_num, user_id in sample_mapping.items():
         print(f"\nProcessing Sample {sample_num} (user_id: {user_id})...")
-        matched_df, unmatched_frames, problem_stats = process_sample(
+        matched_df, unmatched_frames = process_sample(
             sample_num, user_id, df_all, base_dir, output_base_dir
         )
         
@@ -236,8 +157,7 @@ def process_all_samples(excel_path, base_dir, output_base_dir, sample_mapping):
         all_stats[sample_num] = {
             'user_id': user_id,
             'matched_records': len(matched_df),
-            'unmatched_frames': len(unmatched_frames),
-            'problem_stats': problem_stats
+            'unmatched_frames': len(unmatched_frames)
         }
     
     # Combine all matched records into a single DataFrame
@@ -249,23 +169,16 @@ def process_all_samples(excel_path, base_dir, output_base_dir, sample_mapping):
         print(f"\nSaved cleaned data to {output_excel}")
     else:
         print("\nNo valid records found across all samples.")
-    
+
     # Save detailed summary report
     summary_data = []
     for sample_num, stats in all_stats.items():
-        base_row = {
+        summary_data.append({
             'Sample': sample_num,
             'User ID': stats['user_id'],
             'Total Matched Records': stats['matched_records'],
             'Total Unmatched Frames': stats['unmatched_frames']
-        }
-        
-        # Add problem-specific stats
-        for problem, prob_stats in stats['problem_stats'].items():
-            base_row[f"{problem} Records"] = prob_stats['records']
-            base_row[f"{problem} Matched"] = prob_stats['matched']
-        
-        summary_data.append(base_row)
+        })
     
     summary_df = pd.DataFrame(summary_data)
     summary_path = os.path.join(output_base_dir, "processing_summary.xlsx")
@@ -284,17 +197,15 @@ def process_all_samples(excel_path, base_dir, output_base_dir, sample_mapping):
         total_matched += matched
         total_unmatched += unmatched
         print(f"Sample {sample_num} (user_id: {user_id}): {matched} matched records, {unmatched} unmatched frames")
-        for problem, prob_stats in stats['problem_stats'].items():
-            print(f"  - {problem}: {prob_stats['matched']}/{prob_stats['records']} records matched")
     
     print(f"\nTOTAL: {total_matched} matched records, {total_unmatched} unmatched frames")
 
 # Example usage
 if __name__ == "__main__":
     # Configuration
-    excel_path = "D:/Preprocessing/all_samples_data.xlsx"  # Path to your Excel file with all samples
-    base_dir = "D:/Preprocessing"                         # Base directory containing all sample folders
-    output_base_dir = "D:/Preprocessing/Cleaned"          # Where to save cleaned data
+    excel_path = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/raw/all_samples_data.xlsx"  # Path to your Excel file with all samples
+    base_dir = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/raw"                         # Base directory containing all sample folders
+    output_base_dir = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/processed"          # Where to save cleaned data
     
     # Define mapping between Sample number and user_id
     # This needs to be filled in manually based on your data

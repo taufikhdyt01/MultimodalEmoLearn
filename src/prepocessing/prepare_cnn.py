@@ -6,30 +6,6 @@ from tqdm import tqdm
 import shutil
 import re
 
-def extract_challenge_from_page(page):
-    """
-    Mengekstrak nama tantangan dari URL page.
-    
-    Args:
-        page: URL halaman, misal: '/tantangan/penjumlahan-dua-angka'
-    
-    Returns:
-        Nama tantangan atau None jika tidak ditemukan
-    """
-    if pd.isna(page) or not isinstance(page, str):
-        return None
-        
-    if '/tantangan/' in page:
-        parts = page.split('/')
-        try:
-            tantangan_index = parts.index('tantangan')
-            if tantangan_index + 1 < len(parts) and parts[tantangan_index + 1]:
-                return parts[tantangan_index + 1]
-        except ValueError:
-            pass
-    
-    return None
-
 def format_timestamp_to_filename(timestamp):
     """
     Mengkonversi timestamp ke format nama file frame.
@@ -71,31 +47,32 @@ def get_sample_number_from_user_id(user_id, user_id_mapping):
             return sample_num
     return None
 
-def find_image_in_sample_folder(images_dir, sample_num, challenge, frame_name):
+def find_image_in_sample_folder(images_dir, sample_num, frame_name):
     """
-    Mencari file gambar di folder sampel, baik berdasarkan challenge spesifik
-    atau di semua folder challenge.
+    Mencari file gambar di folder sampel (versi yang disederhanakan tanpa challenge).
     
     Args:
         images_dir: Direktori utama data gambar
         sample_num: Nomor sampel (1-20)
-        challenge: Nama challenge (bisa None)
         frame_name: Nama file frame
     
     Returns:
         Path lengkap ke gambar jika ditemukan, None jika tidak
     """
+    # Path langsung ke folder cleaned_frames per sample
+    sample_frames_dir = os.path.join(images_dir, f"Sample {sample_num}", "cleaned_frames")
+    
+    if os.path.exists(sample_frames_dir):
+        img_path = os.path.join(sample_frames_dir, frame_name)
+        if os.path.exists(img_path):
+            return img_path
+    
+    # Fallback: cari di struktur lama (jika masih ada folder challenge)
     sample_dir = os.path.join(images_dir, f"Sample {sample_num}")
     if not os.path.exists(sample_dir):
         return None
     
-    # Jika challenge diketahui, coba cari di folder challenge tersebut
-    if challenge is not None:
-        img_path = os.path.join(sample_dir, challenge, "cleaned_frames", frame_name)
-        if os.path.exists(img_path):
-            return img_path
-    
-    # Jika tidak ditemukan atau challenge tidak diketahui, cari di semua folder challenge
+    # Cari di semua subdirektori yang ada
     for item in os.listdir(sample_dir):
         item_path = os.path.join(sample_dir, item)
         if os.path.isdir(item_path):
@@ -111,6 +88,7 @@ def find_image_in_sample_folder(images_dir, sample_num, challenge, frame_name):
 def prepare_image_data_for_cnn(split_dir, images_dir, output_dir, user_id_mapping, img_size=(224, 224)):
     """
     Mempersiapkan data gambar untuk input CNN.
+    Versi yang disederhanakan tanpa filtering berdasarkan challenge.
     
     Args:
         split_dir: Direktori yang berisi file split data (train, val, test)
@@ -141,13 +119,6 @@ def prepare_image_data_for_cnn(split_dir, images_dir, output_dir, user_id_mappin
         # Create output directories for images
         split_img_dir = os.path.join(output_dir, f"{split_name}_images")
         os.makedirs(split_img_dir, exist_ok=True)
-        
-        # Ekstrak Challenge dari kolom page jika ada
-        if 'page' in df.columns:
-            df['Challenge'] = df['page'].apply(extract_challenge_from_page)
-            print(f"Extracted Challenge from page column.")
-            challenge_counts = df['Challenge'].value_counts()
-            print(f"Challenge distribution: {challenge_counts.to_dict()}")
         
         # Create directories for each emotion class
         if 'Dominant_Emotion' in df.columns:
@@ -189,7 +160,7 @@ def prepare_image_data_for_cnn(split_dir, images_dir, output_dir, user_id_mappin
                 if sample_num is None:
                     if not_found < 5:
                         print(f"User ID {user_id} not found in mapping")
-                    skipped += 1
+                    not_found += 1
                     continue
                 
                 # Convert timestamp to frame filename format
@@ -198,19 +169,14 @@ def prepare_image_data_for_cnn(split_dir, images_dir, output_dir, user_id_mappin
                     skipped += 1
                     continue
                 
-                # Get challenge if available
-                challenge = row['Challenge'] if 'Challenge' in df.columns and not pd.isna(row['Challenge']) else None
-                
-                # Find the image in the cleaned directory using sample number
-                img_path = find_image_in_sample_folder(images_dir, sample_num, challenge, frame_name)
+                # Find the image in the cleaned directory using sample number (tanpa challenge)
+                img_path = find_image_in_sample_folder(images_dir, sample_num, frame_name)
                 
                 if img_path is None or not os.path.exists(img_path):
                     # Debug info for first few not found
                     if not_found < 5:
-                        print(f"Image not found: user_id={user_id}, sample_num={sample_num}, challenge={challenge}, frame={frame_name}")
-                        print(f"  Looked in: {os.path.join(images_dir, f'Sample {sample_num}')}")
-                        if challenge:
-                            print(f"  Specific path checked: {os.path.join(images_dir, f'Sample {sample_num}', challenge, 'cleaned_frames', frame_name)}")
+                        print(f"Image not found: user_id={user_id}, sample_num={sample_num}, frame={frame_name}")
+                        print(f"  Looked in: {os.path.join(images_dir, f'Sample {sample_num}', 'cleaned_frames')}")
                     not_found += 1
                     continue
                 
@@ -298,9 +264,9 @@ def get_user_id_mapping():
 
 # Contoh penggunaan
 if __name__ == "__main__":
-    split_dir = "D:/Preprocessing/Dataset_Split"  # Direktori dengan file train_data.xlsx, val_data.xlsx, test_data.xlsx
-    images_dir = "D:/Preprocessing/Cleaned"       # Direktori dengan folder Sample 1, Sample 2, dll.
-    output_dir = "D:/Preprocessing/CNN_Data"      # Direktori output untuk data CNN
+    split_dir = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/split"  # Direktori dengan file train_data.xlsx, val_data.xlsx, test_data.xlsx
+    images_dir = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/processed"       # Direktori dengan folder Sample 1, Sample 2, dll.
+    output_dir = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/images"      # Direktori output untuk data CNN
     user_id_mapping = get_user_id_mapping()       # Mapping nomor sampel ke user_id
     
     prepare_image_data_for_cnn(split_dir, images_dir, output_dir, user_id_mapping)
