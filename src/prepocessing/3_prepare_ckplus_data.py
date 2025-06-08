@@ -9,13 +9,14 @@ def prepare_ckplus_for_training(ckplus_landmarks_file, output_path):
     
     # Mapping emosi ke format yang konsisten dengan model Anda
     emotion_mapping = {
-        'anger': 'angry',
-        'contempt': 'contempt',  # Tambahkan kategori baru atau map ke existing
-        'disgust': 'disgusted', 
-        'fear': 'fear',
-        'happy': 'happy',
-        'sadness': 'sad',
-        'surprise': 'surprised'
+        'Anger': 'angry',
+        'Contempt': 'contempt',  
+        'Disgust': 'disgusted', 
+        'Fear': 'fear',
+        'Happy': 'happy',
+        'Neutral': 'neutral', 
+        'Sadness': 'sad',
+        'Surprised': 'surprised'
     }
     
     # Update kolom emosi
@@ -39,7 +40,7 @@ def prepare_ckplus_for_training(ckplus_landmarks_file, output_path):
     return df
 
 if __name__ == "__main__":
-    landmarks_file = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/Emotion_Labels/ckplus_landmarks_dlib.xlsx"
-    output_path = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/Emotion_Labels/ckplus_labeled_data.xlsx"
+    landmarks_file = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/Emotion_Labels/ck+_landmarks_dlib.xlsx"
+    output_path = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/Emotion_Labels/ck+_labeled_data.xlsx"
     
     prepare_ckplus_for_training(landmarks_file, output_path)

@@ -7,7 +7,7 @@ def preprocess_ckplus_images(input_dir, output_dir, target_size=(224, 224)):
     """
     Preprocessing gambar CK+ untuk konsistensi ukuran
     """
-    emotions = ['anger', 'contempt', 'disgust', 'fear', 'happy', 'sadness', 'surprise']
+    emotions = ['Anger', 'Contempt', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sadness', 'Surprised']
     
     os.makedirs(output_dir, exist_ok=True)
     
@@ -38,7 +38,7 @@ def preprocess_ckplus_images(input_dir, output_dir, target_size=(224, 224)):
         print(f"Processed {processed_count} images for {emotion}")
 
 if __name__ == "__main__":
-    input_dir = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/ckplus"
-    output_dir = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/ckplus_processed"
+    input_dir = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/ck+"
+    output_dir = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/ck+_processed"
     
     preprocess_ckplus_images(input_dir, output_dir)

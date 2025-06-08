@@ -95,7 +95,7 @@ def extract_landmarks_ckplus_dlib(dataset_path, output_path, model_path=None):
     predictor = dlib.shape_predictor(model_path)
     
     results_data = []
-    emotions = ['anger', 'contempt', 'disgust', 'fear', 'happy', 'sadness', 'surprise']
+    emotions = ['Anger', 'Contempt', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sadness', 'Surprised']
     
     print("🎯 Starting landmark extraction...")
     
@@ -206,8 +206,8 @@ if __name__ == "__main__":
         exit(1)
     
     # Paths
-    dataset_path = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/ckplus_processed"
-    output_path = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/Emotion_Labels/ckplus_landmarks_dlib.xlsx"
+    dataset_path = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/ck+_processed"
+    output_path = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/Emotion_Labels/ck+_landmarks_dlib.xlsx"
     
     # Extract landmarks
     df = extract_landmarks_ckplus_dlib(dataset_path, output_path)

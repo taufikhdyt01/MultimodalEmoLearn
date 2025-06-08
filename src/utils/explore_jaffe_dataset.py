@@ -7,9 +7,9 @@ from pathlib import Path
 
 def explore_ck_dataset(dataset_path):
     """
-    Eksplorasi struktur dataset CK+ yang sudah di-download dari Kaggle
+    Eksplorasi struktur dataset JAFFE yang sudah di-download dari Kaggle
     """
-    print("=== EKSPLORASI DATASET CK+ ===")
+    print("=== EKSPLORASI DATASET JAFFE ===")
     
     # 1. Cek struktur direktori
     print("\n1. STRUKTUR DIREKTORI:")
@@ -130,11 +130,11 @@ def explore_ck_dataset(dataset_path):
 
 def analyze_ck_labels(dataset_path):
     """
-    Analisis khusus untuk label CK+ berdasarkan struktur standar
+    Analisis khusus untuk label JAFFE berdasarkan struktur standar
     """
-    print("\n=== ANALISIS LABEL CK+ ===")
+    print("\n=== ANALISIS LABEL JAFFE ===")
     
-    # CK+ biasanya memiliki struktur:
+    # JAFFE biasanya memiliki struktur:
     # - cohn-kanade-images/ untuk gambar
     # - Emotion/ untuk label emosi
     # - FACS/ untuk action units
@@ -187,7 +187,7 @@ def analyze_ck_labels(dataset_path):
                 for file, label in list(emotion_labels.items())[:5]:
                     print(f"  {os.path.basename(file)}: {label}")
                 
-                # Mapping emotion codes (standar CK+)
+                # Mapping emotion codes (standar JAFFE)
                 ck_emotion_map = {
                     0: 'neutral',
                     1: 'anger', 
@@ -199,14 +199,14 @@ def analyze_ck_labels(dataset_path):
                     7: 'surprise'
                 }
                 
-                print(f"\nMapping emosi CK+:")
+                print(f"\nMapping emosi JAFFE:")
                 for code, emotion in ck_emotion_map.items():
                     print(f"  {code}: {emotion}")
 
 # Contoh penggunaan
 if __name__ == "__main__":
-    # Ganti dengan path dataset CK+ Anda
-    dataset_path = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/ck+"
+    # Ganti dengan path dataset JAFFE Anda
+    dataset_path = "D:/research/2025_iris_taufik/MultimodalEmoLearn/data/jaffe-2"
     
     # Jalankan eksplorasi
     image_info, label_files = explore_ck_dataset(dataset_path)
