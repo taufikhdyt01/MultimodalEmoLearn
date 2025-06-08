@@ -1,0 +1,9 @@
+CK+:
+CNN Only: 0.0816
+Landmark Only: 0.7347
+Late Fusion: 0.7347
+
+Jaffe:
+CNN Only: 0.1628
+Landmark Only: 0.1628
+Late Fusion: 0.2093
