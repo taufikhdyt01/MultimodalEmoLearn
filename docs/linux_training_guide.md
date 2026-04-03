@@ -1,0 +1,299 @@
+# Panduan Training di Linux (NVIDIA T4 - Biznet Gio VPS)
+
+> **Server:** Biznet Gio VPS dengan NVIDIA T4
+> **Akses:** MobaXterm (SSH + file transfer)
+
+## 1. Transfer Project ke VPS
+
+### Option A: Git clone di VPS (RECOMMENDED)
+
+Buka MobaXterm → SSH ke VPS → jalankan:
+```bash
+git clone https://github.com/taufikhdyt01/MultimodalEmoLearn.git
+cd MultimodalEmoLearn
+```
+
+### Option B: Upload via MobaXterm file browser
+
+MobaXterm punya panel file browser di sebelah kiri saat SSH session aktif.
+Cukup **drag & drop** folder project dari Windows ke panel tersebut.
+
+## 2. Transfer Data ke VPS
+
+Data tidak ada di git (di-gitignore, terlalu besar ~10GB). Harus transfer manual.
+
+### Langkah 1: Compress data di Windows
+
+Buka Git Bash / terminal di folder project:
+```bash
+cd D:/MultimodalEmoLearn
+tar -czf dataset.tar.gz data/dataset data/dataset_augmented
+# Hasilnya: dataset.tar.gz (~3-4 GB setelah compress)
+```
+
+### Langkah 2: Upload ke VPS
+
+**Cara A: Drag & drop via MobaXterm (paling mudah)**
+1. Buka MobaXterm → SSH ke VPS
+2. Di panel kiri (file browser), navigasi ke `/home/USER/MultimodalEmoLearn/`
+3. Drag file `dataset.tar.gz` dari Windows Explorer ke panel kiri MobaXterm
+4. Tunggu upload selesai
+
+**Cara B: Via terminal MobaXterm**
+
+MobaXterm punya terminal lokal bawaan yang sudah support SCP:
+```bash
+scp D:/MultimodalEmoLearn/dataset.tar.gz USER@IP_VPS:/home/USER/MultimodalEmoLearn/
+```
+
+> **Tips:** Upload ~3-4 GB bisa memakan waktu tergantung kecepatan internet.
+
+### Langkah 3: Extract di VPS
+
+Di terminal SSH MobaXterm:
+```bash
+cd MultimodalEmoLearn
+tar -xzf dataset.tar.gz
+
+# Verifikasi
+ls data/dataset/*.npy | wc -l           # harus 9 files
+ls data/dataset_augmented/*.npy | wc -l  # harus 9 files
+
+# Hapus file compress (opsional, hemat disk)
+rm dataset.tar.gz
+```
+
+### File yang dibutuhkan:
+```
+data/
+├── dataset/
+│   ├── X_train_images.npy      (~4.2 GB)
+│   ├── X_train_landmarks.npy   (~3.8 MB)
+│   ├── y_train.npy             (~28 KB)
+│   ├── X_val_images.npy        (~0.7 GB)
+│   ├── X_val_landmarks.npy     (~0.6 MB)
+│   ├── y_val.npy               (~5 KB)
+│   ├── X_test_images.npy       (~1.0 GB)
+│   ├── X_test_landmarks.npy    (~0.9 MB)
+│   ├── y_test.npy              (~7 KB)
+│   ├── class_weights.json
+│   ├── dataset_info.json
+│   └── label_map.json
+└── dataset_augmented/
+    ├── X_train_images.npy      (~4.5 GB)
+    ├── X_train_landmarks.npy   (~4.1 MB)
+    ├── y_train.npy             (~30 KB)
+    ├── class_weights.json
+    └── ... (val/test di-copy dari dataset/)
+```
+
+## 3. Setup Environment di VPS
+
+Semua perintah di bawah dijalankan di VPS (setelah `ssh USER@IP_VPS`):
+
+```bash
+# 1. Install Miniconda (jika belum ada)
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+# Ikuti instruksi, jawab "yes" untuk init conda
+source ~/.bashrc
+
+# 2. Buat conda environment
+conda create -n emotrain python=3.10 -y
+conda activate emotrain
+
+# 3. Install PyTorch dengan CUDA (untuk NVIDIA T4)
+# Cek dulu versi CUDA di VPS:
+nvidia-smi
+# Lihat "CUDA Version" di pojok kanan atas output
+
+# Untuk CUDA 12.x:
+conda install pytorch torchvision pytorch-cuda=12.1 -c pytorch -c nvidia -y
+
+# Untuk CUDA 11.x:
+# conda install pytorch torchvision pytorch-cuda=11.8 -c pytorch -c nvidia -y
+
+# 4. Install dependencies lainnya
+pip install numpy scikit-learn matplotlib seaborn jupyter openpyxl
+
+# 5. Verifikasi GPU terdeteksi
+python -c "import torch; print('CUDA:', torch.cuda.is_available()); print('GPU:', torch.cuda.get_device_name(0))"
+# Expected output:
+# CUDA: True
+# GPU: Tesla T4
+```
+
+## 4. Verifikasi Setup
+
+```bash
+cd MultimodalEmoLearn
+
+# Cek data ada
+python -c "
+import numpy as np
+from pathlib import Path
+
+for name in ['dataset', 'dataset_augmented']:
+    d = Path(f'data/{name}')
+    for f in sorted(d.glob('*.npy')):
+        arr = np.load(f)
+        print(f'{name}/{f.name}: shape={arr.shape}, dtype={arr.dtype}')
+"
+
+# Cek model bisa dibuat
+python -c "
+import sys; sys.path.insert(0, 'src')
+from training.models import EmotionCNN, EmotionFCNN, IntermediateFusion
+import torch
+
+device = torch.device('cuda')
+m1 = EmotionCNN(7).to(device)
+m2 = EmotionFCNN(136, 7).to(device)
+m3 = IntermediateFusion(7, 136).to(device)
+
+# Test forward pass
+img = torch.randn(2, 3, 224, 224).to(device)
+lm = torch.randn(2, 136).to(device)
+
+print('CNN:', m1(img).shape)          # [2, 7]
+print('FCNN:', m2(lm).shape)          # [2, 7]
+print('Fusion:', m3(img, lm).shape)   # [2, 7]
+print('All models OK!')
+"
+```
+
+## 5. Jalankan Training
+
+### Opsi A: Notebook interaktif via MobaXterm (RECOMMENDED)
+
+Jalankan Jupyter di VPS, akses dari browser di laptop:
+
+```bash
+# Di MobaXterm, buka SSH session ke VPS, lalu jalankan:
+conda activate emotrain
+cd MultimodalEmoLearn
+jupyter notebook --no-browser --port=8888 --ip=0.0.0.0
+```
+
+MobaXterm otomatis membuat SSH tunnel. Buka browser di laptop: **http://localhost:8888**
+
+> Jika port 8888 tidak ter-tunnel otomatis, buat manual:
+> MobaXterm → menu Tunneling → New SSH tunnel → Local port 8888 → Remote port 8888
+
+Jalankan notebook secara berurutan: `01` → `02` → `03` → `04` → `05`
+
+### Opsi B: Jalankan semua di background (RECOMMENDED kalau mau ditinggal)
+
+Koneksi SSH bisa putus kapan saja tanpa mempengaruhi training:
+
+```bash
+# Di MobaXterm SSH session:
+
+# Pakai tmux supaya proses tidak mati kalau koneksi putus
+tmux new -s training
+
+# Di dalam tmux:
+conda activate emotrain
+cd MultimodalEmoLearn
+bash scripts/run_all.sh
+
+# Setelah jalan, DETACH dari tmux:
+# Tekan: Ctrl+B, lalu tekan D
+# Sekarang bisa tutup MobaXterm, training tetap jalan di VPS
+
+# Nanti kalau mau cek progress, buka MobaXterm lagi:
+tmux attach -t training
+```
+
+### Opsi C: Jalankan satu-satu manual
+
+```bash
+conda activate emotrain
+cd MultimodalEmoLearn
+
+# Jalankan per notebook:
+jupyter nbconvert --to notebook --execute notebooks/01_train_cnn.ipynb \
+    --output 01_train_cnn_executed.ipynb --output-dir notebooks/results/ \
+    --ExecutePreprocessor.timeout=7200
+# Ulangi untuk 02, 03, 04, 05
+```
+
+## 6. Estimasi Waktu Training (NVIDIA T4)
+
+| Notebook | Model | Estimasi per Skenario | Total (3 skenario) |
+|----------|-------|-----------------------|---------------------|
+| 01_train_cnn | CNN | ~15-30 menit | ~45-90 menit |
+| 02_train_fcnn | FCNN | ~2-5 menit | ~6-15 menit |
+| 03_late_fusion | Late Fusion | ~1-2 menit (inference only) | ~3-6 menit |
+| 04_intermediate_fusion | Intermediate | ~20-40 menit | ~60-120 menit |
+| 05_comparison | - | ~1 menit | ~1 menit |
+| **Total** | | | **~2-4 jam** |
+
+## 7. Setelah Training Selesai
+
+### Transfer hasil dari VPS ke laptop Windows:
+
+**Cara A: Drag & drop via MobaXterm**
+1. Di MobaXterm SSH session, navigasi panel kiri ke `MultimodalEmoLearn/models/`
+2. Select semua folder → drag ke Windows Explorer
+
+**Cara B: Compress lalu download**
+
+Di VPS:
+```bash
+cd MultimodalEmoLearn
+tar -czf results.tar.gz models/ notebooks/results/
+```
+
+Lalu download `results.tar.gz` via panel kiri MobaXterm, atau dari Git Bash:
+```bash
+scp USER@IP_VPS:/home/USER/MultimodalEmoLearn/results.tar.gz D:/MultimodalEmoLearn/
+cd D:/MultimodalEmoLearn
+tar -xzf results.tar.gz
+```
+
+### File hasil yang dihasilkan:
+```
+models/
+├── cnn/
+│   ├── cnn_b1_baseline.pth
+│   ├── cnn_b2_weighted.pth
+│   ├── cnn_b3_augmented.pth
+│   └── cnn_results.json
+├── fcnn/
+│   ├── fcnn_b1_baseline.pth
+│   ├── fcnn_b2_weighted.pth
+│   ├── fcnn_b3_augmented.pth
+│   └── fcnn_results.json
+├── late_fusion/
+│   └── late_fusion_results.json
+├── intermediate_fusion/
+│   ├── intermediate_b1_baseline.pth
+│   ├── intermediate_b2_weighted.pth
+│   ├── intermediate_b3_augmented.pth
+│   └── intermediate_fusion_results.json
+└── experiment_summary.json
+```
+
+## 8. Troubleshooting
+
+### CUDA Out of Memory
+```python
+# Kurangi batch size di notebook:
+BATCH_SIZE = 16  # atau 8 untuk intermediate fusion
+```
+
+### Training terlalu lama
+```python
+# Kurangi epochs dan patience:
+EPOCHS = 30
+PATIENCE = 10
+```
+
+### Notebook error saat import
+```bash
+# Pastikan working directory benar:
+cd MultimodalEmoLearn
+# Pastikan src/ ada di path:
+ls src/training/models.py  # harus ada
+```

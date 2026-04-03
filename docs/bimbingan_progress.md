@@ -26,14 +26,18 @@
 
 ### Total 37 Mahasiswa
 
-| Batch | Jumlah | Sudut Kamera | Periode |
-|-------|--------|-------------|---------|
-| Batch 1 (lama) | 20 mahasiswa | Depan saja | April-Mei 2025 |
-| Batch 2 (baru) | 17 mahasiswa | Depan + Samping | November 2025 |
-| **Total** | **37 mahasiswa** | | |
+| Batch | Direkam | Tersedia | Sudut Kamera | Periode |
+|-------|---------|----------|-------------|---------|
+| Batch 1 (lama) | 20 mahasiswa | 20 mahasiswa | Depan saja | April-Mei 2025 |
+| Batch 2 (baru) | 20 mahasiswa | **17 mahasiswa** | Depan + Samping | November 2025 |
+| **Total** | **40** | **37 mahasiswa** | | |
+
+**Catatan Batch 2:** Awalnya batch 2 merekam 20 mahasiswa, namun 3 data rekaman tidak ditemukan di hardisk PC perekaman. Setelah ditelusuri dan hardisk dibuka, file rekaman 3 mahasiswa tersebut tidak tersimpan. Sehingga data batch 2 yang tersedia hanya 17 mahasiswa.
 
 > **Penjelasan lisan:**  
-> "Dari target 38 mahasiswa di proposal, saya berhasil mengumpulkan 37. Satu mahasiswa (ID 204) datanya tidak lengkap sehingga tidak bisa digunakan."
+> "Untuk batch 2, awalnya saya merekam 20 mahasiswa, sama seperti batch 1. Namun saat akan memproses datanya, 3 file rekaman tidak ditemukan di hardisk PC yang digunakan untuk perekaman. Setelah saya cek langsung ke hardisk-nya — karena CPU-nya sempat tidak menyala — ternyata file rekamannya memang tidak tersimpan. Kemungkinan gagal saat proses recording. Jadi data batch 2 yang bisa digunakan hanya 17 mahasiswa."
+>
+> "Total data yang tersedia menjadi 37 mahasiswa dari target 38 di proposal."
 >
 > "Perbedaan utama batch 2 adalah penambahan sudut kamera samping (side view), sehingga satu mahasiswa menghasilkan dua set frame: depan dan samping. Ini untuk menambah variasi data dan menguji apakah side view bisa membantu pengenalan emosi."
 
@@ -332,7 +336,7 @@ Alur validasi ahli:
 | Face detection | dlib | **MediaPipe** | Dlib gagal deteksi side view, MediaPipe support multi-angle |
 | Landmark | 68 titik (dlib) | **68 titik (mapped dari MediaPipe)** | Setara, output tetap 136 fitur |
 | Jumlah mahasiswa | 38 | **37** | 1 mahasiswa data tidak lengkap |
-| Fusion strategy | Late + Intermediate | Late + Intermediate (Hybrid) | Tetap sesuai proposal |
+| Fusion strategy | Late + Intermediate | Late + Intermediate | Tetap sesuai proposal |
 
 > **Penjelasan lisan:**  
 > "Perubahan utama hanya pada tool face detection dari dlib ke MediaPipe. Ini karena data baru memiliki side view yang tidak bisa dideteksi oleh dlib. Output landmark tetap 68 titik yang di-map dari 478 titik MediaPipe, sehingga secara substansi tidak mengubah desain penelitian."
