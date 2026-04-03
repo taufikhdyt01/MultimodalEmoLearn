@@ -180,7 +180,9 @@ MobaXterm otomatis membuat SSH tunnel. Buka browser di laptop: **http://localhos
 > Jika port 8888 tidak ter-tunnel otomatis, buat manual:
 > MobaXterm → menu Tunneling → New SSH tunnel → Local port 8888 → Remote port 8888
 
-Jalankan notebook secara berurutan: `01` → `02` → `03` → `04` → `05`
+Jalankan notebook secara berurutan:
+- **7-class:** `01` → `02` → `03` → `04` → `05`
+- **4-class:** `06` → `07` → `08` → `09` → `10`
 
 ### Opsi B: Jalankan semua di background (RECOMMENDED kalau mau ditinggal)
 
@@ -215,10 +217,10 @@ cd MultimodalEmoLearn
 jupyter nbconvert --to notebook --execute notebooks/01_train_cnn.ipynb \
     --output 01_train_cnn_executed.ipynb --output-dir notebooks/results/ \
     --ExecutePreprocessor.timeout=7200
-# Ulangi untuk 02, 03, 04, 05
+# Ulangi untuk 02-10
 ```
 
-## 6. Estimasi Waktu Training (NVIDIA T4)
+## 6. Estimasi Waktu Training 7-Class (NVIDIA T4)
 
 | Notebook | Model | Estimasi per Skenario | Total (3 skenario) |
 |----------|-------|-----------------------|---------------------|
@@ -275,7 +277,99 @@ models/
 └── experiment_summary.json
 ```
 
-## 8. Troubleshooting
+---
+
+## 8. Menjalankan Eksperimen 4-Class (Lanjutan)
+
+> **Prasyarat:** Notebook 01-05 (7-class) sudah selesai dijalankan.
+
+Setelah hasil 7-class dianalisis, langkah selanjutnya adalah menjalankan eksperimen dengan 4 kelas emosi sebagai perbandingan:
+- **neutral, happy, sad, negative** (angry+fearful+disgusted+surprised digabung)
+
+### Langkah 1: Pull kode terbaru di VPS
+
+```bash
+ssh USER@IP_VPS   # atau buka MobaXterm
+cd MultimodalEmoLearn
+git pull origin master
+```
+
+### Langkah 2: Generate dataset 4-class
+
+Dataset 4-class dibuat dari dataset 7-class yang sudah ada (hanya remap label, tidak perlu transfer data baru):
+
+```bash
+conda activate emotrain
+python src/preprocessing/prepare_dataset_4class.py
+```
+
+### Langkah 3: Jalankan training 4-class
+
+```bash
+# Pakai tmux supaya aman kalau koneksi putus
+tmux new -s training4class
+
+conda activate emotrain
+bash scripts/run_4class.sh
+
+# Detach: Ctrl+B lalu D
+# Re-attach: tmux attach -t training4class
+```
+
+Atau jalankan interaktif via Jupyter (notebook 06 → 07 → 08 → 09 → 10).
+
+### Estimasi waktu 4-class (NVIDIA T4):
+
+| Notebook | Model | Total (3 skenario) |
+|----------|-------|---------------------|
+| 06_train_cnn_4class | CNN | ~45-90 menit |
+| 07_train_fcnn_4class | FCNN | ~6-15 menit |
+| 08_late_fusion_4class | Late Fusion | ~3-6 menit |
+| 09_intermediate_fusion_4class | Intermediate | ~60-120 menit |
+| 10_comparison_4class | Comparison | ~1 menit |
+| **Total** | | **~2-4 jam** |
+
+### Langkah 4: Transfer hasil 4-class
+
+```bash
+# Di VPS:
+cd MultimodalEmoLearn
+tar -czf results_4class.tar.gz models/4class/ notebooks/results/
+```
+
+Download via MobaXterm (drag & drop) atau:
+```bash
+# Di laptop:
+scp USER@IP_VPS:/home/USER/MultimodalEmoLearn/results_4class.tar.gz D:/MultimodalEmoLearn/
+cd D:/MultimodalEmoLearn && tar -xzf results_4class.tar.gz
+```
+
+### File hasil 4-class:
+```
+models/4class/
+├── cnn/
+│   ├── cnn_4c_b1_baseline.pth
+│   ├── cnn_4c_b2_weighted.pth
+│   ├── cnn_4c_b3_augmented.pth
+│   └── cnn_4class_results.json
+├── fcnn/
+│   ├── fcnn_4c_b1_baseline.pth
+│   ├── fcnn_4c_b2_weighted.pth
+│   ├── fcnn_4c_b3_augmented.pth
+│   └── fcnn_4class_results.json
+├── late_fusion/
+│   └── late_fusion_4class_results.json
+├── intermediate_fusion/
+│   ├── intermediate_4c_b1_baseline.pth
+│   ├── intermediate_4c_b2_weighted.pth
+│   ├── intermediate_4c_b3_augmented.pth
+│   └── intermediate_fusion_4class_results.json
+└── experiment_summary_4class.json
+```
+
+---
+
+## 9. Troubleshooting
 
 ### CUDA Out of Memory
 ```python
