@@ -2,7 +2,9 @@
 
 **Nama:** Taufik Hidayat  
 **NIM:** 256150117111007  
-**Judul:** Integrasi Multimodal CNN dan Facial Landmark untuk Pengenalan Emosi dalam Konteks Pembelajaran Pemrograman  
+**Judul:** Integrasi Multimodal Citra Wajah dan Facial Landmark untuk Pengenalan Emosi dalam Konteks Pembelajaran Pemrograman  
+**Pembimbing 1:** Dr.Eng. Fitra Abdurrachman Bachtiar, S.T., M.Eng.  
+**Pembimbing 2:** Dr.Eng. Budi Darma Setiawan, S.Kom., M.Cs.  
 **Tanggal:** April 2025
 
 ---
@@ -281,15 +283,49 @@ Saya sudah menyiapkan 3 opsi:
 > 2. "Apakah 1 ahli cukup, atau perlu 2 ahli untuk inter-rater reliability?"
 > 3. "Apakah Bapak/Ibu punya rekomendasi ahli psikologi yang bisa dihubungi?"
 
-### Format Validasi yang Sudah Disiapkan:
-- File Excel dengan kolom: gambar wajah, label otomatis, confidence score, 7 skor emosi
-- Kolom kosong "Expert Label" dan "Expert Notes" untuk diisi ahli
-- Folder berisi 224x224 cropped face images
-- Petunjuk pengisian sudah disertakan
+### Tool Validasi yang Sudah Disiapkan:
+
+Saya sudah membuat **web tool interaktif** (Streamlit) untuk memudahkan proses validasi:
+
+**Fitur utama:**
+- Tampilan gambar wajah besar + label otomatis + confidence score + bar chart 7 emosi
+- Ahli tinggal klik **"Setuju"** atau pilih emosi yang benar — tidak perlu ketik manual
+- **Multi-validator** — support 1-2 ahli, masing-masing punya progress terpisah
+- **3 opsi set validasi** tersedia dalam 1 tool — tinggal pilih saat login
+- Auto-save setiap klik, ada progress tracker
+- Halaman ringkasan otomatis menghitung **Cohen's Kappa** dan **inter-rater agreement**
+- Download hasil ke CSV
+
+**Cara akses:**
+- Tool akan di-deploy online (Streamlit Cloud) — ahli cukup klik link, tidak perlu install apapun
+- Data wajah mahasiswa sudah mendapat informed consent
+- Repo bersifat **private** (tidak publik)
+
+**Demo** *(bisa ditunjukkan saat bimbingan jika diminta):*
+
+```
+Alur validasi ahli:
+1. Buka link → Login nama → Pilih set validasi
+2. Lihat gambar wajah → Lihat label otomatis
+3. Klik "Setuju" atau pilih emosi yang benar
+4. Otomatis lanjut ke sample berikutnya
+5. Setelah selesai → Download hasil CSV
+```
+
+> **Penjelasan lisan:**  
+> "Untuk memudahkan ahli psikologi, saya sudah menyiapkan web tool interaktif. Ahli cukup buka link di browser, lalu klik-klik untuk validasi — tidak perlu buka Excel dan folder gambar satu-satu. Tool ini juga otomatis menghitung Cohen's Kappa setelah validasi selesai."
+>
+> "Kalau validatornya 2 orang, tool juga bisa menghitung inter-rater agreement antara kedua ahli secara otomatis."
+
+> **Yang perlu ditanyakan:**  
+> 1. "Opsi mana yang paling tepat untuk level tesis S2?"
+> 2. "Apakah 1 ahli cukup, atau perlu 2 ahli untuk inter-rater reliability?"
+> 3. "Apakah Bapak/Ibu punya rekomendasi ahli psikologi yang bisa dihubungi?"
+> 4. "Apakah perlu diberikan honorarium untuk validator?"
 
 ---
 
-## SLIDE 8: Perubahan dari Proposal
+## SLIDE 9: Perubahan dari Proposal
 
 | Aspek | Di Proposal | Implementasi | Alasan |
 |-------|------------|-------------|--------|
@@ -307,24 +343,28 @@ Saya sudah menyiapkan 3 opsi:
 
 ---
 
-## SLIDE 9: Rencana Selanjutnya
+## SLIDE 10: Rencana Selanjutnya
 
 | No | Tahap | Status | Target |
 |----|-------|--------|--------|
 | 1 | Pengumpulan data | Selesai | - |
 | 2 | Preprocessing (frame, crop, landmark) | Selesai | - |
 | 3 | Prepare dataset (numpy arrays) | Selesai | - |
-| 4 | **Validasi ahli psikologi** | **Menunggu keputusan** | Setelah bimbingan ini |
-| 5 | Training CNN (fitur penampilan) | Belum | Setelah validasi |
-| 6 | Training FCNN (fitur landmark) | Belum | Setelah validasi |
-| 7 | Late Fusion | Belum | Setelah unimodal |
-| 8 | Intermediate Fusion | Belum | Setelah unimodal |
-| 9 | Evaluasi & perbandingan | Belum | Setelah semua training |
+| 4 | Class weights + augmentasi | Selesai | - |
+| 5 | Tool validasi ahli (web app) | Selesai, siap deploy | - |
+| 6 | **Deploy tool + kirim ke ahli** | **Menunggu keputusan** | Setelah bimbingan ini |
+| 7 | Training CNN (fitur penampilan) | Belum | Bisa paralel dengan validasi |
+| 8 | Training FCNN (fitur landmark) | Belum | Bisa paralel dengan validasi |
+| 9 | Late Fusion | Belum | Setelah unimodal |
+| 10 | Intermediate Fusion | Belum | Setelah unimodal |
+| 11 | Evaluasi & perbandingan 3 skenario | Belum | Setelah semua training |
 
 > **Penjelasan lisan:**  
-> "Preprocessing sudah selesai semua. Yang menentukan langkah selanjutnya adalah keputusan validasi ahli. Namun sambil menunggu, saya bisa mulai training untuk melihat baseline performance."
+> "Preprocessing dan persiapan dataset sudah selesai semua, termasuk tool validasi untuk ahli psikologi. Yang saya butuhkan dari bimbingan ini adalah keputusan terkait validasi ahli (berapa sample, berapa ahli) dan penanganan class imbalance."
 >
-> "Apakah Bapak/Ibu setuju saya mulai training dulu dengan label auto-detection, lalu nanti update model setelah validasi ahli selesai?"
+> "Sambil menunggu proses validasi, saya bisa mulai training untuk melihat baseline performance. Nanti kalau ada label yang dikoreksi ahli, tinggal update dan re-train."
+>
+> "Apakah Bapak/Ibu setuju dengan rencana ini?"
 
 ---
 
@@ -332,10 +372,12 @@ Saya sudah menyiapkan 3 opsi:
 
 | No | Topik | Pertanyaan | Opsi Rekomendasi |
 |----|-------|-----------|------------------|
-| 1 | Class imbalance | Cukup class weights saja, atau perlu augmentasi/gabung kelas? | Class weights (Opsi A) |
-| 2 | Validasi ahli | Berapa sample? (583 / 1,067 / 1,938) dan berapa ahli? | Tergantung ketersediaan ahli |
-| 3 | Perubahan tool | Perlu revisi proposal untuk perubahan dlib → MediaPipe? | Cukup di BAB 4 |
-| 4 | Timeline | Boleh training dulu sambil menunggu validasi? | Ya, sebagai baseline |
+| 1 | Class imbalance | Cukup class weights saja, atau perlu augmentasi/gabung kelas? | Class weights sebagai baseline, tambah augmentasi jika perlu |
+| 2 | Validasi ahli - jumlah sample | 583 (5%) / 1,067 (10%) / 1,938 (full non-neutral)? | Tergantung ketersediaan ahli |
+| 3 | Validasi ahli - jumlah ahli | 1 ahli atau 2 ahli (untuk inter-rater reliability)? | 2 ahli jika memungkinkan |
+| 4 | Validasi ahli - honorarium | Perlu diberikan fee untuk validator? | Tergantung kebijakan prodi |
+| 5 | Perubahan tool | Perlu revisi proposal untuk perubahan dlib → MediaPipe? | Cukup di BAB 4 |
+| 6 | Timeline | Boleh training dulu sambil menunggu validasi? | Ya, sebagai baseline |
 
 ---
 

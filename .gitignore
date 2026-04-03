@@ -5,7 +5,7 @@ data/
 models/
 
 # Tools (ffmpeg binaries, mediapipe models - can be re-downloaded)
-tools/
+/tools/
 
 # Archive (old experiment results, notebooks, pkl files)
 archive/
