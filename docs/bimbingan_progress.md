@@ -356,19 +356,129 @@ Alur validasi ahli:
 | 3 | Prepare dataset (numpy arrays) | Selesai | - |
 | 4 | Class weights + augmentasi | Selesai | - |
 | 5 | Tool validasi ahli (web app) | Selesai, siap deploy | - |
-| 6 | **Deploy tool + kirim ke ahli** | **Menunggu keputusan** | Setelah bimbingan ini |
-| 7 | Training CNN (fitur penampilan) | Belum | Bisa paralel dengan validasi |
-| 8 | Training FCNN (fitur landmark) | Belum | Bisa paralel dengan validasi |
-| 9 | Late Fusion | Belum | Setelah unimodal |
-| 10 | Intermediate Fusion | Belum | Setelah unimodal |
-| 11 | Evaluasi & perbandingan 3 skenario | Belum | Setelah semua training |
+| 6 | Deploy tool + kirim ke ahli | **Menunggu keputusan** | Setelah bimbingan |
+| 7 | Training CNN | **Selesai** | - |
+| 8 | Training FCNN | **Selesai** | - |
+| 9 | Late Fusion | **Selesai** | - |
+| 10 | Intermediate Fusion | **Selesai** | - |
+| 11 | Evaluasi & perbandingan | **Selesai** | - |
+| 12 | **Perbaikan model** | **Perlu diskusi** | Setelah bimbingan |
+
+---
+
+## SLIDE 11: Hasil Training (4 Model × 3 Skenario = 12 Eksperimen)
+
+Training dilakukan di VPS Biznet Gio (NVIDIA T4, 16GB VRAM) menggunakan PyTorch.
+
+### Tabel Hasil Lengkap (diurutkan berdasarkan Macro F1)
+
+| Rank | Model | Skenario | Accuracy | Macro F1 | Weighted F1 |
+|------|-------|----------|----------|----------|-------------|
+| 1 | **FCNN** | **B1 Baseline** | **95.8%** | **0.234** | 0.952 |
+| 2 | Late Fusion | B1 Baseline | 95.8% | 0.230 | 0.951 |
+| 3 | FCNN | B2 Weights | 89.1% | 0.189 | 0.912 |
+| 4 | Late Fusion | B2 Weights | 89.7% | 0.189 | 0.909 |
+| 5 | Late Fusion | B3 Aug | 92.5% | 0.182 | 0.929 |
+| 6 | FCNN | B3 Aug | 92.3% | 0.182 | 0.927 |
+| 7 | Intermediate | B2 Weights | 84.5% | 0.140 | 0.881 |
+| 8 | Intermediate | B3 Aug | 81.6% | 0.134 | 0.866 |
+| 9 | CNN | B2 Weights | 82.8% | 0.134 | 0.872 |
+| 10 | CNN | B1 Baseline | 84.2% | 0.133 | 0.881 |
+| 11 | CNN | B3 Aug | 64.9% | 0.119 | 0.766 |
+| 12 | Intermediate | B1 Baseline | 63.3% | 0.111 | 0.744 |
+
+### Kombinasi Terbaik: **FCNN + B1 Baseline** (Macro F1: 0.234)
 
 > **Penjelasan lisan:**  
-> "Preprocessing dan persiapan dataset sudah selesai semua, termasuk tool validasi untuk ahli psikologi. Yang saya butuhkan dari bimbingan ini adalah keputusan terkait validasi ahli (berapa sample, berapa ahli) dan penanganan class imbalance."
+> "Training sudah selesai untuk semua 12 kombinasi. Hasilnya, model FCNN (berbasis landmark) tanpa class weights justru memberikan hasil terbaik dengan accuracy 95.8% dan Macro F1 0.234."
+
+---
+
+## SLIDE 12: Analisis Hasil
+
+### Temuan 1: FCNN (Landmark) > CNN (Image)
+
+| Model | Best Macro F1 |
+|-------|--------------|
+| **FCNN** | **0.234** |
+| CNN | 0.134 |
+
+> **Penjelasan lisan:**  
+> "Fitur geometrik dari facial landmark ternyata lebih efektif dari fitur penampilan (citra wajah) untuk dataset ini. Ini konsisten dengan temuan Bachtiar et al. (2024) yang menunjukkan bahwa facial landmark bisa superior untuk ekspresi halus. Kemungkinan karena landmark lebih robust terhadap variasi pencahayaan dan sudut wajah yang terjadi selama sesi pemrograman."
+
+### Temuan 2: Fusion tidak lebih baik dari FCNN saja
+
+| Model | Best Macro F1 |
+|-------|--------------|
+| FCNN | **0.234** |
+| Late Fusion (10% CNN + 90% FCNN) | 0.230 |
+| Intermediate Fusion | 0.140 |
+
+> **Penjelasan lisan:**  
+> "Late Fusion optimal pada bobot CNN hanya 10% dan FCNN 90% — artinya CNN hampir tidak berkontribusi. Intermediate Fusion justru lebih buruk karena fitur CNN yang noisy mengganggu fitur landmark yang sudah bagus. Ini menunjukkan bahwa untuk dataset pembelajaran pemrograman ini, pendekatan unimodal FCNN sudah cukup optimal."
+
+### Temuan 3: Class weights dan augmentasi TIDAK membantu
+
+| Skenario | FCNN Macro F1 | CNN Macro F1 |
+|----------|--------------|-------------|
+| B1 Baseline | **0.234** | 0.133 |
+| B2 Class Weights | 0.189 | 0.134 |
+| B3 Weights + Aug | 0.182 | 0.119 |
+
+> **Penjelasan lisan:**  
+> "Yang mengejutkan, class weights dan augmentasi justru menurunkan performa. Ini kemungkinan karena memberikan bobot terlalu besar pada kelas yang sangat sedikit (fearful: 8 sample, weight 125x) membuat model tidak stabil. Baseline tanpa penanganan justru lebih baik."
+
+### Temuan 4: Masalah utama — kelas minoritas tidak terdeteksi
+
+Dari classification report model terbaik (FCNN B1):
+
+| Emosi | Support | Recall | F1 |
+|-------|---------|--------|-----|
+| Neutral | 1,588 | 99% | 0.98 |
+| Happy | 10 | 0% | 0.00 |
+| Sad | 38 | 32% | 0.41 |
+| Angry | 13 | 0% | 0.00 |
+| Fearful | 1 | 0% | 0.00 |
+| Disgusted | 3 | 0% | 0.00 |
+| Surprised | 3 | 0% | 0.00 |
+
+> **Penjelasan lisan:**  
+> "Meskipun accuracy tinggi (95.8%), model hanya bisa mengenali neutral dan sedikit sad. Kelas lain seperti happy, angry, fearful, disgusted, dan surprised tidak terdeteksi sama sekali. Ini karena jumlah sampelnya terlalu sedikit di test set (1-13 sample) dan model belum cukup belajar dari data training yang juga sangat sedikit untuk kelas-kelas ini."
 >
-> "Sambil menunggu proses validasi, saya bisa mulai training untuk melihat baseline performance. Nanti kalau ada label yang dikoreksi ahli, tinggal update dan re-train."
->
-> "Apakah Bapak/Ibu setuju dengan rencana ini?"
+> "Accuracy 95.8% sebenarnya misleading — model bisa dapat accuracy segitu hanya dengan memprediksi semua sebagai neutral. Itulah kenapa kita pakai Macro F1 (0.234) sebagai metrik utama, yang menunjukkan performa sebenarnya."
+
+---
+
+## SLIDE 13: Diskusi dan Langkah Selanjutnya
+
+### **(KONSULTASI 4)** Bagaimana menyikapi hasil ini?
+
+> **Yang perlu ditanyakan:**  
+> "Pak/Bu, hasilnya menunjukkan bahwa kelas minoritas hampir tidak terdeteksi. Ada beberapa opsi:"
+
+**Opsi A: Terima hasil apa adanya, perkuat di pembahasan**
+- Report sebagai temuan: "Dataset pendidikan autentik memiliki imbalance ekstrem yang sulit diatasi"
+- Ini valid sebagai kontribusi — menunjukkan tantangan nyata FER di konteks pendidikan
+- Bisa dijadikan rekomendasi untuk penelitian selanjutnya
+
+**Opsi B: Coba variasi 4 kelas (gabung kelas langka)**
+- Gabung: angry + fearful + disgusted → "negative", surprised tetap dibuang
+- 4 kelas: neutral, happy, sad, negative
+- Distribusi lebih seimbang, kemungkinan performa lebih baik
+- Namun menyimpang dari proposal (7 emosi)
+
+**Opsi C: Tambah data dari sumber lain (transfer learning)**
+- Pre-train di dataset publik (FER2013, AffectNet) lalu fine-tune di dataset kita
+- Bisa meningkatkan kemampuan mengenali emosi langka
+- Tapi menambah kompleksitas dan waktu
+
+**Opsi D: Kombinasi — jalankan 7 kelas + 4 kelas sebagai perbandingan**
+- 7 kelas sebagai eksperimen utama (sesuai proposal)
+- 4 kelas sebagai analisis tambahan di BAB Pembahasan
+- Menunjukkan bahwa penggabungan kelas bisa meningkatkan performa praktis
+
+> **Rekomendasi:**  
+> "Saya merekomendasikan Opsi D — tetap 7 kelas sebagai utama sesuai proposal, tambah eksperimen 4 kelas sebagai pembahasan tambahan. Ini memberikan analisis yang komprehensif tanpa menyimpang dari rancangan penelitian."
 
 ---
 
@@ -376,12 +486,14 @@ Alur validasi ahli:
 
 | No | Topik | Pertanyaan | Opsi Rekomendasi |
 |----|-------|-----------|------------------|
-| 1 | Class imbalance | Cukup class weights saja, atau perlu augmentasi/gabung kelas? | Class weights sebagai baseline, tambah augmentasi jika perlu |
+| 1 | Class imbalance | Weights/augmentasi tidak cukup efektif, perlu strategi lain? | Coba variasi 4 kelas sebagai tambahan |
 | 2 | Validasi ahli - jumlah sample | 583 (5%) / 1,067 (10%) / 1,938 (full non-neutral)? | Tergantung ketersediaan ahli |
 | 3 | Validasi ahli - jumlah ahli | 1 ahli atau 2 ahli (untuk inter-rater reliability)? | 2 ahli jika memungkinkan |
 | 4 | Validasi ahli - honorarium | Perlu diberikan fee untuk validator? | Tergantung kebijakan prodi |
 | 5 | Perubahan tool | Perlu revisi proposal untuk perubahan dlib → MediaPipe? | Cukup di BAB 4 |
-| 6 | Timeline | Boleh training dulu sambil menunggu validasi? | Ya, sebagai baseline |
+| 6 | Hasil training | Kelas minoritas tidak terdeteksi, bagaimana menyikapi? | Opsi D: 7 kelas utama + 4 kelas tambahan |
+| 7 | FCNN > CNN | Perlu pembahasan khusus kenapa landmark lebih baik? | Ya, bahas di BAB 5 |
+| 8 | Fusion tidak membantu | Apakah ini temuan yang valid untuk dilaporkan? | Ya, kontribusi menunjukkan unimodal bisa cukup |
 
 ---
 
@@ -392,27 +504,41 @@ MultimodalEmoLearn/
 ├── src/
 │   ├── preprocessing/
 │   │   ├── prepare_dataset.py          # Gabung data + split + numpy
+│   │   ├── augment_minority.py         # Augmentasi kelas minoritas
 │   │   └── generate_validation_set.py  # Generate set validasi ahli
+│   ├── training/
+│   │   ├── models.py                   # Arsitektur CNN, FCNN, IntermediateFusion
+│   │   └── utils.py                    # Training loop, evaluasi, visualisasi
+│   ├── tools/
+│   │   ├── validation_app.py           # Streamlit web tool validasi
+│   │   └── process_validation_results.py # Proses hasil validasi + Cohen's Kappa
 │   └── utils/
 │       ├── batch_video_processor.py    # Ekstrak frame dari video
 │       ├── face_crop_landmark.py       # Face crop + 68 landmark
 │       └── generate_emotion_label.py   # Generate label emosi
+├── notebooks/
+│   ├── 01_train_cnn.ipynb              # Training CNN (3 skenario)
+│   ├── 02_train_fcnn.ipynb             # Training FCNN (3 skenario)
+│   ├── 03_late_fusion.ipynb            # Late Fusion + grid search
+│   ├── 04_intermediate_fusion.ipynb    # Intermediate Fusion (3 skenario)
+│   ├── 05_comparison.ipynb             # Perbandingan semua model
+│   └── results/                        # Executed notebooks dari VPS
+├── models/
+│   ├── cnn/cnn_results.json
+│   ├── fcnn/fcnn_results.json
+│   ├── late_fusion/late_fusion_results.json
+│   ├── intermediate_fusion/intermediate_fusion_results.json
+│   ├── experiment_summary.json
+│   └── comparison_*.png                # Grafik perbandingan
 ├── data/
-│   ├── final/                          # Cropped faces 224x224 + landmarks
-│   │   ├── old/{user_id}/front/        # 20 user lama
-│   │   └── new/{user_id}/{front,side}/ # 17 user baru
-│   ├── dataset/                        # Numpy arrays siap training
-│   │   ├── X_train_images.npy (4.25 GB)
-│   │   ├── X_train_landmarks.npy
-│   │   ├── y_train.npy
-│   │   ├── class_weights.json          # Bobot per kelas emosi
-│   │   ├── dataset_info.json           # Metadata dataset
-│   │   └── ... (val + test)
-│   ├── validation_full_1938/           # Opsi A validasi
-│   ├── validation_stratified_10pct/    # Opsi B validasi
-│   └── validation_stratified_5pct/     # Opsi C validasi
+│   ├── dataset/                        # Numpy arrays (original)
+│   ├── dataset_augmented/              # Numpy arrays (augmented)
+│   └── validation_*/                   # Set validasi ahli (3 opsi)
+├── scripts/
+│   └── run_all.sh                      # Batch runner untuk training
 └── docs/
-    └── bimbingan_progress.md           # File ini
+    ├── bimbingan_progress.md           # File ini
+    └── linux_training_guide.md         # Panduan training di VPS
 ```
 
 ---
@@ -426,3 +552,21 @@ MultimodalEmoLearn/
 | 68-point landmark mapping | Sagonas et al. (2016) | Standar landmark untuk FER (di-map dari MediaPipe) |
 | Macro F1-Score | Sokolova & Lapalme (2009) | Evaluasi yang fair untuk data imbalanced |
 | User-based split | - | Mencegah data leaking antar split |
+| Intermediate Fusion | Boulahia et al. (2021) | Feature-level fusion CNN + FCNN |
+| Late Fusion | Boulahia et al. (2021) | Decision-level weighted averaging |
+
+---
+
+## Lampiran C: Konfigurasi Training
+
+| Parameter | CNN | FCNN | Intermediate Fusion |
+|-----------|-----|------|---------------------|
+| Optimizer | Adam | Adam | Adam |
+| Learning Rate | 0.0001 | 0.0001 | 0.0001 |
+| Batch Size | 32 | 128 | 16 |
+| Max Epochs | 50 | 100 | 80 |
+| Early Stopping Patience | 15 | 20 | 25 |
+| LR Scheduler | ReduceLROnPlateau (factor=0.5, patience=8) | ReduceLROnPlateau (factor=0.5, patience=8) | ReduceLROnPlateau (factor=0.5, patience=8) |
+| Best Model Criteria | Val Macro F1 | Val Macro F1 | Val Macro F1 |
+| GPU | NVIDIA T4 (16GB) | NVIDIA T4 (16GB) | NVIDIA T4 (16GB) |
+| Framework | PyTorch | PyTorch | PyTorch |
