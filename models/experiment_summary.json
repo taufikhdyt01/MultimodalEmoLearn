@@ -1,0 +1,107 @@
+{
+  "experiment": "Multimodal Emotion Recognition - Full Comparison",
+  "models": [
+    "CNN",
+    "FCNN",
+    "Late Fusion",
+    "Intermediate Fusion"
+  ],
+  "scenarios": [
+    "B1",
+    "B2",
+    "B3"
+  ],
+  "results": [
+    {
+      "model": "FCNN",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.23427997837326892,
+      "weighted_f1": 0.9524038827060335
+    },
+    {
+      "model": "Late Fusion",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.2298200111244618,
+      "weighted_f1": 0.9511818092825077
+    },
+    {
+      "model": "FCNN",
+      "scenario": "B2",
+      "accuracy": 0.8913043478260869,
+      "macro_f1": 0.18903523392366156,
+      "weighted_f1": 0.9116249557095883
+    },
+    {
+      "model": "Late Fusion",
+      "scenario": "B2",
+      "accuracy": 0.8967391304347826,
+      "macro_f1": 0.18880891545375736,
+      "weighted_f1": 0.9093497811094807
+    },
+    {
+      "model": "Late Fusion",
+      "scenario": "B3",
+      "accuracy": 0.9245169082125604,
+      "macro_f1": 0.18232905962884854,
+      "weighted_f1": 0.9288770237975508
+    },
+    {
+      "model": "FCNN",
+      "scenario": "B3",
+      "accuracy": 0.9227053140096618,
+      "macro_f1": 0.1817469080212935,
+      "weighted_f1": 0.9273418123969833
+    },
+    {
+      "model": "Intermediate Fusion",
+      "scenario": "B2",
+      "accuracy": 0.8448067632850241,
+      "macro_f1": 0.1398763304150952,
+      "weighted_f1": 0.8809207021941983
+    },
+    {
+      "model": "Intermediate Fusion",
+      "scenario": "B3",
+      "accuracy": 0.8158212560386473,
+      "macro_f1": 0.13358186827442212,
+      "weighted_f1": 0.8664831206150219
+    },
+    {
+      "model": "CNN",
+      "scenario": "B2",
+      "accuracy": 0.8278985507246377,
+      "macro_f1": 0.13352898109429331,
+      "weighted_f1": 0.8720099115847972
+    },
+    {
+      "model": "CNN",
+      "scenario": "B1",
+      "accuracy": 0.8417874396135265,
+      "macro_f1": 0.13291801842825987,
+      "weighted_f1": 0.8813995275990508
+    },
+    {
+      "model": "CNN",
+      "scenario": "B3",
+      "accuracy": 0.6485507246376812,
+      "macro_f1": 0.1194259890911494,
+      "weighted_f1": 0.7658838320938454
+    },
+    {
+      "model": "Intermediate Fusion",
+      "scenario": "B1",
+      "accuracy": 0.6328502415458938,
+      "macro_f1": 0.11147855375647175,
+      "weighted_f1": 0.7442858548966419
+    }
+  ],
+  "best_combination": {
+    "model": "FCNN",
+    "scenario": "B1",
+    "accuracy": 0.9583333333333334,
+    "macro_f1": 0.23427997837326892,
+    "weighted_f1": 0.9524038827060335
+  }
+}

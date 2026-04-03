@@ -1,8 +1,8 @@
 # Data (large files)
 data/
 
-# Models
-models/
+# Models (only ignore large .pth files)
+models/**/*.pth
 
 # Tools (ffmpeg binaries, mediapipe models - can be re-downloaded)
 /tools/
