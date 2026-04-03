@@ -1,2 +1,30 @@
+# Data (large files)
 data/
+
+# Models
 models/
+
+# Tools (ffmpeg binaries, mediapipe models - can be re-downloaded)
+tools/
+
+# Archive (old experiment results, notebooks, pkl files)
+archive/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Documents (store separately, not in git)
+*.docx
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
