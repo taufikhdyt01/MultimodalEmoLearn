@@ -1,0 +1,246 @@
+{
+  "experiment": "Multimodal Emotion Recognition - 4-Class vs 7-Class Comparison",
+  "emotions_4class": [
+    "neutral",
+    "happy",
+    "sad",
+    "negative"
+  ],
+  "emotions_7class": [
+    "neutral",
+    "happy",
+    "sad",
+    "angry",
+    "fearful",
+    "disgusted",
+    "surprised"
+  ],
+  "models": [
+    "CNN",
+    "FCNN",
+    "Late Fusion",
+    "Intermediate Fusion"
+  ],
+  "scenarios": [
+    "B1",
+    "B2",
+    "B3"
+  ],
+  "results_4class": [
+    {
+      "model": "FCNN",
+      "scenario": "B3",
+      "accuracy": 0.9438405797101449,
+      "macro_f1": 0.39412120311527354,
+      "weighted_f1": 0.9430556119805052
+    },
+    {
+      "model": "Late Fusion",
+      "scenario": "B3",
+      "accuracy": 0.9456521739130435,
+      "macro_f1": 0.3850103645847875,
+      "weighted_f1": 0.9426703327738555
+    },
+    {
+      "model": "FCNN",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.33012207470747074,
+      "weighted_f1": 0.9429506809376591
+    },
+    {
+      "model": "Late Fusion",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.33012207470747074,
+      "weighted_f1": 0.9429506809376591
+    },
+    {
+      "model": "FCNN",
+      "scenario": "B2",
+      "accuracy": 0.928743961352657,
+      "macro_f1": 0.32715166739956825,
+      "weighted_f1": 0.928795738727418
+    },
+    {
+      "model": "Late Fusion",
+      "scenario": "B2",
+      "accuracy": 0.928743961352657,
+      "macro_f1": 0.32715166739956825,
+      "weighted_f1": 0.928795738727418
+    },
+    {
+      "model": "CNN",
+      "scenario": "B2",
+      "accuracy": 0.927536231884058,
+      "macro_f1": 0.2959698293294508,
+      "weighted_f1": 0.9285893391571626
+    },
+    {
+      "model": "CNN",
+      "scenario": "B1",
+      "accuracy": 0.927536231884058,
+      "macro_f1": 0.2820221169036335,
+      "weighted_f1": 0.9320075402004104
+    },
+    {
+      "model": "Intermediate Fusion",
+      "scenario": "B2",
+      "accuracy": 0.8725845410628019,
+      "macro_f1": 0.2581426842413979,
+      "weighted_f1": 0.8954962755369705
+    },
+    {
+      "model": "Intermediate Fusion",
+      "scenario": "B1",
+      "accuracy": 0.9190821256038647,
+      "macro_f1": 0.2450701185860244,
+      "weighted_f1": 0.9189939206426749
+    },
+    {
+      "model": "Intermediate Fusion",
+      "scenario": "B3",
+      "accuracy": 0.8297101449275363,
+      "macro_f1": 0.23797858827798948,
+      "weighted_f1": 0.8750082911325644
+    },
+    {
+      "model": "CNN",
+      "scenario": "B3",
+      "accuracy": 0.7916666666666666,
+      "macro_f1": 0.23765360028820187,
+      "weighted_f1": 0.8529435743268884
+    }
+  ],
+  "results_7class": [
+    {
+      "model": "FCNN",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.23427997837326892,
+      "weighted_f1": 0.9524038827060335
+    },
+    {
+      "model": "Late Fusion",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.2298200111244618,
+      "weighted_f1": 0.9511818092825077
+    },
+    {
+      "model": "FCNN",
+      "scenario": "B2",
+      "accuracy": 0.8913043478260869,
+      "macro_f1": 0.18903523392366156,
+      "weighted_f1": 0.9116249557095883
+    },
+    {
+      "model": "Late Fusion",
+      "scenario": "B2",
+      "accuracy": 0.8967391304347826,
+      "macro_f1": 0.18880891545375736,
+      "weighted_f1": 0.9093497811094807
+    },
+    {
+      "model": "Late Fusion",
+      "scenario": "B3",
+      "accuracy": 0.9245169082125604,
+      "macro_f1": 0.18232905962884854,
+      "weighted_f1": 0.9288770237975508
+    },
+    {
+      "model": "FCNN",
+      "scenario": "B3",
+      "accuracy": 0.9227053140096618,
+      "macro_f1": 0.1817469080212935,
+      "weighted_f1": 0.9273418123969833
+    },
+    {
+      "model": "Intermediate Fusion",
+      "scenario": "B2",
+      "accuracy": 0.8448067632850241,
+      "macro_f1": 0.1398763304150952,
+      "weighted_f1": 0.8809207021941983
+    },
+    {
+      "model": "Intermediate Fusion",
+      "scenario": "B3",
+      "accuracy": 0.8158212560386473,
+      "macro_f1": 0.13358186827442212,
+      "weighted_f1": 0.8664831206150219
+    },
+    {
+      "model": "CNN",
+      "scenario": "B2",
+      "accuracy": 0.8278985507246377,
+      "macro_f1": 0.13352898109429331,
+      "weighted_f1": 0.8720099115847972
+    },
+    {
+      "model": "CNN",
+      "scenario": "B1",
+      "accuracy": 0.8417874396135265,
+      "macro_f1": 0.13291801842825987,
+      "weighted_f1": 0.8813995275990508
+    },
+    {
+      "model": "CNN",
+      "scenario": "B3",
+      "accuracy": 0.6485507246376812,
+      "macro_f1": 0.1194259890911494,
+      "weighted_f1": 0.7658838320938454
+    },
+    {
+      "model": "Intermediate Fusion",
+      "scenario": "B1",
+      "accuracy": 0.6328502415458938,
+      "macro_f1": 0.11147855375647175,
+      "weighted_f1": 0.7442858548966419
+    }
+  ],
+  "best_4class": {
+    "model": "FCNN",
+    "scenario": "B3",
+    "accuracy": 0.9438405797101449,
+    "macro_f1": 0.39412120311527354,
+    "weighted_f1": 0.9430556119805052
+  },
+  "comparison": [
+    {
+      "model": "CNN",
+      "best_7class_scenario": "B2",
+      "best_7class_macro_f1": 0.13352898109429331,
+      "best_4class_scenario": "B2",
+      "best_4class_macro_f1": 0.2959698293294508,
+      "macro_f1_delta": 0.1624408482351575,
+      "improvement_pct": 121.6521289265644
+    },
+    {
+      "model": "FCNN",
+      "best_7class_scenario": "B1",
+      "best_7class_macro_f1": 0.23427997837326892,
+      "best_4class_scenario": "B3",
+      "best_4class_macro_f1": 0.39412120311527354,
+      "macro_f1_delta": 0.15984122474200463,
+      "improvement_pct": 68.22658336058748
+    },
+    {
+      "model": "Intermediate Fusion",
+      "best_7class_scenario": "B2",
+      "best_7class_macro_f1": 0.1398763304150952,
+      "best_4class_scenario": "B2",
+      "best_4class_macro_f1": 0.2581426842413979,
+      "macro_f1_delta": 0.11826635382630271,
+      "improvement_pct": 84.55065519329611
+    },
+    {
+      "model": "Late Fusion",
+      "best_7class_scenario": "B1",
+      "best_7class_macro_f1": 0.2298200111244618,
+      "best_4class_scenario": "B3",
+      "best_4class_macro_f1": 0.3850103645847875,
+      "macro_f1_delta": 0.1551903534603257,
+      "improvement_pct": 67.52691060322006
+    }
+  ]
+}

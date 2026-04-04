@@ -243,8 +243,11 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, scheduler
 EMOTIONS = ["neutral", "happy", "sad", "angry", "fearful", "disgusted", "surprised"]
 
 
-def full_evaluation(model, test_loader, criterion, device, model_type="cnn"):
+def full_evaluation(model, test_loader, criterion, device, model_type="cnn", emotions=None):
     """Complete evaluation with classification report and confusion matrix."""
+    if emotions is None:
+        emotions = EMOTIONS
+
     test_loss, test_acc, preds, labels, probs = evaluate(
         model, test_loader, criterion, device, model_type
     )
@@ -258,7 +261,7 @@ def full_evaluation(model, test_loader, criterion, device, model_type="cnn"):
     print(f"Test Weighted F1: {weighted_f1:.4f}")
     print()
     print("Classification Report:")
-    print(classification_report(labels, preds, target_names=EMOTIONS, zero_division=0))
+    print(classification_report(labels, preds, target_names=emotions, zero_division=0))
 
     cm = confusion_matrix(labels, preds)
 
@@ -304,14 +307,17 @@ def plot_training_history(history, title="Training History"):
     return fig
 
 
-def plot_confusion_matrix(cm, title="Confusion Matrix"):
+def plot_confusion_matrix(cm, title="Confusion Matrix", emotions=None):
     """Plot confusion matrix heatmap."""
     import matplotlib.pyplot as plt
     import seaborn as sns
 
+    if emotions is None:
+        emotions = EMOTIONS
+
     fig, ax = plt.subplots(figsize=(10, 8))
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
-                xticklabels=EMOTIONS, yticklabels=EMOTIONS, ax=ax)
+                xticklabels=emotions, yticklabels=emotions, ax=ax)
     ax.set_xlabel("Predicted")
     ax.set_ylabel("Actual")
     ax.set_title(title)
@@ -320,24 +326,27 @@ def plot_confusion_matrix(cm, title="Confusion Matrix"):
     return fig
 
 
-def plot_per_class_f1(results_dict, title="Per-Class F1 Score Comparison"):
+def plot_per_class_f1(results_dict, title="Per-Class F1 Score Comparison", emotions=None):
     """Plot F1 score per emosi untuk beberapa model."""
     import matplotlib.pyplot as plt
 
+    if emotions is None:
+        emotions = EMOTIONS
+
     fig, ax = plt.subplots(figsize=(12, 6))
-    x = np.arange(len(EMOTIONS))
+    x = np.arange(len(emotions))
     width = 0.8 / len(results_dict)
 
     for i, (name, results) in enumerate(results_dict.items()):
         report = classification_report(
             results["labels"], results["predictions"],
-            target_names=EMOTIONS, output_dict=True, zero_division=0
+            target_names=emotions, output_dict=True, zero_division=0
         )
-        f1_scores = [report[emo]["f1-score"] for emo in EMOTIONS]
+        f1_scores = [report[emo]["f1-score"] for emo in emotions]
         ax.bar(x + i * width, f1_scores, width, label=name, alpha=0.8)
 
     ax.set_xticks(x + width * (len(results_dict) - 1) / 2)
-    ax.set_xticklabels(EMOTIONS, rotation=45)
+    ax.set_xticklabels(emotions, rotation=45)
     ax.set_ylabel("F1 Score")
     ax.set_title(title)
     ax.legend()
