@@ -1,0 +1,164 @@
+{
+  "B1": {
+    "optimal_weight_cnn": 0.9,
+    "optimal_weight_fcnn": 0.09999999999999998,
+    "val_macro_f1": 0.47223616639186733,
+    "test_accuracy": 0.9510869565217391,
+    "test_macro_f1": 0.3045551615848715,
+    "test_weighted_f1": 0.9402883917763376,
+    "grid_search": [
+      {
+        "weight_cnn": 0.0,
+        "val_macro_f1": 0.4650329814483239
+      },
+      {
+        "weight_cnn": 0.1,
+        "val_macro_f1": 0.46883704919661306
+      },
+      {
+        "weight_cnn": 0.2,
+        "val_macro_f1": 0.4358429412546866
+      },
+      {
+        "weight_cnn": 0.3,
+        "val_macro_f1": 0.39990469897011954
+      },
+      {
+        "weight_cnn": 0.4,
+        "val_macro_f1": 0.3472945164023726
+      },
+      {
+        "weight_cnn": 0.5,
+        "val_macro_f1": 0.3442822066659701
+      },
+      {
+        "weight_cnn": 0.6,
+        "val_macro_f1": 0.40484803187746987
+      },
+      {
+        "weight_cnn": 0.7,
+        "val_macro_f1": 0.41801822258637883
+      },
+      {
+        "weight_cnn": 0.8,
+        "val_macro_f1": 0.456881553156731
+      },
+      {
+        "weight_cnn": 0.9,
+        "val_macro_f1": 0.47223616639186733
+      },
+      {
+        "weight_cnn": 1.0,
+        "val_macro_f1": 0.46338347961718374
+      }
+    ]
+  },
+  "B2": {
+    "optimal_weight_cnn": 0.9,
+    "optimal_weight_fcnn": 0.09999999999999998,
+    "val_macro_f1": 0.4702660054046478,
+    "test_accuracy": 0.9390096618357487,
+    "test_macro_f1": 0.442258727641423,
+    "test_weighted_f1": 0.9459263498354891,
+    "grid_search": [
+      {
+        "weight_cnn": 0.0,
+        "val_macro_f1": 0.4257608063578213
+      },
+      {
+        "weight_cnn": 0.1,
+        "val_macro_f1": 0.430198252255322
+      },
+      {
+        "weight_cnn": 0.2,
+        "val_macro_f1": 0.43298281610669404
+      },
+      {
+        "weight_cnn": 0.3,
+        "val_macro_f1": 0.43120442466938574
+      },
+      {
+        "weight_cnn": 0.4,
+        "val_macro_f1": 0.4350427914186304
+      },
+      {
+        "weight_cnn": 0.5,
+        "val_macro_f1": 0.4358761393645115
+      },
+      {
+        "weight_cnn": 0.6,
+        "val_macro_f1": 0.4441225314475158
+      },
+      {
+        "weight_cnn": 0.7,
+        "val_macro_f1": 0.4309078232526812
+      },
+      {
+        "weight_cnn": 0.8,
+        "val_macro_f1": 0.46096734157568425
+      },
+      {
+        "weight_cnn": 0.9,
+        "val_macro_f1": 0.4702660054046478
+      },
+      {
+        "weight_cnn": 1.0,
+        "val_macro_f1": 0.46554817275747506
+      }
+    ]
+  },
+  "B3": {
+    "optimal_weight_cnn": 0.0,
+    "optimal_weight_fcnn": 1.0,
+    "val_macro_f1": 0.5056880369796759,
+    "test_accuracy": 0.9438405797101449,
+    "test_macro_f1": 0.39412120311527354,
+    "test_weighted_f1": 0.9430556119805052,
+    "grid_search": [
+      {
+        "weight_cnn": 0.0,
+        "val_macro_f1": 0.5056880369796759
+      },
+      {
+        "weight_cnn": 0.1,
+        "val_macro_f1": 0.4844876610554678
+      },
+      {
+        "weight_cnn": 0.2,
+        "val_macro_f1": 0.4862206183880188
+      },
+      {
+        "weight_cnn": 0.3,
+        "val_macro_f1": 0.47129333048615557
+      },
+      {
+        "weight_cnn": 0.4,
+        "val_macro_f1": 0.46637839709477036
+      },
+      {
+        "weight_cnn": 0.5,
+        "val_macro_f1": 0.43913162471229883
+      },
+      {
+        "weight_cnn": 0.6,
+        "val_macro_f1": 0.45715778474399166
+      },
+      {
+        "weight_cnn": 0.7,
+        "val_macro_f1": 0.45738169876100915
+      },
+      {
+        "weight_cnn": 0.8,
+        "val_macro_f1": 0.4613148215913813
+      },
+      {
+        "weight_cnn": 0.9,
+        "val_macro_f1": 0.47142588100102145
+      },
+      {
+        "weight_cnn": 1.0,
+        "val_macro_f1": 0.4862929215715689
+      }
+    ]
+  }
+}

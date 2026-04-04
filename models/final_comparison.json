@@ -1,0 +1,515 @@
+{
+  "experiment": "Multimodal Emotion Recognition - Final Comprehensive Comparison",
+  "configurations": {
+    "class_configs": [
+      "7-class",
+      "4-class"
+    ],
+    "cnn_variants": [
+      "From Scratch",
+      "Transfer Learning"
+    ],
+    "model_types": [
+      "CNN",
+      "FCNN",
+      "Late Fusion",
+      "Intermediate Fusion"
+    ],
+    "scenarios": [
+      "B1",
+      "B2",
+      "B3"
+    ]
+  },
+  "total_combinations_loaded": 48,
+  "best_overall": {
+    "class_config": "4-class",
+    "cnn_variant": "Transfer Learning",
+    "model_type": "Late Fusion",
+    "scenario": "B2",
+    "accuracy": 0.9390096618357487,
+    "macro_f1": 0.442258727641423,
+    "weighted_f1": 0.9459263498354891
+  },
+  "top5": [
+    {
+      "class_config": "4-class",
+      "cnn_variant": "Transfer Learning",
+      "model_type": "Late Fusion",
+      "scenario": "B2",
+      "accuracy": 0.9390096618357487,
+      "macro_f1": 0.442258727641423,
+      "weighted_f1": 0.9459263498354891
+    },
+    {
+      "class_config": "4-class",
+      "cnn_variant": "Transfer Learning",
+      "model_type": "CNN",
+      "scenario": "B2",
+      "accuracy": 0.9154589371980676,
+      "macro_f1": 0.4071106613391958,
+      "weighted_f1": 0.9321709111924398
+    },
+    {
+      "class_config": "4-class",
+      "cnn_variant": "Transfer Learning",
+      "model_type": "FCNN",
+      "scenario": "B3",
+      "accuracy": 0.9438405797101449,
+      "macro_f1": 0.39412120311527354,
+      "weighted_f1": 0.9430556119805052
+    },
+    {
+      "class_config": "4-class",
+      "cnn_variant": "From Scratch",
+      "model_type": "FCNN",
+      "scenario": "B3",
+      "accuracy": 0.9438405797101449,
+      "macro_f1": 0.39412120311527354,
+      "weighted_f1": 0.9430556119805052
+    },
+    {
+      "class_config": "4-class",
+      "cnn_variant": "From Scratch",
+      "model_type": "Late Fusion",
+      "scenario": "B3",
+      "accuracy": 0.9456521739130435,
+      "macro_f1": 0.3850103645847875,
+      "weighted_f1": 0.9426703327738555
+    }
+  ],
+  "all_results": [
+    {
+      "class_config": "4-class",
+      "model_type": "Late Fusion",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B2",
+      "accuracy": 0.9390096618357487,
+      "macro_f1": 0.442258727641423,
+      "weighted_f1": 0.9459263498354891
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "CNN",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B2",
+      "accuracy": 0.9154589371980676,
+      "macro_f1": 0.4071106613391958,
+      "weighted_f1": 0.9321709111924398
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "FCNN",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B3",
+      "accuracy": 0.9438405797101449,
+      "macro_f1": 0.39412120311527354,
+      "weighted_f1": 0.9430556119805052
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "FCNN",
+      "cnn_variant": "From Scratch",
+      "scenario": "B3",
+      "accuracy": 0.9438405797101449,
+      "macro_f1": 0.39412120311527354,
+      "weighted_f1": 0.9430556119805052
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "Late Fusion",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B3",
+      "accuracy": 0.9438405797101449,
+      "macro_f1": 0.39412120311527354,
+      "weighted_f1": 0.9430556119805052
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "Late Fusion",
+      "cnn_variant": "From Scratch",
+      "scenario": "B3",
+      "accuracy": 0.9456521739130435,
+      "macro_f1": 0.3850103645847875,
+      "weighted_f1": 0.9426703327738555
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "Intermediate Fusion",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B3",
+      "accuracy": 0.9438405797101449,
+      "macro_f1": 0.3758205642396819,
+      "weighted_f1": 0.9454515273728828
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "Intermediate Fusion",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B2",
+      "accuracy": 0.9365942028985508,
+      "macro_f1": 0.3535178634906866,
+      "weighted_f1": 0.9409490874478537
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "FCNN",
+      "cnn_variant": "From Scratch",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.33012207470747074,
+      "weighted_f1": 0.9429506809376591
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "Late Fusion",
+      "cnn_variant": "From Scratch",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.33012207470747074,
+      "weighted_f1": 0.9429506809376591
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "FCNN",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.33012207470747074,
+      "weighted_f1": 0.9429506809376591
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "FCNN",
+      "cnn_variant": "From Scratch",
+      "scenario": "B2",
+      "accuracy": 0.928743961352657,
+      "macro_f1": 0.32715166739956825,
+      "weighted_f1": 0.928795738727418
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "FCNN",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B2",
+      "accuracy": 0.928743961352657,
+      "macro_f1": 0.32715166739956825,
+      "weighted_f1": 0.928795738727418
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "Late Fusion",
+      "cnn_variant": "From Scratch",
+      "scenario": "B2",
+      "accuracy": 0.928743961352657,
+      "macro_f1": 0.32715166739956825,
+      "weighted_f1": 0.928795738727418
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "CNN",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B1",
+      "accuracy": 0.9492753623188406,
+      "macro_f1": 0.3093254586169566,
+      "weighted_f1": 0.9399454099330881
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "Late Fusion",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B1",
+      "accuracy": 0.9510869565217391,
+      "macro_f1": 0.3045551615848715,
+      "weighted_f1": 0.9402883917763376
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "CNN",
+      "cnn_variant": "From Scratch",
+      "scenario": "B2",
+      "accuracy": 0.927536231884058,
+      "macro_f1": 0.2959698293294508,
+      "weighted_f1": 0.9285893391571626
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "CNN",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B3",
+      "accuracy": 0.9305555555555556,
+      "macro_f1": 0.28738242584947055,
+      "weighted_f1": 0.9313317395994316
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "CNN",
+      "cnn_variant": "From Scratch",
+      "scenario": "B1",
+      "accuracy": 0.927536231884058,
+      "macro_f1": 0.2820221169036335,
+      "weighted_f1": 0.9320075402004104
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "Intermediate Fusion",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B1",
+      "accuracy": 0.9504830917874396,
+      "macro_f1": 0.2760661431795759,
+      "weighted_f1": 0.938620018219999
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "Intermediate Fusion",
+      "cnn_variant": "From Scratch",
+      "scenario": "B2",
+      "accuracy": 0.8725845410628019,
+      "macro_f1": 0.2581426842413979,
+      "weighted_f1": 0.8954962755369705
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "Intermediate Fusion",
+      "cnn_variant": "From Scratch",
+      "scenario": "B1",
+      "accuracy": 0.9190821256038647,
+      "macro_f1": 0.2450701185860244,
+      "weighted_f1": 0.9189939206426749
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "Intermediate Fusion",
+      "cnn_variant": "From Scratch",
+      "scenario": "B3",
+      "accuracy": 0.8297101449275363,
+      "macro_f1": 0.23797858827798948,
+      "weighted_f1": 0.8750082911325644
+    },
+    {
+      "class_config": "4-class",
+      "model_type": "CNN",
+      "cnn_variant": "From Scratch",
+      "scenario": "B3",
+      "accuracy": 0.7916666666666666,
+      "macro_f1": 0.23765360028820187,
+      "weighted_f1": 0.8529435743268884
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "Late Fusion",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.23427997837326892,
+      "weighted_f1": 0.9524038827060335
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "FCNN",
+      "cnn_variant": "From Scratch",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.23427997837326892,
+      "weighted_f1": 0.9524038827060335
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "FCNN",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.23427997837326892,
+      "weighted_f1": 0.9524038827060335
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "Intermediate Fusion",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B1",
+      "accuracy": 0.9456521739130435,
+      "macro_f1": 0.23218392462780701,
+      "weighted_f1": 0.9486553223305619
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "Late Fusion",
+      "cnn_variant": "From Scratch",
+      "scenario": "B1",
+      "accuracy": 0.9583333333333334,
+      "macro_f1": 0.2298200111244618,
+      "weighted_f1": 0.9511818092825077
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "Late Fusion",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B2",
+      "accuracy": 0.8991545893719807,
+      "macro_f1": 0.1928611799486979,
+      "weighted_f1": 0.9156417427345629
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "FCNN",
+      "cnn_variant": "From Scratch",
+      "scenario": "B2",
+      "accuracy": 0.8913043478260869,
+      "macro_f1": 0.18903523392366156,
+      "weighted_f1": 0.9116249557095883
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "FCNN",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B2",
+      "accuracy": 0.8913043478260869,
+      "macro_f1": 0.18903523392366156,
+      "weighted_f1": 0.9116249557095883
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "Intermediate Fusion",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B3",
+      "accuracy": 0.9510869565217391,
+      "macro_f1": 0.18881374686721636,
+      "weighted_f1": 0.941274834362275
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "Late Fusion",
+      "cnn_variant": "From Scratch",
+      "scenario": "B2",
+      "accuracy": 0.8967391304347826,
+      "macro_f1": 0.18880891545375736,
+      "weighted_f1": 0.9093497811094807
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "Late Fusion",
+      "cnn_variant": "From Scratch",
+      "scenario": "B3",
+      "accuracy": 0.9245169082125604,
+      "macro_f1": 0.18232905962884854,
+      "weighted_f1": 0.9288770237975508
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "FCNN",
+      "cnn_variant": "From Scratch",
+      "scenario": "B3",
+      "accuracy": 0.9227053140096618,
+      "macro_f1": 0.1817469080212935,
+      "weighted_f1": 0.9273418123969833
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "Late Fusion",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B3",
+      "accuracy": 0.9227053140096618,
+      "macro_f1": 0.1817469080212935,
+      "weighted_f1": 0.9273418123969833
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "FCNN",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B3",
+      "accuracy": 0.9227053140096618,
+      "macro_f1": 0.1817469080212935,
+      "weighted_f1": 0.9273418123969833
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "CNN",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B2",
+      "accuracy": 0.9317632850241546,
+      "macro_f1": 0.17723885165745631,
+      "weighted_f1": 0.9298450716549806
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "Intermediate Fusion",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B2",
+      "accuracy": 0.9420289855072463,
+      "macro_f1": 0.164927173584547,
+      "weighted_f1": 0.9387288914355169
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "CNN",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B3",
+      "accuracy": 0.9365942028985508,
+      "macro_f1": 0.1629344844642295,
+      "weighted_f1": 0.9360988703528836
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "CNN",
+      "cnn_variant": "Transfer Learning",
+      "scenario": "B1",
+      "accuracy": 0.9498792270531401,
+      "macro_f1": 0.14582730635512037,
+      "weighted_f1": 0.935340165572285
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "Intermediate Fusion",
+      "cnn_variant": "From Scratch",
+      "scenario": "B2",
+      "accuracy": 0.8448067632850241,
+      "macro_f1": 0.1398763304150952,
+      "weighted_f1": 0.8809207021941983
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "Intermediate Fusion",
+      "cnn_variant": "From Scratch",
+      "scenario": "B3",
+      "accuracy": 0.8158212560386473,
+      "macro_f1": 0.13358186827442212,
+      "weighted_f1": 0.8664831206150219
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "CNN",
+      "cnn_variant": "From Scratch",
+      "scenario": "B2",
+      "accuracy": 0.8278985507246377,
+      "macro_f1": 0.13352898109429331,
+      "weighted_f1": 0.8720099115847972
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "CNN",
+      "cnn_variant": "From Scratch",
+      "scenario": "B1",
+      "accuracy": 0.8417874396135265,
+      "macro_f1": 0.13291801842825987,
+      "weighted_f1": 0.8813995275990508
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "CNN",
+      "cnn_variant": "From Scratch",
+      "scenario": "B3",
+      "accuracy": 0.6485507246376812,
+      "macro_f1": 0.1194259890911494,
+      "weighted_f1": 0.7658838320938454
+    },
+    {
+      "class_config": "7-class",
+      "model_type": "Intermediate Fusion",
+      "cnn_variant": "From Scratch",
+      "scenario": "B1",
+      "accuracy": 0.6328502415458938,
+      "macro_f1": 0.11147855375647175,
+      "weighted_f1": 0.7442858548966419
+    }
+  ]
+}
