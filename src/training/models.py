@@ -2,10 +2,12 @@
 Model Architectures for Emotion Recognition
 =============================================
 CNN, FCNN, Intermediate Fusion (Feature-Level Fusion) - PyTorch implementation.
+Includes Transfer Learning variants (ResNet18).
 """
 
 import torch
 import torch.nn as nn
+from torchvision import models as tv_models
 
 
 class EmotionCNN(nn.Module):
@@ -134,6 +136,99 @@ class IntermediateFusion(nn.Module):
         )
 
         # Landmark stream
+        self.landmark_features = nn.Sequential(
+            nn.Linear(landmark_dim, 256),
+            nn.BatchNorm1d(256), nn.ReLU(), nn.Dropout(0.3),
+            nn.Linear(256, 512),
+            nn.BatchNorm1d(512), nn.ReLU(), nn.Dropout(0.4),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256), nn.ReLU(), nn.Dropout(0.3),
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128), nn.ReLU(), nn.Dropout(0.3),
+        )
+
+        # Post-fusion: 256 (image) + 128 (landmark) = 384
+        self.fusion_head = nn.Sequential(
+            nn.Linear(384, 512),
+            nn.BatchNorm1d(512), nn.ReLU(), nn.Dropout(0.5),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256), nn.ReLU(), nn.Dropout(0.5),
+            nn.Linear(256, num_classes),
+        )
+
+    def forward(self, image, landmark):
+        img_feat = self.image_features(image)
+        img_feat = self.image_fc(img_feat)
+        lm_feat = self.landmark_features(landmark)
+        fused = torch.cat([img_feat, lm_feat], dim=1)
+        return self.fusion_head(fused)
+
+
+# ============== TRANSFER LEARNING ==============
+
+class EmotionCNNTransfer(nn.Module):
+    """Transfer Learning CNN menggunakan ResNet18 pretrained di ImageNet.
+
+    ResNet18 dipilih karena:
+    - Ringan (~11M params) tapi efektif untuk image classification
+    - Pretrained weights dari ImageNet memberikan fitur visual yang kaya
+    - Cocok untuk dataset kecil (~7000 images) yang tidak cukup untuk train from scratch
+
+    Strategy: Fine-tune seluruh network dengan learning rate kecil.
+    """
+
+    def __init__(self, num_classes=7, pretrained=True):
+        super().__init__()
+
+        # Load ResNet18 pretrained
+        weights = tv_models.ResNet18_Weights.DEFAULT if pretrained else None
+        resnet = tv_models.resnet18(weights=weights)
+
+        # Ambil semua layer kecuali FC terakhir
+        self.features = nn.Sequential(*list(resnet.children())[:-1])  # output: 512-dim
+
+        # Custom classifier
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256), nn.ReLU(), nn.Dropout(0.5),
+        )
+
+        self.head = nn.Linear(256, num_classes)
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.classifier(x)
+        return self.head(x)
+
+    def extract_features(self, x):
+        """Extract 256-dim feature vector (untuk fusion)."""
+        x = self.features(x)
+        return self.classifier(x)
+
+
+class IntermediateFusionTransfer(nn.Module):
+    """Intermediate Fusion dengan Transfer Learning CNN (ResNet18) + FCNN.
+
+    Image stream: ResNet18 pretrained → 256-dim
+    Landmark stream: FCNN → 128-dim
+    Concatenate → 384-dim → Dense(512→256) → num_classes
+    """
+
+    def __init__(self, num_classes=7, landmark_dim=136, pretrained=True):
+        super().__init__()
+
+        # Image stream (ResNet18 pretrained)
+        weights = tv_models.ResNet18_Weights.DEFAULT if pretrained else None
+        resnet = tv_models.resnet18(weights=weights)
+        self.image_features = nn.Sequential(*list(resnet.children())[:-1])
+        self.image_fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256), nn.ReLU(), nn.Dropout(0.5),
+        )
+
+        # Landmark stream (sama dengan IntermediateFusion)
         self.landmark_features = nn.Sequential(
             nn.Linear(landmark_dim, 256),
             nn.BatchNorm1d(256), nn.ReLU(), nn.Dropout(0.3),

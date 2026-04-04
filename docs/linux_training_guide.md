@@ -369,7 +369,48 @@ models/4class/
 
 ---
 
-## 9. Troubleshooting
+## 9. Menjalankan Transfer Learning (Lanjutan)
+
+> **Prasyarat:** Notebook 01-10 (from scratch) sudah selesai dijalankan.
+
+Transfer Learning menggunakan ResNet18 pretrained ImageNet untuk menggantikan CNN from scratch.
+
+### Langkah 1: Pull kode terbaru
+
+```bash
+cd MultimodalEmoLearn
+git pull origin master
+```
+
+### Langkah 2: Jalankan
+
+```bash
+tmux new -s transfer
+
+conda activate emotrain
+bash scripts/run_transfer.sh
+
+# Detach: Ctrl+B lalu D
+```
+
+Notebook yang dijalankan: `11` → `12` → `13` → `14` → `15` → `16` → `17`
+
+### Estimasi waktu Transfer Learning (NVIDIA T4):
+
+| Notebook | Model | Total (3 skenario) |
+|----------|-------|---------------------|
+| 11_train_cnn_transfer | CNN TL 7-class | ~30-60 menit |
+| 12_late_fusion_transfer | Late Fusion TL 7-class | ~3-6 menit |
+| 13_intermediate_fusion_transfer | Intermediate TL 7-class | ~40-80 menit |
+| 14_train_cnn_transfer_4class | CNN TL 4-class | ~30-60 menit |
+| 15_late_fusion_transfer_4class | Late Fusion TL 4-class | ~3-6 menit |
+| 16_intermediate_fusion_transfer_4class | Intermediate TL 4-class | ~40-80 menit |
+| 17_comparison_all | Final comparison | ~1 menit |
+| **Total** | | **~2.5-5 jam** |
+
+---
+
+## 10. Troubleshooting
 
 ### CUDA Out of Memory
 ```python
