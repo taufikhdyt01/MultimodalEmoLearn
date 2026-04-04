@@ -449,36 +449,87 @@ Dari classification report model terbaik (FCNN B1):
 
 ---
 
-## SLIDE 13: Diskusi dan Langkah Selanjutnya
+## SLIDE 13: Hasil Training 4-Class (Analisis Tambahan)
 
-### **(KONSULTASI 4)** Bagaimana menyikapi hasil ini?
+Sebagai analisis tambahan, dilakukan eksperimen dengan **4 kelas emosi**:
+- neutral, happy, sad, **negative** (gabungan angry + fearful + disgusted + surprised)
 
-> **Yang perlu ditanyakan:**  
-> "Pak/Bu, hasilnya menunjukkan bahwa kelas minoritas hampir tidak terdeteksi. Ada beberapa opsi:"
+### Tabel Hasil 4-Class (diurutkan berdasarkan Macro F1)
 
-**Opsi A: Terima hasil apa adanya, perkuat di pembahasan**
-- Report sebagai temuan: "Dataset pendidikan autentik memiliki imbalance ekstrem yang sulit diatasi"
-- Ini valid sebagai kontribusi — menunjukkan tantangan nyata FER di konteks pendidikan
-- Bisa dijadikan rekomendasi untuk penelitian selanjutnya
+| Rank | Model | Skenario | Accuracy | Macro F1 | Weighted F1 |
+|------|-------|----------|----------|----------|-------------|
+| 1 | **FCNN** | **B3 Aug** | **94.4%** | **0.394** | 0.943 |
+| 2 | Late Fusion | B3 Aug | 94.6% | 0.385 | 0.943 |
+| 3 | FCNN | B1 Baseline | 95.8% | 0.330 | 0.943 |
+| 4 | Late Fusion | B1 Baseline | 95.8% | 0.330 | 0.943 |
+| 5 | FCNN | B2 Weights | 92.9% | 0.327 | 0.929 |
+| 6 | Late Fusion | B2 Weights | 92.9% | 0.327 | 0.929 |
+| 7 | CNN | B2 Weights | 92.8% | 0.296 | 0.929 |
+| 8 | CNN | B1 Baseline | 92.8% | 0.282 | 0.932 |
+| 9 | Intermediate | B2 Weights | 87.3% | 0.258 | 0.895 |
+| 10 | Intermediate | B1 Baseline | 91.9% | 0.245 | 0.919 |
+| 11 | Intermediate | B3 Aug | 83.0% | 0.238 | 0.875 |
+| 12 | CNN | B3 Aug | 79.2% | 0.238 | 0.853 |
 
-**Opsi B: Coba variasi 4 kelas (gabung kelas langka)**
-- Gabung: angry + fearful + disgusted → "negative", surprised tetap dibuang
-- 4 kelas: neutral, happy, sad, negative
-- Distribusi lebih seimbang, kemungkinan performa lebih baik
-- Namun menyimpang dari proposal (7 emosi)
+### Kombinasi Terbaik 4-Class: **FCNN + B3 Augmented** (Macro F1: 0.394)
 
-**Opsi C: Tambah data dari sumber lain (transfer learning)**
-- Pre-train di dataset publik (FER2013, AffectNet) lalu fine-tune di dataset kita
-- Bisa meningkatkan kemampuan mengenali emosi langka
-- Tapi menambah kompleksitas dan waktu
+> **Penjelasan lisan:**  
+> "Dengan 4 kelas, performa meningkat signifikan di semua model. FCNN dengan augmentasi memberikan Macro F1 terbaik 0.394, naik 68% dari 7-kelas. Ini menunjukkan bahwa penggabungan kelas langka menjadi 'negative' efektif meningkatkan kemampuan model."
 
-**Opsi D: Kombinasi — jalankan 7 kelas + 4 kelas sebagai perbandingan**
-- 7 kelas sebagai eksperimen utama (sesuai proposal)
-- 4 kelas sebagai analisis tambahan di BAB Pembahasan
-- Menunjukkan bahwa penggabungan kelas bisa meningkatkan performa praktis
+---
 
-> **Rekomendasi:**  
-> "Saya merekomendasikan Opsi D — tetap 7 kelas sebagai utama sesuai proposal, tambah eksperimen 4 kelas sebagai pembahasan tambahan. Ini memberikan analisis yang komprehensif tanpa menyimpang dari rancangan penelitian."
+## SLIDE 14: Perbandingan 7-Class vs 4-Class
+
+### Best per Model
+
+| Model | 7-Class (Macro F1) | 4-Class (Macro F1) | Peningkatan |
+|-------|-------------------|-------------------|-------------|
+| **FCNN** | 0.234 (B1) | **0.394 (B3)** | **+68%** |
+| Late Fusion | 0.230 (B1) | 0.385 (B3) | +67% |
+| CNN | 0.134 (B2) | 0.296 (B2) | +121% |
+| Intermediate | 0.140 (B2) | 0.258 (B2) | +84% |
+
+### Temuan baru dari 4-class:
+
+**Temuan 5: Penggabungan kelas signifikan meningkatkan Macro F1**
+
+> **Penjelasan lisan:**  
+> "Dengan menggabungkan 4 emosi langka (angry, fearful, disgusted, surprised) menjadi satu kelas 'negative', Macro F1 meningkat 68% pada model terbaik. Ini menunjukkan bahwa masalah utama di 7-kelas bukan pada modelnya, tapi pada jumlah data kelas minoritas yang terlalu sedikit."
+
+**Temuan 6: Augmentasi efektif untuk 4-class (berbeda dengan 7-class)**
+
+> **Penjelasan lisan:**  
+> "Menariknya, di 4-kelas skenario B3 (augmentasi) justru terbaik, sedangkan di 7-kelas B1 (baseline) yang terbaik. Ini karena di 4-kelas, kelas 'negative' sudah punya 145 sample asli — cukup besar untuk mendapat manfaat dari augmentasi. Di 7-kelas, kelas terkecil hanya 8 sample — terlalu sedikit sehingga augmentasi hanya menghasilkan variasi dari data yang sangat terbatas."
+
+**Temuan 7: FCNN tetap konsisten terbaik di kedua konfigurasi**
+
+> **Penjelasan lisan:**  
+> "Baik di 7-kelas maupun 4-kelas, FCNN (fitur landmark) selalu unggul dari CNN (fitur citra wajah). Ini memperkuat temuan bahwa fitur geometrik lebih efektif dari fitur penampilan untuk dataset pembelajaran pemrograman ini."
+
+---
+
+## SLIDE 15: Diskusi dan Kesimpulan Sementara
+
+### Jawaban terhadap Rumusan Masalah:
+
+**RQ1 (Performa CNN):**
+Model CNN menghasilkan Macro F1 0.134 (7-kelas) dan 0.296 (4-kelas). Performa relatif rendah dibanding FCNN, kemungkinan karena variasi pencahayaan dan sudut wajah selama sesi pemrograman yang mengganggu fitur penampilan.
+
+**RQ2 (Performa FCNN):**
+Model FCNN menghasilkan Macro F1 **0.234** (7-kelas) dan **0.394** (4-kelas). Fitur geometrik dari 68 facial landmark terbukti lebih robust dan efektif untuk konteks pembelajaran pemrograman.
+
+**RQ3 (Perbandingan Fusion):**
+Late Fusion memberikan sedikit perbaikan dari FCNN saja (0.385 vs 0.394 di 4-kelas). Intermediate Fusion justru lebih buruk. Ini menunjukkan bahwa untuk dataset ini, pendekatan unimodal FCNN sudah cukup optimal — menambah modalitas CNN justru memperkenalkan noise.
+
+### **(KONSULTASI 4)** Pertanyaan untuk Pembimbing
+
+> "Pak/Bu, hasil eksperimen sudah lengkap. Beberapa hal yang perlu didiskusikan:"
+
+1. **7-kelas vs 4-kelas:** "Apakah eksperimen 4-kelas cukup sebagai analisis tambahan di BAB Pembahasan, atau perlu dijadikan eksperimen utama?"
+
+2. **FCNN > Fusion:** "Temuan bahwa unimodal FCNN lebih baik dari multimodal fusion agak bertentangan dengan hipotesis di proposal. Bagaimana sebaiknya menyikapi ini di tesis?"
+
+3. **Macro F1 masih rendah:** "Meskipun 4-kelas lebih baik (0.394), nilainya masih di bawah 0.5. Apakah ini masih acceptable untuk tesis, atau perlu eksplorasi arsitektur/metode lain?"
 
 ---
 
@@ -486,14 +537,13 @@ Dari classification report model terbaik (FCNN B1):
 
 | No | Topik | Pertanyaan | Opsi Rekomendasi |
 |----|-------|-----------|------------------|
-| 1 | Class imbalance | Weights/augmentasi tidak cukup efektif, perlu strategi lain? | Coba variasi 4 kelas sebagai tambahan |
-| 2 | Validasi ahli - jumlah sample | 583 (5%) / 1,067 (10%) / 1,938 (full non-neutral)? | Tergantung ketersediaan ahli |
-| 3 | Validasi ahli - jumlah ahli | 1 ahli atau 2 ahli (untuk inter-rater reliability)? | 2 ahli jika memungkinkan |
-| 4 | Validasi ahli - honorarium | Perlu diberikan fee untuk validator? | Tergantung kebijakan prodi |
-| 5 | Perubahan tool | Perlu revisi proposal untuk perubahan dlib → MediaPipe? | Cukup di BAB 4 |
-| 6 | Hasil training | Kelas minoritas tidak terdeteksi, bagaimana menyikapi? | Opsi D: 7 kelas utama + 4 kelas tambahan |
-| 7 | FCNN > CNN | Perlu pembahasan khusus kenapa landmark lebih baik? | Ya, bahas di BAB 5 |
-| 8 | Fusion tidak membantu | Apakah ini temuan yang valid untuk dilaporkan? | Ya, kontribusi menunjukkan unimodal bisa cukup |
+| 1 | 7-kelas vs 4-kelas | Analisis tambahan atau eksperimen utama? | Analisis tambahan di BAB 5 |
+| 2 | FCNN > Fusion | Bagaimana menyikapi di tesis? | Report sebagai temuan, bahas alasannya |
+| 3 | Macro F1 rendah | Acceptable atau perlu metode lain? | Diskusikan dengan pembimbing |
+| 4 | Validasi ahli - jumlah sample | 583 (5%) / 1,067 (10%) / 1,938 (full non-neutral)? | Tergantung ketersediaan ahli |
+| 5 | Validasi ahli - jumlah ahli | 1 ahli atau 2 ahli (untuk inter-rater reliability)? | 2 ahli jika memungkinkan |
+| 6 | Validasi ahli - honorarium | Perlu diberikan fee untuk validator? | Tergantung kebijakan prodi |
+| 7 | Perubahan tool | Perlu revisi proposal untuk perubahan dlib → MediaPipe? | Cukup di BAB 4 |
 
 ---
 
@@ -517,25 +567,26 @@ MultimodalEmoLearn/
 │       ├── face_crop_landmark.py       # Face crop + 68 landmark
 │       └── generate_emotion_label.py   # Generate label emosi
 ├── notebooks/
-│   ├── 01_train_cnn.ipynb              # Training CNN (3 skenario)
-│   ├── 02_train_fcnn.ipynb             # Training FCNN (3 skenario)
-│   ├── 03_late_fusion.ipynb            # Late Fusion + grid search
-│   ├── 04_intermediate_fusion.ipynb    # Intermediate Fusion (3 skenario)
-│   ├── 05_comparison.ipynb             # Perbandingan semua model
+│   ├── 01-05                           # Training 7-class (CNN, FCNN, Fusion, Comparison)
+│   ├── 06-10                           # Training 4-class (CNN, FCNN, Fusion, Comparison)
 │   └── results/                        # Executed notebooks dari VPS
 ├── models/
-│   ├── cnn/cnn_results.json
-│   ├── fcnn/fcnn_results.json
-│   ├── late_fusion/late_fusion_results.json
-│   ├── intermediate_fusion/intermediate_fusion_results.json
-│   ├── experiment_summary.json
-│   └── comparison_*.png                # Grafik perbandingan
+│   ├── cnn/, fcnn/, late_fusion/,      # Hasil 7-class
+│   │   intermediate_fusion/
+│   ├── 4class/                         # Hasil 4-class
+│   │   ├── cnn/, fcnn/, late_fusion/,
+│   │   │   intermediate_fusion/
+│   │   └── experiment_summary_4class.json
+│   └── experiment_summary.json         # Ringkasan 7-class
 ├── data/
-│   ├── dataset/                        # Numpy arrays (original)
-│   ├── dataset_augmented/              # Numpy arrays (augmented)
+│   ├── dataset/                        # Numpy arrays 7-class
+│   ├── dataset_augmented/              # Numpy arrays 7-class augmented
+│   ├── dataset_4class/                 # Numpy arrays 4-class
+│   ├── dataset_4class_augmented/       # Numpy arrays 4-class augmented
 │   └── validation_*/                   # Set validasi ahli (3 opsi)
 ├── scripts/
-│   └── run_all.sh                      # Batch runner untuk training
+│   ├── run_all.sh                      # Jalankan semua (7-class + 4-class)
+│   └── run_4class.sh                   # Jalankan hanya 4-class
 └── docs/
     ├── bimbingan_progress.md           # File ini
     └── linux_training_guide.md         # Panduan training di VPS

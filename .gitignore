@@ -28,3 +28,6 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Compressed archives
+*.tar.gz
