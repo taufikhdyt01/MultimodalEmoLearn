@@ -508,28 +508,100 @@ Sebagai analisis tambahan, dilakukan eksperimen dengan **4 kelas emosi**:
 
 ---
 
-## SLIDE 15: Diskusi dan Kesimpulan Sementara
+## SLIDE 15: Hasil Transfer Learning (ResNet18 Pretrained ImageNet)
+
+Sebagai upaya meningkatkan performa CNN, dilakukan eksperimen **Transfer Learning** menggunakan **ResNet18 pretrained ImageNet** sebagai pengganti CNN from scratch.
+
+### Strategi Transfer Learning
+
+- **Model CNN** diganti: `EmotionCNN` (from scratch) → `EmotionCNNTransfer` (ResNet18 pretrained)
+- **Fine-tune** seluruh network dengan learning rate kecil (0.00005)
+- **Model FCNN** tidak berubah (tetap from scratch, landmark tidak perlu pretrained)
+- **Late Fusion TL** = CNN TL + FCNN (from scratch)
+- **Intermediate Fusion TL** = ResNet18 + FCNN digabung di level fitur
+
+### Hasil Transfer Learning 7-Class
+
+| Model | From Scratch (Best) | Transfer Learning (Best) | Peningkatan |
+|-------|--------------------|--------------------------|----|
+| CNN | 0.134 (B2) | **0.177 (B2)** | +32% |
+| FCNN | 0.234 (B1) | 0.234 (B1) | — (sama) |
+| Late Fusion | 0.230 (B1) | 0.234 (B1) | +2% |
+| Intermediate Fusion | 0.140 (B2) | **0.232 (B1)** | +66% |
+
+### Hasil Transfer Learning 4-Class
+
+| Model | From Scratch (Best) | Transfer Learning (Best) | Peningkatan |
+|-------|--------------------|--------------------------|----|
+| CNN | 0.296 (B2) | **0.407 (B2)** | +37% |
+| FCNN | 0.394 (B3) | 0.394 (B3) | — (sama) |
+| Late Fusion | 0.385 (B3) | **0.442 (B2)** | +15% |
+| Intermediate Fusion | 0.258 (B2) | **0.376 (B3)** | +46% |
+
+### **Best Overall: Late Fusion TL 4-class B2 (Macro F1: 0.442)**
+
+> **Penjelasan lisan:**  
+> "Transfer Learning dengan ResNet18 terbukti meningkatkan performa CNN secara signifikan, terutama di 4-kelas (+37% untuk CNN). Yang paling menonjol adalah Late Fusion dengan Transfer Learning — menggabungkan ResNet18 dan FCNN menghasilkan Macro F1 terbaik secara keseluruhan: **0.442**. Ini naik dari 0.385 (Late Fusion from scratch) dan dari 0.394 (FCNN terbaik from scratch)."
+>
+> "Menariknya, FCNN tetap tidak terpengaruh oleh transfer learning karena FCNN menggunakan landmark — tidak ada pretrained weights yang relevan untuk data numerik geometrik."
+
+### Temuan 8: Transfer Learning efektif meningkatkan CNN
+
+> "ResNet18 yang sudah 'memahami' fitur visual umum dari ImageNet membantu CNN mengenali pola ekspresi wajah meskipun dataset terbatas. Ini menjelaskan mengapa CNN from scratch sangat lemah (kurang data), sedangkan CNN TL jauh lebih baik."
+
+### Temuan 9: Late Fusion TL menjadi model terbaik keseluruhan
+
+> "Dengan menggabungkan CNN TL (ResNet18) dan FCNN via Late Fusion di 4-kelas dengan Class Weights (B2), diperoleh **Macro F1 0.442** — best overall dari 48 kombinasi eksperimen (4 model × 2 variant CNN × 3 skenario × 2 konfigurasi kelas)."
+
+### Top 5 Model Terbaik (dari 48 kombinasi)
+
+| Rank | Model | CNN Variant | Kelas | Skenario | Macro F1 |
+|------|-------|-------------|-------|----------|----------|
+| 1 | **Late Fusion** | **Transfer Learning** | **4-class** | **B2** | **0.442** |
+| 2 | CNN | Transfer Learning | 4-class | B2 | 0.407 |
+| 3 | FCNN | Transfer Learning | 4-class | B3 | 0.394 |
+| 3 | FCNN | From Scratch | 4-class | B3 | 0.394 |
+| 5 | Late Fusion | From Scratch | 4-class | B3 | 0.385 |
+
+---
+
+## SLIDE 16: Perbandingan Lengkap Semua Eksperimen
+
+### Ringkasan Perjalanan Eksperimen
+
+| Tahap | Model Terbaik | Macro F1 | Keterangan |
+|-------|--------------|----------|------------|
+| Tahap 1: 7-class from scratch | FCNN B1 | 0.234 | Baseline awal |
+| Tahap 2: 4-class from scratch | FCNN B3 | 0.394 | +68% dari 7-class |
+| Tahap 3: Transfer Learning | Late Fusion TL B2 | **0.442** | +12% dari 4-class FCNN |
+
+---
+
+## SLIDE 17: Diskusi dan Kesimpulan Sementara
 
 ### Jawaban terhadap Rumusan Masalah:
 
 **RQ1 (Performa CNN):**
-Model CNN menghasilkan Macro F1 0.134 (7-kelas) dan 0.296 (4-kelas). Performa relatif rendah dibanding FCNN, kemungkinan karena variasi pencahayaan dan sudut wajah selama sesi pemrograman yang mengganggu fitur penampilan.
+- From scratch: Macro F1 0.134 (7-class) dan 0.296 (4-class) — rendah karena dataset terbatas
+- Transfer Learning: Macro F1 0.177 (7-class) dan **0.407 (4-class)** — signifikan meningkat (+37%)
 
 **RQ2 (Performa FCNN):**
-Model FCNN menghasilkan Macro F1 **0.234** (7-kelas) dan **0.394** (4-kelas). Fitur geometrik dari 68 facial landmark terbukti lebih robust dan efektif untuk konteks pembelajaran pemrograman.
+Model FCNN menghasilkan Macro F1 **0.234** (7-class) dan **0.394** (4-class). Fitur geometrik dari 68 facial landmark terbukti lebih robust, tidak terpengaruh transfer learning.
 
 **RQ3 (Perbandingan Fusion):**
-Late Fusion memberikan sedikit perbaikan dari FCNN saja (0.385 vs 0.394 di 4-kelas). Intermediate Fusion justru lebih buruk. Ini menunjukkan bahwa untuk dataset ini, pendekatan unimodal FCNN sudah cukup optimal — menambah modalitas CNN justru memperkenalkan noise.
+- From scratch: FCNN > Late Fusion > Intermediate Fusion
+- Transfer Learning: Late Fusion TL menjadi yang terbaik (**0.442**) — ResNet18 mengangkat performa CNN sehingga fusion menjadi efektif
+- Intermediate Fusion TL juga meningkat drastis (+66% di 7-class, +46% di 4-class)
 
 ### **(KONSULTASI 4)** Pertanyaan untuk Pembimbing
 
-> "Pak/Bu, hasil eksperimen sudah lengkap. Beberapa hal yang perlu didiskusikan:"
+> "Pak/Bu, seluruh eksperimen sudah selesai (48 kombinasi total). Beberapa hal yang perlu didiskusikan:"
 
-1. **7-kelas vs 4-kelas:** "Apakah eksperimen 4-kelas cukup sebagai analisis tambahan di BAB Pembahasan, atau perlu dijadikan eksperimen utama?"
+1. **Transfer Learning sebagai kontribusi:** "Transfer Learning (ResNet18) meningkatkan Macro F1 dari 0.394 → 0.442. Apakah ini cukup signifikan sebagai kontribusi tambahan di tesis, atau lebih baik tetap fokus pada from scratch?"
 
-2. **FCNN > Fusion:** "Temuan bahwa unimodal FCNN lebih baik dari multimodal fusion agak bertentangan dengan hipotesis di proposal. Bagaimana sebaiknya menyikapi ini di tesis?"
+2. **FCNN > Fusion (from scratch):** "Temuan bahwa unimodal FCNN lebih baik dari multimodal fusion from scratch agak bertentangan dengan hipotesis di proposal. Namun dengan Transfer Learning, fusion akhirnya menjadi terbaik. Bagaimana sebaiknya menyikapi ini di narasi tesis?"
 
-3. **Macro F1 masih rendah:** "Meskipun 4-kelas lebih baik (0.394), nilainya masih di bawah 0.5. Apakah ini masih acceptable untuk tesis, atau perlu eksplorasi arsitektur/metode lain?"
+3. **Macro F1 0.442:** "Nilai terbaik 0.442 (4-kelas Late Fusion TL) masih di bawah 0.5. Apakah ini acceptable untuk tesis, mengingat ini dataset nyata dari sesi pemrograman yang sangat imbalanced?"
 
 ---
 
@@ -538,12 +610,13 @@ Late Fusion memberikan sedikit perbaikan dari FCNN saja (0.385 vs 0.394 di 4-kel
 | No | Topik | Pertanyaan | Opsi Rekomendasi |
 |----|-------|-----------|------------------|
 | 1 | 7-kelas vs 4-kelas | Analisis tambahan atau eksperimen utama? | Analisis tambahan di BAB 5 |
-| 2 | FCNN > Fusion | Bagaimana menyikapi di tesis? | Report sebagai temuan, bahas alasannya |
-| 3 | Macro F1 rendah | Acceptable atau perlu metode lain? | Diskusikan dengan pembimbing |
-| 4 | Validasi ahli - jumlah sample | 583 (5%) / 1,067 (10%) / 1,938 (full non-neutral)? | Tergantung ketersediaan ahli |
-| 5 | Validasi ahli - jumlah ahli | 1 ahli atau 2 ahli (untuk inter-rater reliability)? | 2 ahli jika memungkinkan |
-| 6 | Validasi ahli - honorarium | Perlu diberikan fee untuk validator? | Tergantung kebijakan prodi |
-| 7 | Perubahan tool | Perlu revisi proposal untuk perubahan dlib → MediaPipe? | Cukup di BAB 4 |
+| 2 | FCNN > Fusion (from scratch) | Bagaimana menyikapi di tesis? | Report sebagai temuan, bahas alasannya |
+| 3 | Transfer Learning sebagai kontribusi | Apakah TL cukup signifikan di tesis? | Diskusikan dengan pembimbing |
+| 4 | Macro F1 0.442 | Acceptable atau perlu metode lain? | Diskusikan dengan pembimbing |
+| 5 | Validasi ahli - jumlah sample | 583 (5%) / 1,067 (10%) / 1,938 (full non-neutral)? | Tergantung ketersediaan ahli |
+| 6 | Validasi ahli - jumlah ahli | 1 ahli atau 2 ahli (untuk inter-rater reliability)? | 2 ahli jika memungkinkan |
+| 7 | Validasi ahli - honorarium | Perlu diberikan fee untuk validator? | Tergantung kebijakan prodi |
+| 8 | Perubahan tool | Perlu revisi proposal untuk perubahan dlib → MediaPipe? | Cukup di BAB 4 |
 
 ---
 
@@ -567,16 +640,23 @@ MultimodalEmoLearn/
 │       ├── face_crop_landmark.py       # Face crop + 68 landmark
 │       └── generate_emotion_label.py   # Generate label emosi
 ├── notebooks/
-│   ├── 01-05                           # Training 7-class (CNN, FCNN, Fusion, Comparison)
-│   ├── 06-10                           # Training 4-class (CNN, FCNN, Fusion, Comparison)
+│   ├── 01-05                           # Training 7-class from scratch
+│   ├── 06-10                           # Training 4-class from scratch
+│   ├── 11-16                           # Transfer Learning (7-class + 4-class)
+│   ├── 17_comparison_all               # Final comparison semua eksperimen
 │   └── results/                        # Executed notebooks dari VPS
 ├── models/
-│   ├── cnn/, fcnn/, late_fusion/,      # Hasil 7-class
+│   ├── cnn/, fcnn/, late_fusion/,      # Hasil 7-class from scratch
 │   │   intermediate_fusion/
-│   ├── 4class/                         # Hasil 4-class
+│   ├── 4class/                         # Hasil 4-class from scratch
 │   │   ├── cnn/, fcnn/, late_fusion/,
 │   │   │   intermediate_fusion/
 │   │   └── experiment_summary_4class.json
+│   ├── cnn_transfer/                   # Hasil CNN Transfer Learning (7-class + 4-class)
+│   ├── 4class/cnn_transfer/            # Hasil CNN TL 4-class
+│   ├── final_comparison.json           # Ringkasan 48 kombinasi eksperimen
+│   ├── final_comparison_bar.png        # Chart perbandingan bar
+│   ├── final_comparison_heatmap.png    # Chart heatmap
 │   └── experiment_summary.json         # Ringkasan 7-class
 ├── data/
 │   ├── dataset/                        # Numpy arrays 7-class
@@ -586,7 +666,8 @@ MultimodalEmoLearn/
 │   └── validation_*/                   # Set validasi ahli (3 opsi)
 ├── scripts/
 │   ├── run_all.sh                      # Jalankan semua (7-class + 4-class)
-│   └── run_4class.sh                   # Jalankan hanya 4-class
+│   ├── run_4class.sh                   # Jalankan hanya 4-class
+│   └── run_transfer.sh                 # Jalankan transfer learning (11-17)
 └── docs/
     ├── bimbingan_progress.md           # File ini
     └── linux_training_guide.md         # Panduan training di VPS
@@ -605,10 +686,13 @@ MultimodalEmoLearn/
 | User-based split | - | Mencegah data leaking antar split |
 | Intermediate Fusion | Boulahia et al. (2021) | Feature-level fusion CNN + FCNN |
 | Late Fusion | Boulahia et al. (2021) | Decision-level weighted averaging |
+| ResNet18 Transfer Learning | He et al. (2016), CVPR | Pretrained ImageNet sebagai backbone CNN |
 
 ---
 
 ## Lampiran C: Konfigurasi Training
+
+### From Scratch
 
 | Parameter | CNN | FCNN | Intermediate Fusion |
 |-----------|-----|------|---------------------|
@@ -621,3 +705,17 @@ MultimodalEmoLearn/
 | Best Model Criteria | Val Macro F1 | Val Macro F1 | Val Macro F1 |
 | GPU | NVIDIA T4 (16GB) | NVIDIA T4 (16GB) | NVIDIA T4 (16GB) |
 | Framework | PyTorch | PyTorch | PyTorch |
+
+### Transfer Learning
+
+| Parameter | CNN TL (ResNet18) | Intermediate Fusion TL |
+|-----------|-------------------|------------------------|
+| Backbone | ResNet18 pretrained ImageNet | ResNet18 pretrained ImageNet |
+| Optimizer | Adam | Adam |
+| Learning Rate | 0.00005 | 0.00005 |
+| Batch Size | 32 | 16 |
+| Max Epochs | 50 | 80 |
+| Early Stopping Patience | 15 | 25 |
+| LR Scheduler | ReduceLROnPlateau (factor=0.5, patience=8) | ReduceLROnPlateau (factor=0.5, patience=8) |
+| Fine-tune Strategy | Full fine-tune semua layer | Full fine-tune semua layer |
+| GPU | NVIDIA T4 (16GB) | NVIDIA T4 (16GB) |
