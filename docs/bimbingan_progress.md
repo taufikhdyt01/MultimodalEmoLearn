@@ -250,7 +250,7 @@ Di proposal tertulis 80/10/10, namun karena split dilakukan **berdasarkan user**
 
 ---
 
-## SLIDE 7: Validasi Ahli Psikologi
+## SLIDE 8: Validasi Ahli Psikologi
 
 > **Penjelasan lisan:**  
 > "Sesuai proposal, label emosi saat ini sepenuhnya dari auto-detection (Face API). Untuk dual-validation, kita perlu ahli psikologi untuk memvalidasi sebagian sample."
@@ -282,10 +282,53 @@ Saya sudah menyiapkan 3 opsi:
 - Masih memenuhi syarat statistik untuk Cohen's Kappa
 - Justifikasi: "5% stratified random sampling, memenuhi minimum statistical requirement"
 
-> **Yang perlu ditanyakan:**  
-> 1. "Opsi mana yang paling tepat untuk level tesis S2?"
-> 2. "Apakah 1 ahli cukup, atau perlu 2 ahli untuk inter-rater reliability?"
-> 3. "Apakah Bapak/Ibu punya rekomendasi ahli psikologi yang bisa dihubungi?"
+---
+
+### **(KONSULTASI 2b)** Revisi Pendekatan: SSL + Validasi Minimal
+
+Berdasarkan masukan dosen — opsi A/B/C terlalu banyak beban validator — pendekatan direvisi menjadi:
+
+**Skema baru: 146 sampel divalidasi ahli + SSL untuk sisanya**
+
+```
+9,894 sampel total
+       ↓
+146 sampel → divalidasi manual oleh ahli (stratified per kelas, min 10/kelas)
+       ↓
+Sisanya (~9,748) → diverifikasi otomatis menggunakan
+representasi ResNet18 (self-supervised pre-selection):
+  - Ekstrak embedding semua sampel
+  - Sampel konsisten dengan centroid kelasnya → dianggap valid
+  - Sampel tidak konsisten (outlier) → dieksklusi dari training
+```
+
+#### Justifikasi Jumlah 146 Sampel (~1.5%)
+
+Mengacu pada **MER2024** (Lian et al., 2024) — benchmark semi-supervised emotion recognition resmi di ACM MM + IJCAI 2024:
+
+| | MER2024 | Dataset penelitian ini |
+|-|---------|----------------------|
+| Total sampel | 115,595 | 9,894 |
+| Labeled (divalidasi) | 1,169 (**±1%**) | **146 sampel (1.5%)** |
+| Unlabeled (SSL) | 99% | 99% |
+| Anotator | 5 orang | 3 orang (minimum) |
+| Threshold agreement | 4/5 = 80% | 2/3 = 67% |
+
+> **Referensi:** Lian, Z., et al. (2024). *MER 2024: Semi-Supervised Learning, Noise Robustness, and Open-Vocabulary Multimodal Emotion Recognition.* Proceedings of the 2nd International Workshop on Multimodal and Responsible Affective Computing, ACM MM 2024. https://arxiv.org/abs/2404.17113
+
+#### Jumlah Validator
+
+Berdasarkan MER2024 (5 anotator) — untuk konteks tesis S2 yang lebih terbatas:
+- **Minimum 3 validator** berlatar belakang psikologi (bisa mahasiswa S2/S3 psikologi)
+- Validasi independen → hitung **Fleiss' Kappa** (untuk 3+ rater)
+- Target κ ≥ 0.61 (Landis & Koch, 1977) = substantial agreement
+
+#### Penjelasan lisan:
+> "Setelah berdiskusi dengan dosen, pendekatan validasi direvisi. Daripada membebankan validator dengan ratusan sampel, saya mengadopsi pendekatan semi-supervised seperti yang digunakan di MER2024 — challenge resmi pengenalan emosi di ACM MM 2024. Di sana, hanya 1% dari total data yang divalidasi manusia, sisanya ditangani oleh model SSL. Untuk dataset saya yang berjumlah ~9.894 sampel, 1% stratified sampling menghasilkan 146 sampel yang perlu divalidasi ahli (minimum 10 per kelas emosi, kelas langka seperti fearful diambil seluruhnya). Sisanya diverifikasi konsistensinya menggunakan embedding dari ResNet18 yang sudah dilatih."
+>
+> "Untuk validator, saya berencana menggunakan 3 orang berlatar belakang psikologi, mengacu pada MER2024 yang menggunakan 5 anotator. Kesepakatan antar validator diukur menggunakan Fleiss' Kappa dengan target κ ≥ 0.61."
+
+---
 
 ### Tool Validasi yang Sudah Disiapkan:
 
@@ -366,7 +409,33 @@ Alur validasi ahli:
 
 ---
 
-## SLIDE 11: Hasil Training (4 Model × 3 Skenario = 12 Eksperimen)
+## SLIDE 11: Rancangan Eksperimen — Tahap 1: 7-Class From Scratch
+
+**7 kelas emosi:** neutral, happy, sad, angry, fearful, disgusted, surprised
+
+**4 Model yang dibandingkan:**
+- **CNN** — menggunakan fitur citra wajah 224×224 px
+- **FCNN** — menggunakan fitur landmark geometrik (136 koordinat)
+- **Late Fusion** — menggabungkan CNN + FCNN di level keputusan (weighted average)
+- **Intermediate Fusion** — menggabungkan CNN + FCNN di level fitur (concatenation)
+
+**3 Skenario penanganan class imbalance:**
+- **B1** = Baseline: training biasa tanpa penanganan
+- **B2** = Class Weights (Cui et al., 2019): penalty loss lebih besar untuk kelas langka
+- **B3** = Class Weights + Augmentasi: flip, rotasi ±15°, brightness untuk kelas < 150 sample
+
+**Total: 4 model × 3 skenario = 12 eksperimen** | GPU: NVIDIA T4 | Metrik: Macro F1-Score
+
+> **Penjelasan lisan:**
+> "Saya melakukan eksperimen tahap pertama dengan 7 kelas emosi: neutral, happy, sad, angry, fearful, disgusted, dan surprised. Ada 4 model yang dibandingkan — CNN yang menggunakan fitur citra wajah, FCNN yang menggunakan fitur landmark geometrik, Late Fusion yang menggabungkan keduanya di level keputusan, dan Intermediate Fusion yang menggabungkan di level fitur."
+>
+> "Masing-masing model dijalankan dengan 3 skenario penanganan class imbalance yang berbeda. Skenario B1 adalah baseline tanpa penanganan. Skenario B2 menggunakan class weights — prinsipnya kelas yang lebih langka mendapat penalty lebih besar kalau salah diprediksi, sehingga model dipaksa lebih serius mempelajari kelas tersebut. Skenario B3 menambahkan augmentasi data di atas class weights."
+>
+> "Total di tahap ini: 4 model × 3 skenario = 12 eksperimen."
+
+---
+
+## SLIDE 12: Hasil Training (4 Model × 3 Skenario = 12 Eksperimen)
 
 Training dilakukan di VPS Biznet Gio (NVIDIA T4, 16GB VRAM) menggunakan PyTorch.
 
@@ -394,7 +463,7 @@ Training dilakukan di VPS Biznet Gio (NVIDIA T4, 16GB VRAM) menggunakan PyTorch.
 
 ---
 
-## SLIDE 12: Analisis Hasil
+## SLIDE 13: Analisis Hasil
 
 ### Temuan 1: FCNN (Landmark) > CNN (Image)
 
@@ -449,7 +518,27 @@ Dari classification report model terbaik (FCNN B1):
 
 ---
 
-## SLIDE 13: Hasil Training 4-Class (Analisis Tambahan)
+## SLIDE 14: Rancangan Eksperimen — Tahap 2: 4-Class
+
+| Kelas Baru | Kelas Asal | Total Sample | Alasan |
+|-----------|-----------|-------------|--------|
+| neutral | neutral | 8,356 | Tetap — kelas dominan |
+| happy | happy | 783 | Tetap — cukup data |
+| sad | sad | 576 | Tetap — cukup data |
+| negative | angry (63) + fearful (13) + disgusted (24) + surprised (79) | 179 | Digabung — masing-masing < 80 sample |
+
+**4 model × 3 skenario = 12 eksperimen tambahan | Total kumulatif: 24 eksperimen**
+
+> **Penjelasan lisan:**
+> "Setelah melihat hasil tahap 1, Macro F1 terbaik hanya 0.234. Kalau saya lihat detail per kelasnya, ternyata emosi-emosi langka seperti angry, fearful, disgusted, dan surprised sama sekali tidak terdeteksi — recall-nya nol. Ini bukan karena modelnya buruk, tapi karena jumlah sampelnya terlalu sedikit. Yang paling ekstrem adalah fearful, hanya 13 sampel total, dan di test set hanya ada 1 sampel."
+>
+> "Dari sini saya berpikir: masalahnya bukan di arsitektur model, tapi di data. Keempat emosi langka ini secara konseptual juga bisa dikelompokkan sebagai respons emosi negatif. Jadi saya coba gabungkan keempatnya menjadi satu kelas baru bernama 'negative'."
+>
+> "Dengan penggabungan ini, kelas 'negative' memiliki 179 sampel — jauh lebih banyak dari masing-masing kelas aslinya. Saya kemudian mengulang seluruh eksperimen dengan konfigurasi 4 kelas ini. Total jadi 24 eksperimen kumulatif."
+
+---
+
+## SLIDE 15: Hasil Training 4-Class (Analisis Tambahan)
 
 Sebagai analisis tambahan, dilakukan eksperimen dengan **4 kelas emosi**:
 - neutral, happy, sad, **negative** (gabungan angry + fearful + disgusted + surprised)
@@ -478,7 +567,7 @@ Sebagai analisis tambahan, dilakukan eksperimen dengan **4 kelas emosi**:
 
 ---
 
-## SLIDE 14: Perbandingan 7-Class vs 4-Class
+## SLIDE 16: Perbandingan 7-Class vs 4-Class
 
 ### Best per Model
 
@@ -508,7 +597,31 @@ Sebagai analisis tambahan, dilakukan eksperimen dengan **4 kelas emosi**:
 
 ---
 
-## SLIDE 15: Hasil Transfer Learning (ResNet18 Pretrained ImageNet)
+## SLIDE 17: Rancangan Eksperimen — Tahap 3: Transfer Learning
+
+| Komponen | Tahap 1 & 2 (From Scratch) | Tahap 3 (Transfer Learning) | Catatan |
+|---------|--------------------------|----------------------------|--------|
+| CNN backbone | EmotionCNN (dari nol) | ResNet18 pretrained ImageNet | Fine-tune seluruh layer |
+| FCNN | Fully-connected (dari nol) | Sama — tidak berubah | Landmark = numerik, tidak perlu pretrained |
+| Late Fusion | CNN scratch + FCNN | CNN TL + FCNN | |
+| Intermediate Fusion | CNN scratch + FCNN (feature-level) | ResNet18 + FCNN (feature-level) | |
+| Learning Rate | 0.0001 | 0.00005 | Lebih kecil untuk fine-tuning |
+
+**4 model × 3 skenario × 2 konfigurasi kelas = 24 eksperimen tambahan**
+**Total keseluruhan: 12 + 12 + 24 = 48 eksperimen**
+
+> **Penjelasan lisan:**
+> "Setelah tahap 2, FCNN memang sudah membaik — Macro F1 0.394 di 4 kelas. Tapi CNN masih tertinggal jauh di 0.296, padahal idealnya fusion harusnya lebih baik dari masing-masing modalitas. Saya analisis penyebabnya: CNN dilatih dari nol dengan dataset yang relatif kecil, sekitar 9 ribu sampel. Untuk CNN yang kompleks, itu belum cukup."
+>
+> "Solusinya adalah Transfer Learning. Saya gunakan ResNet18 yang sudah pretrained di ImageNet — dataset dengan 1.2 juta gambar. Idenya, ResNet18 sudah 'memahami' fitur visual dasar seperti tepi, tekstur, dan bentuk. Saya tinggal fine-tune agar ia belajar mengenali ekspresi wajah dari dataset saya, dengan learning rate yang lebih kecil supaya tidak menghancurkan pengetahuan yang sudah ada."
+>
+> "Perlu dicatat, FCNN tidak saya ubah — karena FCNN menggunakan data landmark yang berupa koordinat numerik, tidak ada pretrained weights yang relevan untuk itu. Transfer Learning hanya diterapkan pada komponen CNN."
+>
+> "Di tahap ini saya jalankan eksperimen untuk 7-class dan 4-class sekaligus, jadi total tambahan 24 eksperimen. Keseluruhan dari 3 tahap: 48 eksperimen."
+
+---
+
+## SLIDE 18: Hasil Transfer Learning (ResNet18 Pretrained ImageNet)
 
 Sebagai upaya meningkatkan performa CNN, dilakukan eksperimen **Transfer Learning** menggunakan **ResNet18 pretrained ImageNet** sebagai pengganti CNN from scratch.
 
@@ -565,7 +678,7 @@ Sebagai upaya meningkatkan performa CNN, dilakukan eksperimen **Transfer Learnin
 
 ---
 
-## SLIDE 16: Perbandingan Lengkap Semua Eksperimen
+## SLIDE 19: Perbandingan Lengkap Semua Eksperimen
 
 ### Ringkasan Perjalanan Eksperimen
 
@@ -577,7 +690,7 @@ Sebagai upaya meningkatkan performa CNN, dilakukan eksperimen **Transfer Learnin
 
 ---
 
-## SLIDE 17: Diskusi dan Kesimpulan Sementara
+## SLIDE 20: Diskusi dan Kesimpulan Sementara
 
 ### Jawaban terhadap Rumusan Masalah:
 

@@ -410,7 +410,163 @@ Notebook yang dijalankan: `11` → `12` → `13` → `14` → `15` → `16` → 
 
 ---
 
-## 10. Troubleshooting
+## 10. Menjalankan Eksperimen Front-Only (Lanjutan)
+
+> **Prasyarat:** Notebook 01-17 (front+side) sudah selesai dijalankan.
+
+Eksperimen front-only menggunakan **hanya data sudut depan** dari kedua batch, untuk konsistensi karena batch 1 hanya memiliki sudut depan sedangkan batch 2 memiliki depan+samping.
+
+### Langkah 1: Pull kode terbaru
+
+```bash
+cd MultimodalEmoLearn
+git pull origin master
+```
+
+### Langkah 2: Transfer dataset front-only ke VPS
+
+Dataset front-only sudah di-generate di laptop. Cukup upload **base dataset saja** (~4 GB), sisanya di-generate di VPS.
+
+**Di laptop (Git Bash / terminal):**
+```bash
+cd D:/MultimodalEmoLearn
+tar -czf dataset_frontonly.tar.gz data/dataset_frontonly/
+# Hasilnya: dataset_frontonly.tar.gz (~2-3 GB setelah compress)
+```
+
+**Upload ke VPS** via MobaXterm (drag & drop) atau:
+```bash
+scp dataset_frontonly.tar.gz USER@IP_VPS:/home/USER/MultimodalEmoLearn/
+```
+
+**Di VPS — extract dan generate dataset turunan:**
+```bash
+cd MultimodalEmoLearn
+tar -xzf dataset_frontonly.tar.gz
+rm dataset_frontonly.tar.gz  # hemat disk
+
+# Verify
+ls data/dataset_frontonly/*.npy | wc -l  # harus 9+ files
+
+# Generate augmented + 4-class (dari base dataset, ~5 menit)
+conda activate emotrain
+python scripts/prepare_frontonly_all.py
+```
+
+Ini akan menghasilkan 4 dataset:
+```
+data/
+├── dataset_frontonly/              # 7-class front-only (7,091 sampel) — dari upload
+├── dataset_frontonly_augmented/    # 7-class + augmentasi kelas minoritas — di-generate
+├── dataset_frontonly_4class/       # 4-class front-only — di-generate
+└── dataset_frontonly_4class_augmented/  # 4-class + augmentasi — di-generate
+```
+
+Ini akan menghasilkan 4 dataset:
+```
+data/
+├── dataset_frontonly/              # 7-class front-only (7,091 sampel)
+├── dataset_frontonly_augmented/    # 7-class + augmentasi kelas minoritas
+├── dataset_frontonly_4class/       # 4-class front-only
+└── dataset_frontonly_4class_augmented/  # 4-class + augmentasi
+```
+
+### Langkah 3: Jalankan training front-only
+
+```bash
+tmux new -s frontonly
+
+conda activate emotrain
+
+# From scratch 7-class (notebook 18-21)
+bash scripts/run_frontonly_7class.sh
+
+# From scratch 4-class (notebook 22-25)
+bash scripts/run_frontonly_4class.sh
+
+# Transfer Learning (notebook 26-31)
+bash scripts/run_frontonly_transfer.sh
+
+# Comparison (notebook 32)
+jupyter nbconvert --to notebook --execute notebooks/32_comparison_frontonly_vs_original.ipynb \
+    --output 32_executed.ipynb --output-dir notebooks/results/ \
+    --ExecutePreprocessor.timeout=7200
+
+# Detach: Ctrl+B lalu D
+```
+
+Atau jalankan interaktif via Jupyter (notebook 18 → 19 → ... → 32).
+
+### Notebook front-only:
+
+| No | Notebook | Model | Kelas |
+|----|----------|-------|-------|
+| **From Scratch** |||
+| 18 | `cnn_frontonly_7class` | CNN | 7 |
+| 19 | `fcnn_frontonly_7class` | FCNN | 7 |
+| 20 | `late_fusion_frontonly_7class` | Late Fusion | 7 |
+| 21 | `intermediate_frontonly_7class` | Intermediate | 7 |
+| 22 | `cnn_frontonly_4class` | CNN | 4 |
+| 23 | `fcnn_frontonly_4class` | FCNN | 4 |
+| 24 | `late_fusion_frontonly_4class` | Late Fusion | 4 |
+| 25 | `intermediate_frontonly_4class` | Intermediate | 4 |
+| **Transfer Learning** |||
+| 26 | `cnn_tl_frontonly_7class` | CNN TL (ResNet18) | 7 |
+| 27 | `late_fusion_tl_frontonly_7class` | Late Fusion TL | 7 |
+| 28 | `intermediate_tl_frontonly_7class` | Intermediate TL | 7 |
+| 29 | `cnn_tl_frontonly_4class` | CNN TL (ResNet18) | 4 |
+| 30 | `late_fusion_tl_frontonly_4class` | Late Fusion TL | 4 |
+| 31 | `intermediate_tl_frontonly_4class` | Intermediate TL | 4 |
+| **Perbandingan** |||
+| 32 | `comparison_frontonly_vs_original` | Semua | - |
+
+### Estimasi waktu front-only (NVIDIA T4):
+
+| Tahap | Notebook | Estimasi |
+|-------|----------|----------|
+| From scratch 7-class | 18-21 | ~2-4 jam |
+| From scratch 4-class | 22-25 | ~2-4 jam |
+| Transfer Learning | 26-31 | ~2.5-5 jam |
+| Comparison | 32 | ~1 menit |
+| **Total** | | **~6.5-13 jam** |
+
+### Langkah 4: Transfer hasil
+
+```bash
+# Di VPS:
+cd MultimodalEmoLearn
+tar -czf results_frontonly.tar.gz models/frontonly/ notebooks/results/
+```
+
+Download via MobaXterm atau:
+```bash
+scp USER@IP_VPS:/home/USER/MultimodalEmoLearn/results_frontonly.tar.gz D:/MultimodalEmoLearn/
+cd D:/MultimodalEmoLearn && tar -xzf results_frontonly.tar.gz
+```
+
+### File hasil front-only:
+```
+models/frontonly/
+├── 7class/
+│   ├── cnn_b1.pth, cnn_b2.pth, cnn_b3.pth
+│   ├── fcnn_b1.pth, fcnn_b2.pth, fcnn_b3.pth
+│   ├── intermediate_b1.pth, intermediate_b2.pth, intermediate_b3.pth
+│   └── *_results.json
+├── 4class/
+│   └── (sama seperti 7class)
+├── 7class_tl/
+│   ├── cnn_tl_b1.pth, cnn_tl_b2.pth, cnn_tl_b3.pth
+│   ├── fcnn_b1.pth, fcnn_b2.pth, fcnn_b3.pth
+│   ├── intermediate_tl_b1.pth, ...
+│   └── *_results.json
+├── 4class_tl/
+│   └── (sama seperti 7class_tl)
+└── results_transfer_frontonly.json
+```
+
+---
+
+## 11. Troubleshooting
 
 ### CUDA Out of Memory
 ```python
