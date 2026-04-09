@@ -690,31 +690,123 @@ Sebagai upaya meningkatkan performa CNN, dilakukan eksperimen **Transfer Learnin
 
 ---
 
-## SLIDE 20: Diskusi dan Kesimpulan Sementara
+## SLIDE 21: Eksperimen Front-Only (Tahap 4: Konsistensi Data)
 
-### Jawaban terhadap Rumusan Masalah:
+### Motivasi
+
+Batch 1 hanya memiliki sudut kamera **depan**, sedangkan batch 2 memiliki **depan + samping**. Inkonsistensi ini bisa mempengaruhi hasil eksperimen karena side view memiliki karakteristik fitur yang berbeda (landmark geometrik, tekstur wajah).
+
+**Solusi:** Ulangi seluruh 48 eksperimen menggunakan **hanya data sudut depan** dari kedua batch.
+
+### Dataset Front-Only
+
+| | Front+Side (sebelumnya) | Front-Only |
+|-|------------------------|------------|
+| Batch 1 | 3,824 (front) | 3,824 (front) |
+| Batch 2 | ~6,070 (front+side) | ~3,267 (front) |
+| **Total** | **9,894** | **7,091** |
+| Train / Val / Test | 7,064 / 1,174 / 1,656 | 5,348 / 707 / 1,036 |
+
+User split **identik** — test set menggunakan user yang sama → hasil bisa dibandingkan secara fair.
+
+### Hasil Front-Only: Best per Tahap
+
+| Tahap | Model Terbaik | Macro F1 |
+|-------|--------------|----------|
+| Tahap 1: 7-class from scratch | Late Fusion B3 | 0.175 |
+| Tahap 2: 4-class from scratch | Late Fusion B3 | 0.394 |
+| Tahap 3: 7-class TL | Intermediate TL B3 | 0.180 |
+| Tahap 3: 4-class TL | **Intermediate TL B1** | **0.412** |
+
+### Top 5 Front-Only (dari 48 kombinasi)
+
+| Rank | Model | Kelas | Skenario | Macro F1 |
+|------|-------|-------|----------|----------|
+| 1 | **Intermediate Fusion TL** | **4-class** | **B1** | **0.412** |
+| 2 | Late Fusion | 4-class | B3 | 0.394 |
+| 3 | Late Fusion TL | 4-class | B3 | 0.372 |
+| 4 | FCNN | 4-class | B3 | 0.361 |
+| 5 | Late Fusion TL | 4-class | B1 | 0.309 |
+
+> **Penjelasan lisan:**
+> "Sesuai saran dosen, saya mengulangi seluruh 48 eksperimen menggunakan hanya data sudut depan dari kedua batch, untuk memastikan konsistensi data. Dataset berkurang dari 9.894 menjadi 7.091 sampel karena side view dari batch 2 dihilangkan."
+>
+> "Model terbaik front-only adalah Intermediate Fusion TL 4-class B1 dengan Macro F1 0.412. Menariknya, ini sedikit lebih baik daripada best model front+side (CNN TL 4-class B2: 0.407), yang menunjukkan bahwa side view justru bisa menambah noise."
+
+---
+
+## SLIDE 22: Perbandingan Front-Only vs Front+Side
+
+### Best Model per Tahap
+
+| Tahap | Front-Only (F1) | Front+Side (F1) | Selisih |
+|-------|:--------------:|:--------------:|:-------:|
+| 7-class scratch | 0.175 (Late Fusion B3) | 0.234 (FCNN B1) | -0.060 |
+| 4-class scratch | 0.394 (Late Fusion B3) | 0.394 (FCNN B3) | -0.001 |
+| 7-class TL | 0.180 (Intermediate TL B3) | 0.232 (Intermediate TL B1) | -0.052 |
+| **4-class TL** | **0.412 (Intermediate TL B1)** | **0.407 (CNN TL B2)** | **+0.005** |
+
+### Overall Best
+
+| | Model | Macro F1 |
+|-|-------|:--------:|
+| **Front-only** | Intermediate Fusion TL 4-class B1 | **0.412** |
+| Front+side | CNN TL 4-class B2 | 0.407 |
+| Selisih | | **+0.005** |
+
+### Temuan dari Perbandingan
+
+**Temuan 10: Side view tidak meningkatkan performa best model**
+> "Overall best front-only (0.412) sedikit lebih baik dari front+side (0.407). Ini menunjukkan bahwa penambahan side view tidak membantu — justru berpotensi menambah noise karena perbedaan karakteristik fitur antar sudut kamera."
+
+**Temuan 11: FCNN paling terdampak oleh penghapusan side view**
+> "FCNN mengalami penurunan terbesar (-0.076 di 7-class) ketika side view dihilangkan. Ini logis karena landmark dari side view memiliki pola geometrik yang sangat berbeda dari front view — model kehilangan variasi data yang signifikan."
+
+**Temuan 12: CNN justru membaik di front-only**
+> "CNN (citra wajah) sedikit membaik di front-only (+0.005 di 7-class). Ini karena tanpa variasi sudut kamera, CNN bisa lebih fokus mempelajari fitur ekspresi wajah dari sudut yang konsisten."
+
+**Temuan 13: Konsistensi data lebih penting dari kuantitas**
+> "Meskipun dataset berkurang 28% (9.894 → 7.091), best model tidak menurun. Ini memperkuat argumen bahwa konsistensi data (semua front view) lebih penting daripada kuantitas data (campur front+side)."
+
+> **Penjelasan lisan:**
+> "Perbandingan menunjukkan bahwa front-only justru menghasilkan best model yang sedikit lebih baik. Dosen benar — konsistensi data lebih penting dari jumlah data. Menariknya, model terbaik bergeser dari Late Fusion TL (front+side) ke Intermediate Fusion TL (front-only), yang menunjukkan bahwa arsitektur optimal bisa berubah tergantung karakteristik data."
+
+---
+
+## SLIDE 23: Diskusi dan Kesimpulan Sementara
+
+### Jawaban terhadap Rumusan Masalah (menggunakan hasil front-only sebagai acuan utama):
 
 **RQ1 (Performa CNN):**
-- From scratch: Macro F1 0.134 (7-class) dan 0.296 (4-class) — rendah karena dataset terbatas
-- Transfer Learning: Macro F1 0.177 (7-class) dan **0.407 (4-class)** — signifikan meningkat (+37%)
+- From scratch: Macro F1 0.137 (7-class) dan 0.265 (4-class) — rendah karena dataset terbatas
+- Transfer Learning: Macro F1 0.154 (7-class) dan **0.274 (4-class)** — meningkat dengan ResNet18
 
 **RQ2 (Performa FCNN):**
-Model FCNN menghasilkan Macro F1 **0.234** (7-class) dan **0.394** (4-class). Fitur geometrik dari 68 facial landmark terbukti lebih robust, tidak terpengaruh transfer learning.
+Model FCNN menghasilkan Macro F1 **0.158** (7-class) dan **0.361** (4-class). Fitur geometrik dari 68 facial landmark terbukti lebih robust.
 
 **RQ3 (Perbandingan Fusion):**
-- From scratch: FCNN > Late Fusion > Intermediate Fusion
-- Transfer Learning: Late Fusion TL menjadi yang terbaik (**0.442**) — ResNet18 mengangkat performa CNN sehingga fusion menjadi efektif
-- Intermediate Fusion TL juga meningkat drastis (+66% di 7-class, +46% di 4-class)
+- From scratch: Late Fusion terbaik (0.175 / 0.394) — menggabungkan CNN + FCNN di level keputusan
+- Transfer Learning: **Intermediate Fusion TL menjadi yang terbaik (0.412)** — penggabungan di level fitur lebih efektif saat CNN sudah kuat (ResNet18)
+- Konsistensi data (front-only) lebih penting dari kuantitas — best model front-only (0.412) sedikit lebih baik dari front+side (0.407)
 
-### **(KONSULTASI 4)** Pertanyaan untuk Pembimbing
+### Ringkasan Perjalanan Eksperimen (Front-Only — Acuan Utama)
 
-> "Pak/Bu, seluruh eksperimen sudah selesai (48 kombinasi total). Beberapa hal yang perlu didiskusikan:"
+| Tahap | Model Terbaik | Macro F1 | Keterangan |
+|-------|--------------|----------|------------|
+| Tahap 1: 7-class | Late Fusion B3 | 0.175 | Baseline |
+| Tahap 2: 4-class | Late Fusion B3 | 0.394 | +125% dari 7-class |
+| Tahap 3: TL 4-class | **Intermediate TL B1** | **0.412** | +5% dari 4-class |
+| Tahap 4: Front-only vs Front+side | Front-only sedikit lebih baik | +0.005 | Konsistensi > kuantitas |
 
-1. **Transfer Learning sebagai kontribusi:** "Transfer Learning (ResNet18) meningkatkan Macro F1 dari 0.394 → 0.442. Apakah ini cukup signifikan sebagai kontribusi tambahan di tesis, atau lebih baik tetap fokus pada from scratch?"
+### **(KONSULTASI 5)** Pertanyaan untuk Pembimbing
 
-2. **FCNN > Fusion (from scratch):** "Temuan bahwa unimodal FCNN lebih baik dari multimodal fusion from scratch agak bertentangan dengan hipotesis di proposal. Namun dengan Transfer Learning, fusion akhirnya menjadi terbaik. Bagaimana sebaiknya menyikapi ini di narasi tesis?"
+> "Pak/Bu, seluruh eksperimen sudah selesai — 48 kombinasi front+side + 48 kombinasi front-only = 96 total. Beberapa hal yang perlu didiskusikan:"
 
-3. **Macro F1 0.442:** "Nilai terbaik 0.442 (4-kelas Late Fusion TL) masih di bawah 0.5. Apakah ini acceptable untuk tesis, mengingat ini dataset nyata dari sesi pemrograman yang sangat imbalanced?"
+1. **Acuan utama:** "Hasil front-only saya jadikan acuan utama karena datanya konsisten (semua sudut depan). Hasil front+side dijadikan pembanding. Apakah Bapak/Ibu setuju?"
+
+2. **Best model bergeser:** "Best model bergeser dari Late Fusion TL (front+side, 0.442) ke Intermediate Fusion TL (front-only, 0.412). Ini menunjukkan arsitektur optimal bergantung pada karakteristik data."
+
+3. **Macro F1 0.412:** "Nilai terbaik 0.412 masih di bawah 0.5. Namun mengingat ini dataset nyata dari sesi pemrograman yang sangat imbalanced, apakah ini acceptable?"
 
 ---
 
