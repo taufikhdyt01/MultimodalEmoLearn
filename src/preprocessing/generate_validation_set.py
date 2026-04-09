@@ -97,7 +97,7 @@ def load_new_labels():
     return user_labels
 
 
-def collect_all_samples(old_labels, new_labels):
+def collect_all_samples(old_labels, new_labels, front_only=False):
     """Kumpulkan semua samples dengan metadata lengkap."""
     samples = []
 
@@ -134,7 +134,8 @@ def collect_all_samples(old_labels, new_labels):
                 continue
             uid = uid_dir.name
             labels = new_labels.get(uid, {})
-            for angle in ["front", "side"]:
+            angles = ["front"] if front_only else ["front", "side"]
+            for angle in angles:
                 faces_dir = uid_dir / angle / "faces"
                 if not faces_dir.exists():
                     continue
@@ -334,6 +335,8 @@ def main():
     parser.add_argument("--seed", type=int, default=RANDOM_SEED)
     parser.add_argument("--output", type=str, default=None,
                         help="Output directory (default: auto-named)")
+    parser.add_argument("--front-only", action="store_true",
+                        help="Hanya gunakan data front view (tanpa side)")
     args = parser.parse_args()
 
     # Auto-name output dir
@@ -357,7 +360,7 @@ def main():
 
     # 2. Collect all samples
     print("[2/4] Collecting samples...")
-    all_samples = collect_all_samples(old_labels, new_labels)
+    all_samples = collect_all_samples(old_labels, new_labels, front_only=args.front_only)
     print(f"  Total samples: {len(all_samples)}")
 
     # 3. Select validation samples
