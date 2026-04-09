@@ -610,7 +610,34 @@ notebooks/results/
 
 ---
 
-## 12. Troubleshooting
+## 12. 5-Fold Cross-Validation (Lanjutan)
+
+5-Fold CV subject-wise — user dikelompokkan ke 5 grup, rotasi test set.
+Lebih cepat dari LOSO (~2-4 jam vs ~8-15 jam).
+
+```bash
+tmux new -s crossval
+conda activate emotrain
+cd MultimodalEmoLearn
+
+bash scripts/run_crossval.sh
+```
+
+### Output 5-Fold CV:
+```
+models/frontonly/crossval/
+├── cv5_intermediate_tl_4class.json
+├── cv5_late_fusion_4class.json
+├── cv5_fcnn_4class.json
+└── cv5_comparison.png
+
+notebooks/results/
+└── 34_crossval_frontonly_executed.ipynb
+```
+
+---
+
+## 13. Troubleshooting
 
 ### CUDA Out of Memory
 ```python
