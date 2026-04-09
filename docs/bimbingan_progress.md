@@ -773,9 +773,49 @@ User split **identik** — test set menggunakan user yang sama → hasil bisa di
 
 ---
 
-## SLIDE 23: Diskusi dan Kesimpulan Sementara
+## SLIDE 23: Evaluasi Robustness — LOSO, 5-Fold CV, Random Split
 
-### Jawaban terhadap Rumusan Masalah (menggunakan hasil front-only sebagai acuan utama):
+### Motivasi
+
+Eksperimen sebelumnya menggunakan **single user-based split** (80/10/10 — fix 5 user test). Hasilnya bisa bias ke user tertentu. Dosen meminta evaluasi dengan strategi split yang berbeda untuk menunjukkan robustness model.
+
+### 3 Strategi yang Dibandingkan
+
+| Strategi | Cara | Fold | Data Leakage? |
+|----------|------|:----:|:-------------:|
+| **LOSO** | 1 user = 1 test set, rotasi | 37 | Tidak |
+| **5-Fold CV** | User dibagi 5 grup (~7 user/grup), rotasi | 5 | Tidak |
+| **Random Split** | Sampel diacak tanpa peduli user | 5 repeat | **Ya** (baseline) |
+
+### Model yang Diuji
+
+3 model terbaik dari front-only 4-class:
+1. Intermediate Fusion TL B1 (single split: 0.412)
+2. Late Fusion B3 (single split: 0.394)
+3. FCNN B3 (single split: 0.361)
+
+### Hasil (sedang berjalan di VPS)
+
+| Model | Single Split | Random Split | 5-Fold CV | LOSO |
+|-------|:-----------:|:------------:|:---------:|:----:|
+| Intermediate TL | 0.412 | *pending* | *pending* | *pending* |
+| Late Fusion | 0.394 | *pending* | *pending* | *pending* |
+| FCNN | 0.361 | *pending* | *pending* | *pending* |
+
+*Hasil akan diupdate setelah training selesai.*
+
+> **Penjelasan lisan:**
+> "Untuk memvalidasi robustness model, saya mengevaluasi 3 model terbaik menggunakan 3 strategi pembagian data: LOSO (gold standard, 37 fold), 5-Fold CV (moderat), dan Random Split (baseline dengan data leakage)."
+>
+> "Random Split sengaja dimasukkan sebagai pembanding — kalau hasilnya jauh lebih tinggi dari LOSO/CV, artinya model 'menghafal' wajah user (data leakage) bukan mengenali ekspresi. Kalau hasilnya mirip, artinya model sudah belajar pola ekspresi yang general."
+>
+> "LOSO adalah yang paling ketat — setiap user mendapat giliran menjadi test set. Hasilnya berupa mean ± std yang lebih bisa dipercaya daripada single split."
+
+---
+
+## SLIDE 24: Diskusi dan Kesimpulan Sementara
+
+### Jawaban terhadap Rumusan Masalah (menggunakan hasil front-only sebagai acuan utama, pending validasi LOSO):
 
 **RQ1 (Performa CNN):**
 - From scratch: Macro F1 0.137 (7-class) dan 0.265 (4-class) — rendah karena dataset terbatas
@@ -800,7 +840,7 @@ Model FCNN menghasilkan Macro F1 **0.158** (7-class) dan **0.361** (4-class). Fi
 
 ### **(KONSULTASI 5)** Pertanyaan untuk Pembimbing
 
-> "Pak/Bu, seluruh eksperimen sudah selesai — 48 kombinasi front+side + 48 kombinasi front-only = 96 total. Beberapa hal yang perlu didiskusikan:"
+> "Pak/Bu, total eksperimen sekarang: 48 (front+side) + 48 (front-only) = 96, ditambah evaluasi LOSO/CV/Random Split yang sedang berjalan. Beberapa hal yang perlu didiskusikan:"
 
 1. **Acuan utama:** "Hasil front-only saya jadikan acuan utama karena datanya konsisten (semua sudut depan). Hasil front+side dijadikan pembanding. Apakah Bapak/Ibu setuju?"
 
@@ -808,20 +848,35 @@ Model FCNN menghasilkan Macro F1 **0.158** (7-class) dan **0.361** (4-class). Fi
 
 3. **Macro F1 0.412:** "Nilai terbaik 0.412 masih di bawah 0.5. Namun mengingat ini dataset nyata dari sesi pemrograman yang sangat imbalanced, apakah ini acceptable?"
 
+4. **LOSO sedang berjalan:** "Evaluasi LOSO (37 fold), 5-Fold CV, dan Random Split sedang berjalan di VPS. Hasilnya akan menunjukkan apakah model robust terhadap variasi user dan apakah ada data leakage."
+
+5. **Validasi ahli:** "Dataset validasi 1% (146 sampel) sudah disiapkan. Butuh 3 validator berlatar psikologi. Apakah Bapak/Ibu punya rekomendasi?"
+
 ---
 
 ## Ringkasan Poin Konsultasi
 
-| No | Topik | Pertanyaan | Opsi Rekomendasi |
-|----|-------|-----------|------------------|
-| 1 | 7-kelas vs 4-kelas | Analisis tambahan atau eksperimen utama? | Analisis tambahan di BAB 5 |
-| 2 | FCNN > Fusion (from scratch) | Bagaimana menyikapi di tesis? | Report sebagai temuan, bahas alasannya |
-| 3 | Transfer Learning sebagai kontribusi | Apakah TL cukup signifikan di tesis? | Diskusikan dengan pembimbing |
-| 4 | Macro F1 0.442 | Acceptable atau perlu metode lain? | Diskusikan dengan pembimbing |
-| 5 | Validasi ahli - jumlah sample | 583 (5%) / 1,067 (10%) / 1,938 (full non-neutral)? | Tergantung ketersediaan ahli |
-| 6 | Validasi ahli - jumlah ahli | 1 ahli atau 2 ahli (untuk inter-rater reliability)? | 2 ahli jika memungkinkan |
-| 7 | Validasi ahli - honorarium | Perlu diberikan fee untuk validator? | Tergantung kebijakan prodi |
-| 8 | Perubahan tool | Perlu revisi proposal untuk perubahan dlib → MediaPipe? | Cukup di BAB 4 |
+| No | Topik | Status |
+|----|-------|--------|
+| 1 | Eksperimen front+side (48 kombinasi) | ✅ Selesai |
+| 2 | Eksperimen front-only (48 kombinasi) | ✅ Selesai |
+| 3 | Perbandingan front-only vs front+side | ✅ Selesai — front-only sedikit lebih baik |
+| 4 | LOSO Cross-Validation (37 fold) | ⏳ Sedang berjalan di VPS |
+| 5 | 5-Fold CV (subject-wise) | ⏳ Sedang berjalan di VPS |
+| 6 | Random Split (baseline) | ⏳ Sedang berjalan di VPS |
+| 7 | Validasi ahli — dataset 146 sampel | ✅ Dataset siap, butuh 3 validator |
+| 8 | Validasi ahli — Streamlit web app | ✅ App siap deploy |
+| 9 | Perubahan dlib → MediaPipe | ✅ Cukup dijelaskan di BAB 4 |
+
+### Pertanyaan yang Perlu Didiskusikan
+
+| No | Topik | Pertanyaan |
+|----|-------|-----------|
+| 1 | Acuan utama | Front-only sebagai acuan utama, front+side sebagai pembanding? |
+| 2 | Best model bergeser | Late Fusion TL (0.442) → Intermediate TL (0.412) — bagaimana menyikapi? |
+| 3 | Macro F1 0.412 | Acceptable untuk tesis? |
+| 4 | Validasi ahli | Rekomendasi 3 validator psikologi? |
+| 5 | Honorarium | Perlu fee untuk validator? |
 
 ---
 
@@ -845,10 +900,16 @@ MultimodalEmoLearn/
 │       ├── face_crop_landmark.py       # Face crop + 68 landmark
 │       └── generate_emotion_label.py   # Generate label emosi
 ├── notebooks/
-│   ├── 01-05                           # Training 7-class from scratch
-│   ├── 06-10                           # Training 4-class from scratch
-│   ├── 11-16                           # Transfer Learning (7-class + 4-class)
-│   ├── 17_comparison_all               # Final comparison semua eksperimen
+│   ├── 01-05                           # Training 7-class from scratch (front+side)
+│   ├── 06-10                           # Training 4-class from scratch (front+side)
+│   ├── 11-16                           # Transfer Learning (front+side)
+│   ├── 17_comparison_all               # Comparison front+side
+│   ├── 18-25                           # Training front-only (from scratch)
+│   ├── 26-31                           # Transfer Learning front-only
+│   ├── 32_comparison_frontonly          # Comparison front-only vs original
+│   ├── 33_loso_frontonly               # LOSO Cross-Validation (37 fold)
+│   ├── 34_crossval_frontonly           # 5-Fold CV (subject-wise)
+│   ├── 35_randomsplit_frontonly        # Random Split (baseline)
 │   └── results/                        # Executed notebooks dari VPS
 ├── models/
 │   ├── cnn/, fcnn/, late_fusion/,      # Hasil 7-class from scratch
@@ -864,15 +925,18 @@ MultimodalEmoLearn/
 │   ├── final_comparison_heatmap.png    # Chart heatmap
 │   └── experiment_summary.json         # Ringkasan 7-class
 ├── data/
-│   ├── dataset/                        # Numpy arrays 7-class
-│   ├── dataset_augmented/              # Numpy arrays 7-class augmented
-│   ├── dataset_4class/                 # Numpy arrays 4-class
-│   ├── dataset_4class_augmented/       # Numpy arrays 4-class augmented
-│   └── validation_*/                   # Set validasi ahli (3 opsi)
+│   ├── dataset/                        # Numpy arrays 7-class (front+side)
+│   ├── dataset_frontonly/              # Numpy arrays 7-class (front-only)
+│   ├── dataset_frontonly_4class/       # Numpy arrays 4-class (front-only)
+│   ├── dataset_frontonly_*augmented/   # Versi augmented
+│   └── validation/sets/1pct/          # Set validasi ahli (146 sampel)
 ├── scripts/
-│   ├── run_all.sh                      # Jalankan semua (7-class + 4-class)
-│   ├── run_4class.sh                   # Jalankan hanya 4-class
-│   └── run_transfer.sh                 # Jalankan transfer learning (11-17)
+│   ├── run_frontonly_7class.sh         # Training front-only 7-class
+│   ├── run_frontonly_4class.sh         # Training front-only 4-class
+│   ├── run_frontonly_transfer.sh       # Training front-only TL
+│   ├── run_loso.sh                     # LOSO cross-validation
+│   ├── run_crossval.sh                 # 5-Fold CV
+│   └── run_randomsplit.sh              # Random Split baseline
 └── docs/
     ├── bimbingan_progress.md           # File ini
     └── linux_training_guide.md         # Panduan training di VPS
