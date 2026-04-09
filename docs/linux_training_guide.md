@@ -566,7 +566,40 @@ models/frontonly/
 
 ---
 
-## 11. Troubleshooting
+## 11. LOSO Cross-Validation (Lanjutan)
+
+LOSO (Leave-One-Subject-Out) mengevaluasi robustness model — setiap user jadi test set 1x.
+
+### Jalankan LOSO
+
+```bash
+tmux new -s loso
+conda activate emotrain
+cd MultimodalEmoLearn
+
+# Top 3 model, 4-class (disarankan)
+python scripts/run_loso.py --models intermediate_tl late_fusion fcnn --num-classes 4
+
+# Atau via notebook
+jupyter nbconvert --to notebook --execute notebooks/33_loso_frontonly.ipynb \
+    --output 33_executed.ipynb --output-dir notebooks/results/ \
+    --ExecutePreprocessor.timeout=36000
+```
+
+**Estimasi:** ~8-15 jam untuk 3 model × 37 fold.
+
+### Output LOSO:
+```
+models/frontonly/loso/
+├── loso_intermediate_tl_4class.json   # 37 fold results + summary
+├── loso_late_fusion_4class.json
+├── loso_fcnn_4class.json
+└── loso_comparison.png                # Bar chart per fold
+```
+
+---
+
+## 12. Troubleshooting
 
 ### CUDA Out of Memory
 ```python
