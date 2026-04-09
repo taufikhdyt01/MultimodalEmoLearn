@@ -590,13 +590,8 @@ tmux new -s loso
 conda activate emotrain
 cd MultimodalEmoLearn
 
-# Top 3 model, 4-class (disarankan)
-python scripts/run_loso.py --models intermediate_tl late_fusion fcnn --num-classes 4
-
-# Atau via notebook
-jupyter nbconvert --to notebook --execute notebooks/33_loso_frontonly.ipynb \
-    --output 33_executed.ipynb --output-dir notebooks/results/ \
-    --ExecutePreprocessor.timeout=36000
+# Jalankan via shell script (otomatis execute notebook 33)
+bash scripts/run_loso.sh
 ```
 
 **Estimasi:** ~8-15 jam untuk 3 model × 37 fold.
@@ -608,6 +603,9 @@ models/frontonly/loso/
 ├── loso_late_fusion_4class.json
 ├── loso_fcnn_4class.json
 └── loso_comparison.png                # Bar chart per fold
+
+notebooks/results/
+└── 33_loso_frontonly_executed.ipynb    # Executed notebook dengan chart
 ```
 
 ---
