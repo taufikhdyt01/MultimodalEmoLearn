@@ -261,9 +261,10 @@ def full_evaluation(model, test_loader, criterion, device, model_type="cnn", emo
     print(f"Test Weighted F1: {weighted_f1:.4f}")
     print()
     print("Classification Report:")
-    print(classification_report(labels, preds, target_names=emotions, zero_division=0))
+    class_labels = list(range(len(emotions)))
+    print(classification_report(labels, preds, labels=class_labels, target_names=emotions, zero_division=0))
 
-    cm = confusion_matrix(labels, preds)
+    cm = confusion_matrix(labels, preds, labels=class_labels)
 
     results = {
         "test_loss": test_loss,
@@ -338,9 +339,10 @@ def plot_per_class_f1(results_dict, title="Per-Class F1 Score Comparison", emoti
     width = 0.8 / len(results_dict)
 
     for i, (name, results) in enumerate(results_dict.items()):
+        class_labels = list(range(len(emotions)))
         report = classification_report(
             results["labels"], results["predictions"],
-            target_names=emotions, output_dict=True, zero_division=0
+            labels=class_labels, target_names=emotions, output_dict=True, zero_division=0
         )
         f1_scores = [report[emo]["f1-score"] for emo in emotions]
         ax.bar(x + i * width, f1_scores, width, label=name, alpha=0.8)

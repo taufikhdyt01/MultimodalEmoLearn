@@ -596,12 +596,18 @@ bash scripts/run_loso.sh
 
 **Estimasi:** ~8-15 jam untuk 3 model × 37 fold.
 
+> **Status (10 Apr 2026):** Baru 1 model (intermediate_tl) yang selesai LOSO (34/37 fold).
+> Late fusion dan FCNN belum dijalankan karena waktu terbatas.
+> Hasil intermediate_tl sudah tersimpan di `models/frontonly/loso/loso_intermediate_tl_4class.json`.
+> Untuk melanjutkan, jalankan ulang `bash scripts/run_loso.sh` — model yang sudah selesai akan di-overwrite,
+> atau modifikasi notebook 33 agar skip model yang sudah ada.
+
 ### Output LOSO:
 ```
 models/frontonly/loso/
-├── loso_intermediate_tl_4class.json   # 37 fold results + summary
-├── loso_late_fusion_4class.json
-├── loso_fcnn_4class.json
+├── loso_intermediate_tl_4class.json   # ✅ Selesai (34/37 fold)
+├── loso_late_fusion_4class.json       # ❌ Belum dijalankan
+├── loso_fcnn_4class.json              # ❌ Belum dijalankan
 └── loso_comparison.png                # Bar chart per fold
 
 notebooks/results/
