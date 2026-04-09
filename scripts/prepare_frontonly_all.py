@@ -13,7 +13,7 @@ import numpy as np
 from pathlib import Path
 from collections import Counter
 
-BASE = Path("d:/MultimodalEmoLearn")
+BASE = Path(__file__).resolve().parent.parent
 SRC_DATASET = BASE / "data" / "dataset_frontonly"
 AUG_DATASET = BASE / "data" / "dataset_frontonly_augmented"
 FOURCLASS_DIR = BASE / "data" / "dataset_frontonly_4class"
