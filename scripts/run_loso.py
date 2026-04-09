@@ -4,6 +4,12 @@ LOSO (Leave-One-Subject-Out) Cross-Validation
 Untuk setiap user, jadikan sebagai test set, sisanya sebagai train+val.
 Jalankan pada top 3 model front-only.
 
+Menggunakan numpy arrays dari dataset_frontonly + user_ids mapping.
+Tidak memerlukan raw data (data/processed, data/final).
+
+Prerequisite:
+    python scripts/generate_user_ids.py  (generate user_ids_all.npy)
+
 Usage:
     python scripts/run_loso.py                          # semua top 3 model
     python scripts/run_loso.py --models intermediate_tl  # model tertentu
@@ -12,15 +18,13 @@ Usage:
 import sys
 import os
 import json
-import csv
 import argparse
 import numpy as np
 import torch
 import torch.nn as nn
 from pathlib import Path
-from collections import defaultdict, Counter
+from collections import Counter
 from torch.utils.data import DataLoader, TensorDataset
-import cv2
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
@@ -32,170 +36,48 @@ from training.models import (
 from training.utils import train_model, full_evaluation
 
 # ── CONFIG ────────────────────────────────────────────
-FINAL_DIR = PROJECT_ROOT / "data" / "final"
-OLD_DIR = FINAL_DIR / "old"
-NEW_DIR = FINAL_DIR / "new"
-OLD_PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
-NEW_PROCESSED_DIR = PROJECT_ROOT / "data" / "processed_new"
+DATASET_DIR = PROJECT_ROOT / "data" / "dataset_frontonly"
 OUTPUT_DIR = PROJECT_ROOT / "models" / "frontonly" / "loso"
 
 EMOTIONS_7 = ["neutral", "happy", "sad", "angry", "fearful", "disgusted", "surprised"]
 EMOTIONS_4 = ["neutral", "happy", "sad", "negative"]
 REMAP_4 = {0: 0, 1: 1, 2: 2, 3: 3, 4: 3, 5: 3, 6: 3}
 
-IMG_SIZE = 224
 BATCH_SIZE = 32
 EPOCHS = 50
 PATIENCE = 15
 
 
-# ── DATA COLLECTION (reuse from prepare_dataset.py) ──
+# ── DATA LOADING (from pre-built numpy arrays) ──────
 
-def load_old_labels():
-    import openpyxl
-    sample_uid_map = {}
-    for sample_dir in OLD_PROCESSED_DIR.iterdir():
-        if not sample_dir.is_dir() or not sample_dir.name.startswith("Sample"):
-            continue
-        for xlsx in sample_dir.rglob("cleaned_data.xlsx"):
-            wb = openpyxl.load_workbook(xlsx, read_only=True)
-            ws = wb.active
-            for row in ws.iter_rows(min_row=2, max_row=2, values_only=True):
-                sample_uid_map[sample_dir.name] = str(row[1])
-            wb.close()
-            break
-    user_labels = defaultdict(dict)
-    for sample_dir in OLD_PROCESSED_DIR.iterdir():
-        if not sample_dir.is_dir() or not sample_dir.name.startswith("Sample"):
-            continue
-        uid = sample_uid_map.get(sample_dir.name)
-        if not uid:
-            continue
-        for xlsx_path in sample_dir.rglob("cleaned_data.xlsx"):
-            wb = openpyxl.load_workbook(xlsx_path, read_only=True)
-            ws = wb.active
-            headers = [cell.value for cell in next(ws.iter_rows(max_row=1))]
-            for row in ws.iter_rows(min_row=2, values_only=True):
-                timestamp = row[2]
-                if timestamp is None:
-                    continue
-                time_key = timestamp.strftime("%H_%M_%S")
-                scores = []
-                for emo in EMOTIONS_7:
-                    idx = headers.index(emo)
-                    val = row[idx] if row[idx] is not None else 0.0
-                    scores.append(float(val))
-                user_labels[uid][time_key] = scores
-            wb.close()
-    return user_labels
+def load_all_data():
+    """Load all images, landmarks, labels, and user_ids from numpy arrays."""
+    # Check if user_ids_all.npy exists
+    uid_path = DATASET_DIR / "user_ids_all.npy"
+    if not uid_path.exists():
+        print("ERROR: user_ids_all.npy not found!")
+        print("Run first: python scripts/generate_user_ids.py")
+        sys.exit(1)
 
+    # Load all splits and concatenate
+    all_images = []
+    all_landmarks = []
+    all_labels = []
+    all_uids = np.load(uid_path, allow_pickle=True)
 
-def load_new_labels():
-    user_labels = defaultdict(dict)
-    for user_dir in NEW_PROCESSED_DIR.iterdir():
-        if not user_dir.is_dir() or not user_dir.name.isdigit():
-            continue
-        uid = user_dir.name
-        labels_csv = user_dir / "labels.csv"
-        if not labels_csv.exists():
-            continue
-        with open(labels_csv, "r") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                emo_id = row["emotion_id"]
-                scores = [float(row.get(emo, 0.0)) for emo in EMOTIONS_7]
-                user_labels[uid][emo_id] = scores
-    return user_labels
+    for split in ["train", "val", "test"]:
+        all_images.append(np.load(DATASET_DIR / f"X_{split}_images.npy"))
+        all_landmarks.append(np.load(DATASET_DIR / f"X_{split}_landmarks.npy"))
+        all_labels.append(np.load(DATASET_DIR / f"y_{split}.npy"))
 
+    images = np.concatenate(all_images, axis=0)
+    landmarks = np.concatenate(all_landmarks, axis=0)
+    labels = np.concatenate(all_labels, axis=0)
 
-def collect_all_frontonly_samples(old_labels, new_labels):
-    """Collect all front-only samples grouped by user."""
-    user_samples = defaultdict(list)
+    assert len(images) == len(all_uids), \
+        f"Mismatch: {len(images)} samples vs {len(all_uids)} user_ids"
 
-    # Old data (front only)
-    if OLD_DIR.exists():
-        for uid_dir in sorted(OLD_DIR.iterdir()):
-            if not uid_dir.is_dir():
-                continue
-            uid = uid_dir.name
-            labels = old_labels.get(uid, {})
-            faces_dir = uid_dir / "front" / "faces"
-            lm_dir = uid_dir / "front" / "landmarks"
-            if not faces_dir.exists():
-                continue
-            for face_file in sorted(faces_dir.glob("*.jpg")):
-                time_key = face_file.stem.replace("frame_", "")
-                lm_file = lm_dir / (face_file.stem + ".csv")
-                if time_key in labels and lm_file.exists():
-                    scores = labels[time_key]
-                    label_idx = int(np.argmax(scores))
-                    user_samples[uid].append({
-                        "face_path": str(face_file),
-                        "lm_path": str(lm_file),
-                        "label": label_idx,
-                    })
-
-    # New data (front only — no side)
-    if NEW_DIR.exists():
-        for uid_dir in sorted(NEW_DIR.iterdir()):
-            if not uid_dir.is_dir():
-                continue
-            uid = uid_dir.name
-            labels = new_labels.get(uid, {})
-            faces_dir = uid_dir / "front" / "faces"
-            lm_dir = uid_dir / "front" / "landmarks"
-            if not faces_dir.exists():
-                continue
-            for face_file in sorted(faces_dir.glob("*.jpg")):
-                parts = face_file.stem.split("_emo")
-                if len(parts) != 2:
-                    continue
-                emo_id = parts[1]
-                lm_file = lm_dir / (face_file.stem + ".csv")
-                if emo_id in labels and lm_file.exists():
-                    scores = labels[emo_id]
-                    label_idx = int(np.argmax(scores))
-                    user_samples[uid].append({
-                        "face_path": str(face_file),
-                        "lm_path": str(lm_file),
-                        "label": label_idx,
-                    })
-
-    return dict(user_samples)
-
-
-def load_image(path):
-    img = cv2.imread(path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    return img.astype(np.float32) / 255.0
-
-
-def load_landmark(path):
-    coords = []
-    with open(path, "r") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            coords.append(float(row["x"]))
-            coords.append(float(row["y"]))
-    return np.array(coords, dtype=np.float32)
-
-
-def build_arrays_from_samples(samples, num_classes=7):
-    """Build numpy arrays from sample list."""
-    n = len(samples)
-    images = np.zeros((n, IMG_SIZE, IMG_SIZE, 3), dtype=np.float32)
-    landmarks = np.zeros((n, 136), dtype=np.float32)
-    labels = np.zeros(n, dtype=np.int64)
-
-    for i, s in enumerate(samples):
-        images[i] = load_image(s["face_path"])
-        landmarks[i] = load_landmark(s["lm_path"])
-        if num_classes == 4:
-            labels[i] = REMAP_4[s["label"]]
-        else:
-            labels[i] = s["label"]
-
-    return images, landmarks, labels
+    return images, landmarks, labels, all_uids
 
 
 def make_loaders(images, landmarks, labels, model_type, batch_size=32, shuffle=True):
@@ -257,15 +139,12 @@ MODEL_CONFIGS = {
 }
 
 
-def train_and_eval_fold(model_name, train_samples, test_samples,
+def train_and_eval_fold(model_name, train_img, train_lm, train_y,
+                        test_img, test_lm, test_y,
                         num_classes, device, fold_dir):
-    """Train model on train_samples, evaluate on test_samples."""
+    """Train model on train arrays, evaluate on test arrays."""
     cfg = MODEL_CONFIGS[model_name]
     emotions = EMOTIONS_4 if num_classes == 4 else EMOTIONS_7
-
-    # Build arrays
-    train_img, train_lm, train_y = build_arrays_from_samples(train_samples, num_classes)
-    test_img, test_lm, test_y = build_arrays_from_samples(test_samples, num_classes)
 
     # For validation, take 10% of train
     n_val = max(1, int(len(train_y) * 0.1))
@@ -382,19 +261,24 @@ def main():
     emotions = EMOTIONS_4 if num_classes == 4 else EMOTIONS_7
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    # ── Collect all samples ──
-    print("\nCollecting samples (front-only)...")
-    old_labels = load_old_labels()
-    new_labels = load_new_labels()
-    user_samples = collect_all_frontonly_samples(old_labels, new_labels)
+    # ── Load all data from numpy arrays ──
+    print("\nLoading data from numpy arrays...")
+    all_images, all_landmarks, all_labels, all_uids = load_all_data()
 
-    users = sorted(user_samples.keys())
-    total = sum(len(v) for v in user_samples.values())
+    # Remap labels if 4-class
+    if num_classes == 4:
+        all_labels = np.array([REMAP_4[int(l)] for l in all_labels], dtype=np.int64)
+
+    # Group indices by user
+    users = sorted(set(all_uids))
+    user_indices = {uid: np.where(all_uids == uid)[0] for uid in users}
+
+    total = len(all_labels)
     print(f"Total: {total} samples from {len(users)} users")
     for uid in users:
-        n = len(user_samples[uid])
-        counts = Counter(s["label"] for s in user_samples[uid])
-        print(f"  User {uid:>4s}: {n:>4d} samples | {dict(sorted(counts.items()))}")
+        idx = user_indices[uid]
+        counts = Counter(all_labels[idx].tolist())
+        print(f"  User {uid:>4s}: {len(idx):>4d} samples | {dict(sorted(counts.items()))}")
 
     # ── Run LOSO ──
     for model_name in args.models:
@@ -409,28 +293,25 @@ def main():
         os.makedirs(model_dir, exist_ok=True)
 
         for i, test_user in enumerate(users):
-            print(f"\n  Fold {i+1}/{len(users)}: test=user_{test_user} "
-                  f"({len(user_samples[test_user])} samples)")
+            test_idx = user_indices[test_user]
+            train_idx = np.concatenate([user_indices[u] for u in users if u != test_user])
 
-            # Split
-            test_samps = user_samples[test_user]
-            train_samps = []
-            for uid in users:
-                if uid != test_user:
-                    train_samps.extend(user_samples[uid])
+            print(f"\n  Fold {i+1}/{len(users)}: test=user_{test_user} "
+                  f"({len(test_idx)} samples)")
 
             # Skip if test set has no samples for target classes
-            test_labels = [REMAP_4[s["label"]] if num_classes == 4 else s["label"]
-                          for s in test_samps]
-            if len(set(test_labels)) < 2:
-                print(f"    SKIP: test user only has {len(set(test_labels))} class(es)")
+            test_labels = all_labels[test_idx]
+            if len(set(test_labels.tolist())) < 2:
+                print(f"    SKIP: test user only has {len(set(test_labels.tolist()))} class(es)")
                 continue
 
             fold_dir = model_dir / f"fold_{test_user}"
             os.makedirs(fold_dir, exist_ok=True)
 
             result = train_and_eval_fold(
-                model_name, train_samps, test_samps,
+                model_name,
+                all_images[train_idx], all_landmarks[train_idx], all_labels[train_idx],
+                all_images[test_idx], all_landmarks[test_idx], all_labels[test_idx],
                 num_classes, device, fold_dir)
 
             result["test_user"] = test_user

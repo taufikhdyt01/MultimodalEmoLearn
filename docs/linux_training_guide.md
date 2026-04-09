@@ -570,6 +570,19 @@ models/frontonly/
 
 LOSO (Leave-One-Subject-Out) mengevaluasi robustness model — setiap user jadi test set 1x.
 
+### Prerequisite: Generate user_ids (jika belum ada)
+
+```bash
+# Jalankan di LAPTOP (butuh data/processed & data/final), lalu upload hasilnya
+python scripts/generate_user_ids.py
+# Upload file-file kecil ini ke VPS:
+#   data/dataset_frontonly/user_ids_all.npy (~28 KB)
+#   data/dataset_frontonly/y_all.npy (~28 KB)
+#   data/dataset_frontonly/user_ids_train.npy
+#   data/dataset_frontonly/user_ids_val.npy
+#   data/dataset_frontonly/user_ids_test.npy
+```
+
 ### Jalankan LOSO
 
 ```bash
