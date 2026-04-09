@@ -637,7 +637,44 @@ notebooks/results/
 
 ---
 
-## 13. Troubleshooting
+## 13. Random Split — Baseline Comparison (Lanjutan)
+
+Random split sebagai baseline untuk menunjukkan efek data leakage.
+Sampel diacak tanpa memperhatikan user → user yang sama bisa di train & test.
+
+```bash
+tmux new -s randomsplit
+conda activate emotrain
+cd MultimodalEmoLearn
+
+bash scripts/run_randomsplit.sh
+```
+
+**Estimasi:** ~30-60 menit (5 repeats × 3 model).
+
+### Output Random Split:
+```
+models/frontonly/randomsplit/
+├── random_intermediate_tl_4class.json
+├── random_late_fusion_4class.json
+├── random_fcnn_4class.json
+└── split_strategy_comparison.png      # Grouped bar chart semua strategi
+
+notebooks/results/
+└── 35_randomsplit_frontonly_executed.ipynb
+```
+
+### Ringkasan Semua Strategi Split:
+
+| No | Notebook | Strategi | Fold/Repeat | Estimasi |
+|----|----------|----------|:-----------:|----------|
+| 33 | `loso_frontonly` | LOSO (37 fold) | 37 × 3 model | ~8-15 jam |
+| 34 | `crossval_frontonly` | 5-Fold CV | 5 × 3 model | ~2-4 jam |
+| 35 | `randomsplit_frontonly` | Random Split | 5 × 3 model | ~30-60 menit |
+
+---
+
+## 14. Troubleshooting
 
 ### CUDA Out of Memory
 ```python
