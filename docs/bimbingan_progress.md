@@ -794,22 +794,45 @@ Eksperimen sebelumnya menggunakan **single user-based split** (80/10/10 — fix 
 2. Late Fusion B3 (single split: 0.394)
 3. FCNN B3 (single split: 0.361)
 
-### Hasil (sedang berjalan di VPS)
+### Hasil
 
 | Model | Single Split | Random Split | 5-Fold CV | LOSO |
 |-------|:-----------:|:------------:|:---------:|:----:|
-| Intermediate TL | 0.412 | *pending* | *pending* | *pending* |
-| Late Fusion | 0.394 | *pending* | *pending* | *pending* |
-| FCNN | 0.361 | *pending* | *pending* | *pending* |
+| Intermediate TL | 0.412 | **0.586 ± 0.032** | *pending* | **0.370 ± 0.125** |
+| Late Fusion | 0.394 | **0.580 ± 0.032** | *pending* | *pending* |
+| FCNN | 0.361 | **0.471 ± 0.026** | *pending* | *pending* |
 
-*Hasil akan diupdate setelah training selesai.*
+*5-Fold CV dan LOSO (Late Fusion, FCNN) masih berjalan di VPS.*
+
+### Temuan 14: LOSO menunjukkan performa sebenarnya lebih rendah dari single split
+
+Intermediate Fusion TL pada LOSO (34 fold dari 37 user):
+- **LOSO Macro F1: 0.370 ± 0.125** vs Single Split: 0.412
+- Std deviation tinggi (0.125) → performa sangat bervariasi antar user
+- Ini menunjukkan single split (0.412) kemungkinan **over-estimate** karena kebetulan mendapat user test yang "mudah"
+
+### Temuan 15: Random Split jauh lebih tinggi — bukti data leakage
+
+Random Split menghasilkan Macro F1 yang **jauh lebih tinggi** (+0.11 s/d +0.19) dari user-based split:
+
+| Model | User-Based → Random | Selisih |
+|-------|:-------------------:|:-------:|
+| Intermediate TL | 0.412 → 0.586 | **+42%** |
+| Late Fusion | 0.394 → 0.580 | **+47%** |
+| FCNN | 0.361 → 0.471 | **+30%** |
+
+Ini membuktikan bahwa ketika sampel dari user yang sama ada di train dan test (data leakage), model "menghafal" identitas wajah user — bukan mengenali pola ekspresi emosi. **Maka user-based split (LOSO/CV) wajib digunakan** untuk evaluasi yang valid.
 
 > **Penjelasan lisan:**
 > "Untuk memvalidasi robustness model, saya mengevaluasi 3 model terbaik menggunakan 3 strategi pembagian data: LOSO (gold standard, 37 fold), 5-Fold CV (moderat), dan Random Split (baseline dengan data leakage)."
 >
-> "Random Split sengaja dimasukkan sebagai pembanding — kalau hasilnya jauh lebih tinggi dari LOSO/CV, artinya model 'menghafal' wajah user (data leakage) bukan mengenali ekspresi. Kalau hasilnya mirip, artinya model sudah belajar pola ekspresi yang general."
+> "Hasilnya sangat jelas — Random Split menghasilkan Macro F1 yang jauh lebih tinggi, naik 30-47% dibandingkan user-based split. Intermediate Fusion TL misalnya, naik dari 0.412 ke 0.586. Ini bukan karena modelnya tiba-tiba lebih baik, tapi karena model bisa 'menghafal' wajah user yang sama muncul di train dan test."
 >
-> "LOSO adalah yang paling ketat — setiap user mendapat giliran menjadi test set. Hasilnya berupa mean ± std yang lebih bisa dipercaya daripada single split."
+> "Temuan ini memperkuat argumen bahwa evaluasi harus menggunakan user-based split seperti LOSO atau Cross-Validation, bukan random split."
+>
+> "Sementara itu, LOSO untuk Intermediate Fusion TL sudah selesai — Macro F1 turun dari 0.412 (single split) ke 0.370 ± 0.125 (LOSO). Std deviation yang tinggi (0.125) menunjukkan performa sangat bervariasi antar user — ada user yang mudah diprediksi, ada yang sangat sulit. Ini artinya angka 0.412 dari single split kemungkinan sedikit optimistic."
+>
+> "Rangkuman perbandingan: Random Split (0.586) >> Single Split (0.412) > LOSO (0.370). Pola ini menunjukkan semakin ketat strategi evaluasinya, semakin rendah hasilnya — tapi semakin jujur juga representasinya."
 
 ---
 
