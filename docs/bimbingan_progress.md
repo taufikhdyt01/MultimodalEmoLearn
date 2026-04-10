@@ -215,6 +215,22 @@ Evaluasi semua skenario menggunakan **Macro F1-Score** (bukan accuracy, karena a
 | Validation | 1,174 | 3 users | 11.9% |
 | Test | 1,656 | 5 users | 16.7% |
 
+### Detail per Batch (Front-Only)
+
+| | Train | Val | Test | Total |
+|-|:-----:|:---:|:----:|:-----:|
+| **Batch 1** (20 user, front only) | 18 user (3,334) | 1 user (232) | 1 user (258) | 20 user (3,824) |
+| **Batch 2** (17 user, front only) | 11 user (2,014) | 2 user (475) | 4 user (778) | 17 user (3,267) |
+| **Total** | **29 user (5,348)** | **3 user (707)** | **5 user (1,036)** | **37 user (7,091)** |
+
+Detail user per split:
+- **Train (29 user):** 97, 99, 100, 101, 102, 103, 104, 106, 107, 108, 109, 110, 113, 114, 115, 116, 117, 118, 200, 201, 203, 205, 208, 210, 211, 212, 213, 215, 216
+- **Val (3 user):** 112 (Batch 1), 207, 214 (Batch 2)
+- **Test (5 user):** 111 (Batch 1), 197, 202, 206, 209 (Batch 2)
+
+> **Penjelasan lisan:**
+> "Split dilakukan per user, bukan per sampel — jadi semua frame dari 1 mahasiswa hanya masuk ke 1 split. Dari 20 user batch 1, 18 masuk train, 1 val, 1 test. Dari 17 user batch 2, 11 masuk train, 2 val, 4 test. Proporsi batch 2 di test set memang lebih banyak karena algoritma smart split memastikan emosi langka (fearful, disgusted) terdistribusi merata ke semua split."
+
 ### Kenapa rasionya bukan tepat 80/10/10?
 
 Di proposal tertulis 80/10/10, namun karena split dilakukan **berdasarkan user** (bukan random per-sample), rasio tidak bisa tepat. Rasio aktual 71/12/17 masih dalam rentang standar yang lazim di penelitian:
@@ -798,11 +814,11 @@ Eksperimen sebelumnya menggunakan **single user-based split** (80/10/10 — fix 
 
 | Model | Single Split | Random Split | 5-Fold CV | LOSO |
 |-------|:-----------:|:------------:|:---------:|:----:|
-| Intermediate TL | 0.412 | **0.586 ± 0.032** | *pending* | **0.370 ± 0.125** |
-| Late Fusion | 0.394 | **0.580 ± 0.032** | *pending* | *pending* |
-| FCNN | 0.361 | **0.471 ± 0.026** | *pending* | *pending* |
+| Intermediate TL | 0.412 | **0.586 ± 0.032** | **0.435 ± 0.068** | **0.370 ± 0.125** |
+| Late Fusion | 0.394 | **0.580 ± 0.032** | **0.401 ± 0.055** | *pending* |
+| FCNN | 0.361 | **0.471 ± 0.026** | **0.399 ± 0.062** | *pending* |
 
-*5-Fold CV dan LOSO (Late Fusion, FCNN) masih berjalan di VPS.*
+*LOSO (Late Fusion, FCNN) masih berjalan di VPS.*
 
 ### Temuan 14: LOSO menunjukkan performa sebenarnya lebih rendah dari single split
 
@@ -832,7 +848,7 @@ Ini membuktikan bahwa ketika sampel dari user yang sama ada di train dan test (d
 >
 > "Sementara itu, LOSO untuk Intermediate Fusion TL sudah selesai — Macro F1 turun dari 0.412 (single split) ke 0.370 ± 0.125 (LOSO). Std deviation yang tinggi (0.125) menunjukkan performa sangat bervariasi antar user — ada user yang mudah diprediksi, ada yang sangat sulit. Ini artinya angka 0.412 dari single split kemungkinan sedikit optimistic."
 >
-> "Rangkuman perbandingan: Random Split (0.586) >> Single Split (0.412) > LOSO (0.370). Pola ini menunjukkan semakin ketat strategi evaluasinya, semakin rendah hasilnya — tapi semakin jujur juga representasinya."
+> "Rangkuman perbandingan Intermediate TL: Random Split (0.586) >> 5-Fold CV (0.435) > Single Split (0.412) > LOSO (0.370). Pola ini menunjukkan semakin ketat strategi evaluasinya, semakin rendah hasilnya — tapi semakin jujur juga representasinya."
 
 ---
 
