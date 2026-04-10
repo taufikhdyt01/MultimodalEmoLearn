@@ -21,11 +21,11 @@ ADMIN_PASSWORD = "emoval2026"  # ganti sesuai kebutuhan
 
 DEFAULT_CONFIG = {
     "active_set": "1pct_frontonly",
-    "active_label": "1% Front-Only (104 sample)",
+    "active_label": "1% Front-Only (128 sample)",
 }
 
 VALIDATION_SETS = {
-    "1% Front-Only (104 sample)": BASE_DIR / "sets" / "1pct_frontonly",
+    "1% Front-Only (128 sample)": BASE_DIR / "sets" / "1pct_frontonly",
     "1% Front+Side (146 sample)": BASE_DIR / "sets" / "1pct",
     "5% Stratified (583 sample)": BASE_DIR / "sets" / "5pct",
     "10% Stratified (1,067 sample)": BASE_DIR / "sets" / "10pct",
