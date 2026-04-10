@@ -1,0 +1,103 @@
+{
+  "model": "late_fusion",
+  "description": "Late Fusion (CNN + FCNN weighted avg)",
+  "num_classes": 4,
+  "k_folds": 5,
+  "seed": 42,
+  "total_users": 37,
+  "accuracy_mean": 0.8202769808561795,
+  "accuracy_std": 0.07237334135407615,
+  "macro_f1_mean": 0.40125483168225495,
+  "macro_f1_std": 0.05458866508180365,
+  "weighted_f1_mean": 0.8053607916868339,
+  "weighted_f1_std": 0.06605226656434092,
+  "per_fold": [
+    {
+      "test_accuracy": 0.8068669527896996,
+      "test_macro_f1": 0.3801710353649526,
+      "test_weighted_f1": 0.7769279145733293,
+      "best_cnn_weight": 0.25,
+      "fold": 1,
+      "test_users": [
+        "118",
+        "114",
+        "104",
+        "211",
+        "97",
+        "207",
+        "107",
+        "208"
+      ],
+      "test_samples": 1864
+    },
+    {
+      "test_accuracy": 0.8747030878859857,
+      "test_macro_f1": 0.4966862203437214,
+      "test_weighted_f1": 0.8646758532835159,
+      "best_cnn_weight": 0.15000000000000002,
+      "fold": 2,
+      "test_users": [
+        "206",
+        "117",
+        "109",
+        "116",
+        "113",
+        "214",
+        "110",
+        "200"
+      ],
+      "test_samples": 1684
+    },
+    {
+      "test_accuracy": 0.8427734375,
+      "test_macro_f1": 0.4197445825334968,
+      "test_weighted_f1": 0.8309380540105415,
+      "best_cnn_weight": 0.05,
+      "fold": 3,
+      "test_users": [
+        "100",
+        "213",
+        "106",
+        "112",
+        "101",
+        "209",
+        "202"
+      ],
+      "test_samples": 1024
+    },
+    {
+      "test_accuracy": 0.687218045112782,
+      "test_macro_f1": 0.33617231353929905,
+      "test_weighted_f1": 0.6898391051842079,
+      "best_cnn_weight": 0.9,
+      "fold": 4,
+      "test_users": [
+        "102",
+        "99",
+        "216",
+        "103",
+        "215",
+        "205",
+        "212"
+      ],
+      "test_samples": 1330
+    },
+    {
+      "test_accuracy": 0.8898233809924306,
+      "test_macro_f1": 0.373500006629805,
+      "test_weighted_f1": 0.8644230313825748,
+      "best_cnn_weight": 1.0,
+      "fold": 5,
+      "test_users": [
+        "111",
+        "203",
+        "197",
+        "201",
+        "108",
+        "115",
+        "210"
+      ],
+      "test_samples": 1189
+    }
+  ]
+}
