@@ -1,0 +1,54 @@
+{
+  "model": "intermediate_tl",
+  "description": "Intermediate Fusion TL (ResNet18 + FCNN)",
+  "num_classes": 4,
+  "n_repeats": 5,
+  "split_ratio": [
+    0.8,
+    0.1,
+    0.1
+  ],
+  "accuracy_mean": 0.8664788732394367,
+  "accuracy_std": 0.014319171861564907,
+  "macro_f1_mean": 0.5858107334851778,
+  "macro_f1_std": 0.03188540802349833,
+  "weighted_f1_mean": 0.8621123652189068,
+  "weighted_f1_std": 0.015591533818225313,
+  "per_repeat": [
+    {
+      "test_accuracy": 0.8577464788732394,
+      "test_macro_f1": 0.5762253768035088,
+      "test_weighted_f1": 0.8459847981768774,
+      "seed": 100,
+      "repeat": 1
+    },
+    {
+      "test_accuracy": 0.8647887323943662,
+      "test_macro_f1": 0.614464770324659,
+      "test_weighted_f1": 0.8646460848294873,
+      "seed": 101,
+      "repeat": 2
+    },
+    {
+      "test_accuracy": 0.8943661971830986,
+      "test_macro_f1": 0.6201435826635767,
+      "test_weighted_f1": 0.8908715877137484,
+      "seed": 102,
+      "repeat": 3
+    },
+    {
+      "test_accuracy": 0.8549295774647887,
+      "test_macro_f1": 0.5311291080924456,
+      "test_weighted_f1": 0.8563836331005946,
+      "seed": 103,
+      "repeat": 4
+    },
+    {
+      "test_accuracy": 0.8605633802816901,
+      "test_macro_f1": 0.5870908295416988,
+      "test_weighted_f1": 0.8526757222738262,
+      "seed": 104,
+      "repeat": 5
+    }
+  ]
+}

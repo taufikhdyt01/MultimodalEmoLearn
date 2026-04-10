@@ -1,0 +1,54 @@
+{
+  "model": "fcnn",
+  "description": "FCNN (Landmark only)",
+  "num_classes": 4,
+  "n_repeats": 5,
+  "split_ratio": [
+    0.8,
+    0.1,
+    0.1
+  ],
+  "accuracy_mean": 0.8422535211267604,
+  "accuracy_std": 0.01953638409509823,
+  "macro_f1_mean": 0.47137784075637396,
+  "macro_f1_std": 0.025589738788466238,
+  "weighted_f1_mean": 0.8293024737039684,
+  "weighted_f1_std": 0.021378911500837847,
+  "per_repeat": [
+    {
+      "test_accuracy": 0.8309859154929577,
+      "test_macro_f1": 0.42822030730148264,
+      "test_weighted_f1": 0.8038721130272204,
+      "seed": 100,
+      "repeat": 1
+    },
+    {
+      "test_accuracy": 0.8464788732394366,
+      "test_macro_f1": 0.46188270718564,
+      "test_weighted_f1": 0.827498586823703,
+      "seed": 101,
+      "repeat": 2
+    },
+    {
+      "test_accuracy": 0.8549295774647887,
+      "test_macro_f1": 0.4801384463826136,
+      "test_weighted_f1": 0.8441861901336958,
+      "seed": 102,
+      "repeat": 3
+    },
+    {
+      "test_accuracy": 0.8676056338028169,
+      "test_macro_f1": 0.5051863893800006,
+      "test_weighted_f1": 0.8613383193892311,
+      "seed": 103,
+      "repeat": 4
+    },
+    {
+      "test_accuracy": 0.8112676056338028,
+      "test_macro_f1": 0.48146135353213304,
+      "test_weighted_f1": 0.8096171591459915,
+      "seed": 104,
+      "repeat": 5
+    }
+  ]
+}
