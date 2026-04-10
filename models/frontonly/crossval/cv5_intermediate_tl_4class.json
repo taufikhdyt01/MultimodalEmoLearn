@@ -1,0 +1,98 @@
+{
+  "model": "intermediate_tl",
+  "description": "Intermediate Fusion TL (ResNet18 + FCNN)",
+  "num_classes": 4,
+  "k_folds": 5,
+  "seed": 42,
+  "total_users": 37,
+  "accuracy_mean": 0.8082014911789436,
+  "accuracy_std": 0.0950961367587081,
+  "macro_f1_mean": 0.434840741074855,
+  "macro_f1_std": 0.06788017172984238,
+  "weighted_f1_mean": 0.8051511171583711,
+  "weighted_f1_std": 0.08451103887751876,
+  "per_fold": [
+    {
+      "test_accuracy": 0.6469957081545065,
+      "test_macro_f1": 0.3601461239808119,
+      "test_weighted_f1": 0.6828741155594332,
+      "fold": 1,
+      "test_users": [
+        "118",
+        "114",
+        "104",
+        "211",
+        "97",
+        "207",
+        "107",
+        "208"
+      ],
+      "test_samples": 1864
+    },
+    {
+      "test_accuracy": 0.899643705463183,
+      "test_macro_f1": 0.5436745242414417,
+      "test_weighted_f1": 0.8918104966621746,
+      "fold": 2,
+      "test_users": [
+        "206",
+        "117",
+        "109",
+        "116",
+        "113",
+        "214",
+        "110",
+        "200"
+      ],
+      "test_samples": 1684
+    },
+    {
+      "test_accuracy": 0.8369140625,
+      "test_macro_f1": 0.44499154840464833,
+      "test_weighted_f1": 0.839143105818365,
+      "fold": 3,
+      "test_users": [
+        "100",
+        "213",
+        "106",
+        "112",
+        "101",
+        "209",
+        "202"
+      ],
+      "test_samples": 1024
+    },
+    {
+      "test_accuracy": 0.7609022556390977,
+      "test_macro_f1": 0.3651002155714484,
+      "test_weighted_f1": 0.7282069771142384,
+      "fold": 4,
+      "test_users": [
+        "102",
+        "99",
+        "216",
+        "103",
+        "215",
+        "205",
+        "212"
+      ],
+      "test_samples": 1330
+    },
+    {
+      "test_accuracy": 0.896551724137931,
+      "test_macro_f1": 0.4602912931759245,
+      "test_weighted_f1": 0.8837208906376443,
+      "fold": 5,
+      "test_users": [
+        "111",
+        "203",
+        "197",
+        "201",
+        "108",
+        "115",
+        "210"
+      ],
+      "test_samples": 1189
+    }
+  ]
+}
