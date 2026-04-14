@@ -9,11 +9,44 @@ import time
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 from sklearn.metrics import (
     classification_report, confusion_matrix, f1_score, accuracy_score
 )
+
+
+# ============== LOSS FUNCTIONS ==============
+
+class FocalLoss(nn.Module):
+    """Focal Loss (Lin et al., 2017) for imbalanced classification.
+
+    Reduces loss for well-classified samples, focuses on hard examples.
+    FL(p_t) = -alpha_t * (1 - p_t)^gamma * log(p_t)
+
+    Args:
+        gamma: focusing parameter (default=2.0). Higher = more focus on hard samples.
+        alpha: class weights (tensor). If None, no class weighting.
+        reduction: 'mean' or 'sum'.
+    """
+
+    def __init__(self, gamma=2.0, alpha=None, reduction="mean"):
+        super().__init__()
+        self.gamma = gamma
+        self.alpha = alpha
+        self.reduction = reduction
+
+    def forward(self, inputs, targets):
+        ce_loss = F.cross_entropy(inputs, targets, weight=self.alpha, reduction="none")
+        p_t = torch.exp(-ce_loss)  # probability of correct class
+        focal_loss = ((1 - p_t) ** self.gamma) * ce_loss
+
+        if self.reduction == "mean":
+            return focal_loss.mean()
+        elif self.reduction == "sum":
+            return focal_loss.sum()
+        return focal_loss
 
 
 # ============== DATASET ==============
