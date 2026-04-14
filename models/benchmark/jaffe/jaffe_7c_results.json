@@ -1,0 +1,33 @@
+{
+  "CNN_B1": {
+    "accuracy": 0.45,
+    "macro_f1": 0.304029304029304,
+    "weighted_f1": 0.31923076923076926
+  },
+  "FCNN_B1": {
+    "accuracy": 0.25,
+    "macro_f1": 0.2087912087912088,
+    "weighted_f1": 0.16923076923076924
+  },
+  "Intermediate_B1": {
+    "accuracy": 0.15,
+    "macro_f1": 0.037267080745341616,
+    "weighted_f1": 0.03913043478260869
+  },
+  "CNN_TL_B1": {
+    "accuracy": 0.5,
+    "macro_f1": 0.4638932496075353,
+    "weighted_f1": 0.43708791208791214
+  },
+  "Intermediate_TL_B1": {
+    "accuracy": 0.45,
+    "macro_f1": 0.44730983302411875,
+    "weighted_f1": 0.41967532467532476
+  },
+  "Late_Fusion_B1": {
+    "accuracy": 0.6,
+    "macro_f1": 0.5452380952380952,
+    "weighted_f1": 0.5225,
+    "best_cnn_weight": 0.9
+  }
+}
