@@ -680,7 +680,70 @@ notebooks/results/
 
 ---
 
-## 14. Troubleshooting
+## 14. Benchmark JAFFE & CK+ (Lanjutan)
+
+Benchmark menggunakan dataset standar JAFFE dan CK+ dengan skenario yang sama.
+Hanya B1 (Baseline) karena kedua dataset relatif seimbang.
+
+### Prerequisite: Upload dataset benchmark ke VPS
+
+```bash
+# Di laptop: compress
+cd D:/MultimodalEmoLearn
+tar -czf benchmark_data.tar.gz data/benchmark/jaffe_7class data/benchmark/jaffe_4class \
+    data/benchmark/ckplus_7class data/benchmark/ckplus_4class data/benchmark/ckplus_4class_contempt
+
+# Upload ke VPS via SCP
+scp benchmark_data.tar.gz USER@IP_VPS:/home/USER/MultimodalEmoLearn/
+
+# Di VPS: extract
+cd MultimodalEmoLearn
+tar -xzf benchmark_data.tar.gz
+rm benchmark_data.tar.gz
+```
+
+### Jalankan Benchmark
+
+```bash
+tmux new -s benchmark
+conda activate emotrain
+cd MultimodalEmoLearn
+
+bash scripts/run_benchmark.sh
+```
+
+**Estimasi:** ~1-2 jam total (12 eksperimen per dataset × 2 dataset).
+
+### Eksperimen per dataset:
+
+| Model | Kelas | Total |
+|-------|:-----:|:-----:|
+| CNN | 7 + 4 | 2 |
+| FCNN | 7 + 4 | 2 |
+| Late Fusion | 7 + 4 | 2 |
+| Intermediate | 7 + 4 | 2 |
+| CNN TL | 7 + 4 | 2 |
+| Intermediate TL | 7 + 4 | 2 |
+| **Total per dataset** | | **12** |
+
+### Output Benchmark:
+```
+models/benchmark/
+├── jaffe/
+│   ├── jaffe_7c_results.json
+│   └── jaffe_4c_results.json
+└── ckplus/
+    ├── ckplus_7c_results.json
+    └── ckplus_4c_results.json
+
+notebooks/results/
+├── 36_benchmark_jaffe_executed.ipynb
+└── 37_benchmark_ckplus_executed.ipynb
+```
+
+---
+
+## 15. Troubleshooting
 
 ### CUDA Out of Memory
 ```python
