@@ -928,6 +928,34 @@ Evaluasi yang lebih robust untuk perbandingan dengan paper lain:
 | Dataset sendiri 4-class | 5-Fold CV | Intermediate TL | **0.435 ± 0.068** |
 | Dataset sendiri 4-class | LOSO | Intermediate TL | **0.370 ± 0.125** |
 
+### Perbandingan dengan Paper Lain (State-of-the-Art)
+
+#### CK+
+
+| Paper | Tahun | Metode | Evaluasi | Accuracy/F1 |
+|-------|:-----:|--------|----------|:-----------:|
+| Dada et al. | 2023 | CNN-10 | 10-fold CV | 99.9% (acc) |
+| AA-DCN | 2024 | Anti-aliased Deep Conv | - | 99.26% (acc) |
+| β-skeleton + CNN | 2024 | Landmark + CNN hybrid | 10-fold | 96.19% (acc) |
+| GhostNet Multimodal | 2024 | Face+Speech+EEG fusion | 10-fold CV | 98.27% (acc) |
+| **Penelitian ini** | **2026** | **Intermediate TL (ResNet18+FCNN)** | **10-fold CV** | **91.9% (acc) / 0.783 (F1)** |
+
+#### JAFFE
+
+| Paper | Tahun | Metode | Evaluasi | Accuracy/F1 |
+|-------|:-----:|--------|----------|:-----------:|
+| AA-DCN | 2024 | Anti-aliased Deep Conv | - | 98.0% (acc) |
+| Fine-grained fusion | 2025 | Landmark + image fusion | - | 97.61% (acc) |
+| Feature boosted DL | 2023 | Boosted features | - | 96.16% (acc) |
+| β-skeleton + CNN | 2024 | Landmark geometric | 10-fold | 89.23% (acc) |
+| **Penelitian ini** | **2026** | **Late Fusion (CNN+FCNN)** | **LOSO** | **54.0% (acc) / 0.467 (F1)** |
+
+**Catatan:** Perbandingan tidak sepenuhnya apple-to-apple karena:
+- Paper SOTA umumnya pakai arsitektur lebih besar (VGG16, EfficientNet, ViT)
+- Sebagian paper pakai random split (data leakage), bukan subject-wise
+- Penelitian ini pakai arsitektur sederhana (ResNet18) + subject-wise CV/LOSO yang lebih ketat
+- Metrik berbeda: paper lain lapor accuracy, penelitian ini fokus Macro F1 (lebih jujur untuk imbalanced)
+
 ### Temuan dari Benchmark
 
 **Temuan 16: CK+ menghasilkan Macro F1 jauh lebih tinggi**
