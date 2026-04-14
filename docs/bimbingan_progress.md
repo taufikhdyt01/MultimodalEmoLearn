@@ -893,6 +893,9 @@ Menguji pipeline dan arsitektur yang sama pada dataset standar untuk menunjukkan
 
 Evaluasi yang lebih robust untuk perbandingan dengan paper lain:
 
+- **JAFFE → LOSO (10 fold):** JAFFE hanya punya 10 subjek, sehingga LOSO = 10-fold CV secara natural (setiap fold = 1 subjek keluar)
+- **CK+ → 10-Fold CV (subject-wise):** CK+ punya 118 subjek — LOSO 118 fold terlalu mahal secara komputasi, sehingga digunakan 10-fold CV dimana 118 subjek dibagi ke 10 grup
+
 #### 7-Class (mean ± std)
 
 | Model | JAFFE LOSO | CK+ 10-Fold CV | Dataset Sendiri LOSO |
