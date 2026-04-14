@@ -772,7 +772,60 @@ notebooks/results/
 
 ---
 
-## 15. Troubleshooting
+## 15. Improved Experiments: Focal Loss + FER2013 Pre-Training
+
+### Step 1: Download & Prepare FER2013 di VPS
+
+```bash
+# Install kaggle CLI (jika belum)
+pip install kaggle
+
+# Copy kaggle.json dari laptop ke VPS
+# Di laptop:
+scp C:/Users/grinv/.kaggle/kaggle.json USER@IP_VPS:~/.kaggle/
+
+# Di VPS:
+chmod 600 ~/.kaggle/kaggle.json
+cd MultimodalEmoLearn
+
+# Download FER2013
+python -c "
+from kaggle.api.kaggle_api_extended import KaggleApi
+api = KaggleApi(); api.authenticate()
+api.dataset_download_files('msambare/fer2013', path='data/benchmark/fer2013/', unzip=True)
+print('Done!')
+"
+
+# Prepare (resize 48->224, grayscale->RGB)
+python scripts/prepare_fer2013.py
+```
+
+### Step 2: Run Improved Experiments
+
+```bash
+tmux new -s improved
+conda activate emotrain
+cd MultimodalEmoLearn
+
+bash scripts/run_improved.sh
+```
+
+**Estimasi:** ~3-5 jam (pre-train FER2013 + 8 experiments).
+
+### Output:
+```
+models/pretrained/resnet18_fer2013.pth    # FER2013 pre-trained weights
+models/frontonly/improved/
+├── CNN_TL_FocalLoss.pth
+├── CNN_FER2013_Focal.pth
+├── IntermediateTL_FER2013_Focal.pth
+├── ...
+└── improved_results.json
+```
+
+---
+
+## 16. Troubleshooting
 
 ### CUDA Out of Memory
 ```python

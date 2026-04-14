@@ -92,7 +92,8 @@ def load_from_folders(base_dir):
 
 
 def process_and_save(samples, output_dir):
-    """Resize to 224x224, convert grayscale to RGB, save as numpy arrays."""
+    """Resize to 224x224, convert grayscale to RGB, save as numpy arrays.
+    Uses memory-mapped files to avoid OOM on large datasets."""
     os.makedirs(output_dir, exist_ok=True)
 
     for split_name, split_samples in samples.items():
@@ -100,22 +101,26 @@ def process_and_save(samples, output_dir):
             continue
 
         n = len(split_samples)
-        images = np.zeros((n, IMG_SIZE, IMG_SIZE, 3), dtype=np.float32)
+        img_path = output_dir / f"X_{split_name}_images.npy"
+        lbl_path = output_dir / f"y_{split_name}.npy"
+
+        # Create memory-mapped array to avoid OOM
+        images = np.lib.format.open_memmap(
+            str(img_path), mode='w+', dtype=np.float32,
+            shape=(n, IMG_SIZE, IMG_SIZE, 3))
         labels = np.zeros(n, dtype=np.int64)
 
         for i, (pixels, emo) in enumerate(split_samples):
-            # Resize 48x48 -> 224x224
             img = cv2.resize(pixels, (IMG_SIZE, IMG_SIZE))
-            # Grayscale -> RGB (repeat 3 channels)
             img_rgb = np.stack([img, img, img], axis=-1)
             images[i] = img_rgb.astype(np.float32) / 255.0
-            labels[i] = FER_TO_OUR[emo]  # remap to our label order
+            labels[i] = FER_TO_OUR[emo]
 
             if (i + 1) % 5000 == 0 or (i + 1) == n:
                 print(f"    {split_name}: {i + 1}/{n}")
 
-        np.save(output_dir / f"X_{split_name}_images.npy", images)
-        np.save(output_dir / f"y_{split_name}.npy", labels)
+        del images  # flush memmap
+        np.save(lbl_path, labels)
 
         counts = Counter(labels.tolist())
         print(f"  {split_name}: {n} samples")
