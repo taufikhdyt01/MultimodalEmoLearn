@@ -741,6 +741,35 @@ notebooks/results/
 └── 37_benchmark_ckplus_executed.ipynb
 ```
 
+### Benchmark LOSO & 10-Fold CV
+
+Setelah single split selesai, jalankan LOSO (JAFFE) dan 10-fold CV (CK+):
+
+```bash
+tmux new -s benchmark_cv
+conda activate emotrain
+cd MultimodalEmoLearn
+
+bash scripts/run_benchmark_cv.sh
+```
+
+**Estimasi:** ~8-13 jam total (120 training runs per dataset).
+
+### Output:
+```
+models/benchmark/
+├── jaffe_loso/
+│   ├── jaffe_7c_loso_results.json
+│   └── jaffe_4c_loso_results.json
+└── ckplus_cv10/
+    ├── ckplus_7c_cv10_results.json
+    └── ckplus_4c_cv10_results.json
+
+notebooks/results/
+├── 38_benchmark_jaffe_loso_executed.ipynb
+└── 39_benchmark_ckplus_cv10_executed.ipynb
+```
+
 ---
 
 ## 15. Troubleshooting
