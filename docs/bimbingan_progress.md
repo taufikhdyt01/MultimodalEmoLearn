@@ -953,11 +953,12 @@ Evaluasi yang lebih robust untuk perbandingan dengan paper lain:
 | β-skeleton + CNN | 2024 | Landmark geometric | 10-fold | 89.23% (acc) |
 | **Penelitian ini** | **2026** | **Late Fusion (CNN+FCNN)** | **LOSO** | **54.0% (acc) / 0.467 (F1)** |
 
-**Catatan:** Perbandingan tidak sepenuhnya apple-to-apple karena:
-- Paper SOTA umumnya pakai arsitektur lebih besar (VGG16, EfficientNet, ViT)
-- Sebagian paper pakai random split (data leakage), bukan subject-wise
-- Penelitian ini pakai arsitektur sederhana (ResNet18) + subject-wise CV/LOSO yang lebih ketat
+**Catatan Penting:** Perbandingan tidak sepenuhnya apple-to-apple karena:
+- Paper SOTA (99%+) **kemungkinan besar pakai random split** (data leakage) — bukan subject-wise
+- Penelitian ini pakai **subject-wise CV/LOSO** yang lebih ketat — hasil lebih rendah tapi lebih valid
+- Paper SOTA pakai arsitektur lebih besar (VGG16, EfficientNet, ViT) vs penelitian ini ResNet18 sederhana
 - Metrik berbeda: paper lain lapor accuracy, penelitian ini fokus Macro F1 (lebih jujur untuk imbalanced)
+- **Bukti:** di dataset sendiri, random split naik +30-47% vs subject-wise — angka SOTA di paper lain bisa inflate serupa
 
 ### Temuan dari Benchmark
 
