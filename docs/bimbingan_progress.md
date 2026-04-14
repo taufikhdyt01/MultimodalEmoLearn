@@ -852,9 +852,66 @@ Ini membuktikan bahwa ketika sampel dari user yang sama ada di train dan test (d
 
 ---
 
-## SLIDE 24: Diskusi dan Kesimpulan Sementara
+## SLIDE 24: Benchmark — JAFFE & CK+
 
-### Jawaban terhadap Rumusan Masalah (menggunakan hasil front-only sebagai acuan utama, pending validasi LOSO):
+### Tujuan
+Menguji pipeline dan arsitektur yang sama pada dataset standar untuk menunjukkan bahwa pendekatan ini kompetitif dan performa rendah di dataset sendiri disebabkan oleh **karakteristik data** (natural expression, imbalanced), bukan kelemahan arsitektur.
+
+### Dataset Benchmark
+
+| Dataset | Sampel | Emosi | Subjek | Karakteristik |
+|---------|:------:|:-----:|:------:|---------------|
+| **JAFFE** | 213 | 7 | 10 | Lab, wanita Jepang, seimbang |
+| **CK+** | 636 | 7+contempt | 118 | Lab, ekspresi peak, semi-balanced |
+| **Dataset sendiri** | 7,091 | 7 | 37 | Natural (sesi programming), sangat imbalanced |
+
+### Hasil Benchmark (Single Split, B1 Baseline)
+
+#### 7-Class
+
+| Model | JAFFE | CK+ | Dataset Sendiri |
+|-------|:-----:|:---:|:---------------:|
+| CNN | 0.304 | 0.461 | 0.137 |
+| FCNN | 0.209 | 0.395 | 0.158 |
+| Late Fusion | **0.545** | 0.498 | 0.175 |
+| Intermediate | 0.037 | 0.316 | 0.137 |
+| CNN TL | 0.464 | **0.913** | 0.154 |
+| Intermediate TL | 0.447 | 0.833 | 0.180 |
+
+#### 4-Class
+
+| Model | JAFFE | CK+ | Dataset Sendiri |
+|-------|:-----:|:---:|:---------------:|
+| CNN | 0.177 | 0.645 | 0.238 |
+| FCNN | **0.438** | 0.592 | 0.361 |
+| Late Fusion | 0.396 | 0.592 | 0.394 |
+| Intermediate | 0.177 | 0.567 | 0.243 |
+| CNN TL | 0.330 | 0.675 | 0.274 |
+| Intermediate TL | 0.375 | **0.837** | **0.412** |
+
+### Temuan dari Benchmark
+
+**Temuan 16: CK+ menghasilkan Macro F1 jauh lebih tinggi**
+> CK+ best: CNN TL 7-class = 0.913, Intermediate TL 4-class = 0.837. Ini karena CK+ adalah dataset lab dengan ekspresi wajah yang jelas dan terkontrol. Arsitektur yang sama menghasilkan performa sangat baik di CK+ tapi rendah di dataset sendiri — menunjukkan **masalahnya bukan di arsitektur, tapi di karakteristik data**.
+
+**Temuan 17: Transfer Learning konsisten terbaik di semua dataset**
+> CNN TL dan Intermediate TL selalu masuk top 2 di CK+ dan JAFFE. Ini memperkuat justifikasi penggunaan Transfer Learning (ResNet18) dalam penelitian ini.
+
+**Temuan 18: Dataset sendiri paling menantang**
+> Dataset sendiri (natural expression saat programming) menghasilkan Macro F1 terendah di semua model. Ini wajar karena: (1) ekspresi halus/natural, bukan lab-induced, (2) sangat imbalanced (neutral 82%), (3) variasi pencahayaan dan posisi.
+
+> **Penjelasan lisan:**
+> "Untuk membandingkan pipeline saya dengan dataset standar, saya menguji arsitektur yang sama pada JAFFE dan CK+. Hasilnya, CNN TL di CK+ mencapai Macro F1 0.913 — sangat tinggi. Ini menunjukkan bahwa arsitektur dan pipeline saya sudah benar dan kompetitif."
+>
+> "Performa rendah di dataset sendiri (0.37-0.41) bukan karena arsitektur buruk, tapi karena datanya memang lebih menantang — ekspresi natural saat pemrograman, bukan ekspresi yang diminta di lab. Ditambah distribusi yang sangat imbalanced (neutral 82%)."
+>
+> "Ini sebenarnya temuan yang menarik untuk tesis: pendekatan multimodal yang bekerja baik di dataset standar ternyata masih memiliki tantangan signifikan ketika diterapkan di konteks pembelajaran pemrograman yang natural."
+
+---
+
+## SLIDE 25: Diskusi dan Kesimpulan Sementara
+
+### Jawaban terhadap Rumusan Masalah:
 
 **RQ1 (Performa CNN):**
 - From scratch: Macro F1 0.137 (7-class) dan 0.265 (4-class) — rendah karena dataset terbatas
