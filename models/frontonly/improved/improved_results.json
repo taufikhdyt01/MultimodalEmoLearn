@@ -1,0 +1,43 @@
+{
+  "CNN_TL_FocalLoss": {
+    "accuracy": 0.943050193050193,
+    "macro_f1": 0.3543437569762849,
+    "weighted_f1": 0.9371809639441394
+  },
+  "FCNN_FocalLoss": {
+    "accuracy": 0.8706563706563707,
+    "macro_f1": 0.2527800500731266,
+    "weighted_f1": 0.8860308533841664
+  },
+  "IntermediateTL_FocalLoss": {
+    "accuracy": 0.9391891891891891,
+    "macro_f1": 0.3502099722414228,
+    "weighted_f1": 0.9332541528465791
+  },
+  "CNN_FER2013_CE": {
+    "accuracy": 0.9411196911196911,
+    "macro_f1": 0.3496778576437588,
+    "weighted_f1": 0.9317242743018515
+  },
+  "IntermediateTL_FER2013_CE": {
+    "accuracy": 0.9353281853281853,
+    "macro_f1": 0.406169191314426,
+    "weighted_f1": 0.928444292661721
+  },
+  "CNN_FER2013_Focal": {
+    "accuracy": 0.9343629343629344,
+    "macro_f1": 0.4011107034259259,
+    "weighted_f1": 0.9306297992887792
+  },
+  "IntermediateTL_FER2013_Focal": {
+    "accuracy": 0.9198841698841699,
+    "macro_f1": 0.34335821668530575,
+    "weighted_f1": 0.9220511755949464
+  },
+  "LateFusion_FER2013_Focal": {
+    "accuracy": 0.9343629343629344,
+    "macro_f1": 0.4011107034259259,
+    "weighted_f1": 0.9306297992887792,
+    "best_cnn_weight": 1.0
+  }
+}
