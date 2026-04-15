@@ -825,7 +825,47 @@ models/frontonly/improved/
 
 ---
 
-## 16. Troubleshooting
+## 16. Undersampling Neutral (Lanjutan)
+
+Mengurangi dominasi neutral (78% train) untuk meningkatkan deteksi kelas minoritas.
+
+### Generate dataset undersampled (jika belum)
+```bash
+python scripts/prepare_undersampled.py
+```
+
+Menghasilkan 3 variasi:
+```
+data/dataset_frontonly_under_660_4class/   # neutral=660 (rasio 5.8:1)
+data/dataset_frontonly_under_382_4class/   # neutral=382 (rasio 3.4:1)
+data/dataset_frontonly_under_114_4class/   # neutral=114 (rasio 1:1)
+```
+
+### Jalankan eksperimen
+```bash
+tmux new -s undersample
+conda activate emotrain
+cd MultimodalEmoLearn
+
+bash scripts/run_undersampled.sh
+```
+
+**Estimasi:** ~2-3 jam (3 model x 4 dataset = 12 eksperimen).
+
+### Output:
+```
+models/frontonly/undersampled/
+├── IntTL_*.pth, FCNN_*.pth, LateFusion_*.pth
+├── undersampled_results.json        # per-class F1 scores
+└── undersampled_perclass.png        # comparison chart
+
+notebooks/results/
+└── 42_frontonly_undersampled_executed.ipynb
+```
+
+---
+
+## 17. Troubleshooting
 
 ### CUDA Out of Memory
 ```python
