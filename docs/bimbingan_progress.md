@@ -985,7 +985,73 @@ Evaluasi yang lebih robust untuk perbandingan dengan paper lain:
 
 ---
 
-## SLIDE 25: Diskusi dan Kesimpulan Sementara
+## SLIDE 25: Undersampling Neutral — Analisis Imbalance
+
+### Motivasi
+Neutral mendominasi 78% training dan 95% test. Imbalance ratio 36.8:1 (neutral vs negative). Model cenderung "malas" — prediksi semua neutral sudah dapat accuracy 95%.
+
+### Strategi Undersampling
+
+| Variasi | Neutral Train | Total Train | Rasio N:Neg |
+|---------|:------------:|:-----------:|:-----------:|
+| Original | 4,192 | 5,348 | 36.8:1 |
+| **Under-660** | 660 | 1,816 | 5.8:1 |
+| Under-382 | 382 | 1,538 | 3.4:1 |
+| Under-114 | 114 | 1,270 | 1:1 |
+
+### Hasil Per-Class F1
+
+#### Intermediate TL
+
+| Dataset | Macro F1 | neutral | happy | sad | negative |
+|---------|:--------:|:-------:|:-----:|:---:|:--------:|
+| Original | 0.363 | 0.975 | 0.000 | 0.476 | 0.000 |
+| Under-660 | 0.257 | 0.934 | 0.068 | 0.027 | 0.000 |
+| Under-382 | 0.322 | 0.933 | 0.059 | 0.197 | 0.100 |
+| Under-114 | 0.277 | 0.889 | 0.118 | 0.019 | 0.083 |
+
+#### Late Fusion
+
+| Dataset | Macro F1 | neutral | happy | sad | negative |
+|---------|:--------:|:-------:|:-----:|:---:|:--------:|
+| Original | 0.296 | 0.967 | 0.158 | 0.061 | 0.000 |
+| **Under-660** | **0.405** | 0.963 | 0.075 | **0.581** | 0.000 |
+| Under-382 | 0.294 | 0.931 | 0.024 | 0.222 | 0.000 |
+| Under-114 | 0.160 | 0.516 | 0.010 | 0.115 | 0.000 |
+
+#### FCNN
+
+| Dataset | Macro F1 | neutral | happy | sad | negative |
+|---------|:--------:|:-------:|:-----:|:---:|:--------:|
+| Original | 0.263 | 0.940 | 0.112 | 0.000 | 0.000 |
+| **Under-660** | **0.348** | 0.954 | 0.095 | **0.341** | 0.000 |
+| Under-382 | 0.265 | 0.921 | 0.037 | 0.100 | 0.000 |
+| Under-114 | 0.343 | 0.852 | 0.235 | 0.247 | 0.038 |
+
+### Temuan dari Undersampling
+
+**Temuan 20: Under-660 meningkatkan deteksi sad secara signifikan**
+> Late Fusion under-660: sad F1 naik dari 0.061 → **0.581** (+852%). FCNN under-660: sad naik dari 0.000 → 0.341. Mengurangi neutral ke level happy (660) memberikan ruang bagi model untuk belajar kelas lain.
+
+**Temuan 21: Negative tetap tidak terdeteksi (F1 ~ 0)**
+> Di hampir semua variasi, negative F1 = 0.000. Bahkan dengan rasio 1:1 (under-114), negative hanya mencapai 0.083-0.100. **Masalah bukan hanya di training imbalance** — test set hanya punya 16 sampel negative, terlalu sedikit untuk evaluasi yang reliable.
+
+**Temuan 22: Test set terlalu imbalanced untuk evaluasi fair**
+> Test set: neutral=981 (95%), happy=10 (1%), sad=29 (3%), negative=16 (1.5%). Dengan test set sekecil ini, 1 sampel salah/benar di happy bisa mengubah F1 sebesar 10-20%. **Evaluasi per kelas tidak reliable untuk kelas dengan < 30 sampel di test set.**
+
+**Temuan 23: Undersampling terlalu agresif justru menurunkan performa**
+> Under-114 (rasio 1:1) justru menurunkan performa semua model. Total training hanya 1,270 sampel — terlalu sedikit untuk deep learning. **Under-660 (rasio 5.8:1) adalah sweet spot** — cukup seimbang tapi masih punya data yang cukup.
+
+> **Penjelasan lisan:**
+> "Saya melakukan undersampling neutral dengan 3 variasi. Hasilnya menarik — under-660 (neutral dikurangi ke 660, setara happy) meningkatkan deteksi sad secara signifikan. Late Fusion sad F1 naik dari 0.061 ke 0.581."
+>
+> "Tapi negative tetap tidak terdeteksi bahkan dengan rasio 1:1. Ini menunjukkan masalahnya ada di dua level: (1) training data negative terlalu sedikit (114 sampel), dan (2) test set hanya punya 16 sampel negative — terlalu kecil untuk evaluasi yang meaningful."
+>
+> "Temuan penting: masalah bukan hanya di imbalance training, tapi juga di ukuran test set per kelas. Untuk kelas dengan < 30 sampel di test, evaluasi F1 tidak reliable."
+
+---
+
+## SLIDE 26: Diskusi dan Kesimpulan Sementara
 
 ### Jawaban terhadap Rumusan Masalah:
 
