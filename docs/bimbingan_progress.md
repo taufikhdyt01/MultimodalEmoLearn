@@ -1051,7 +1051,124 @@ Neutral mendominasi 78% training dan 95% test. Imbalance ratio 36.8:1 (neutral v
 
 ---
 
-## SLIDE 26: Diskusi dan Kesimpulan Sementara
+## SLIDE 26: Confidence Filtering >= 60% — Breakthrough
+
+### Motivasi
+
+Analisis confidence score Face API menunjukkan bahwa kelas minoritas punya confidence **jauh lebih rendah**:
+
+| Emosi | Rata-rata Confidence |
+|-------|:--------------------:|
+| Neutral | 0.959 (tinggi) |
+| Happy | 0.878 |
+| Sad | 0.770 |
+| **Angry** | **0.634** |
+| **Fearful** | **0.671** |
+| **Disgusted** | **0.566** |
+| Surprised | 0.730 |
+
+**Hipotesis:** Label dengan confidence rendah kemungkinan salah — menjadi noise yang mengganggu training.
+
+### Strategi
+
+Filter semua sampel dengan confidence < 60% → `data/dataset_frontonly_conf60`
+
+| | Original | Conf60 | Filtered |
+|-|:--------:|:------:|:--------:|
+| Total | 7,091 | 6,795 | 296 (4.2%) |
+| Kelas minoritas | lebih banyak noise | lebih bersih | ~50-57% dari minoritas |
+
+### Hasil — Perbandingan Best Model
+
+| Tahap | Original (F1) | **Conf60 (F1)** | Improvement |
+|-------|:-------------:|:---------------:|:-----------:|
+| 7-class scratch | 0.175 | **0.289** (Late Fusion B1) | **+65%** |
+| 4-class scratch | 0.394 | **0.482** (Late Fusion B1) | **+22%** |
+| 7-class TL | 0.180 | **0.301** (Late Fusion TL B1) | **+67%** |
+| **4-class TL** | **0.412** | **0.521** (Intermediate TL B3) | **+27%** |
+
+### Hasil Lengkap Conf60
+
+#### 7-Class From Scratch
+
+| Model | Skenario | Macro F1 | Accuracy |
+|-------|----------|:--------:|:--------:|
+| CNN | B1 Baseline | 0.277 | 0.811 |
+| CNN | B2 Class Weights | 0.240 | 0.774 |
+| CNN | B3 Weights+Aug | 0.253 | 0.785 |
+| FCNN | B1 Baseline | 0.232 | 0.768 |
+| FCNN | B2 Class Weights | 0.244 | 0.765 |
+| FCNN | B3 Weights+Aug | 0.222 | 0.740 |
+| Intermediate | B1 Baseline | 0.261 | 0.792 |
+| Intermediate | B2 Class Weights | 0.247 | 0.779 |
+| Intermediate | B3 Weights+Aug | 0.229 | 0.775 |
+| **Late Fusion** | **B1 Baseline** | **0.289** | 0.839 |
+
+#### 4-Class From Scratch
+
+| Model | Skenario | Macro F1 | Accuracy |
+|-------|----------|:--------:|:--------:|
+| CNN | B1 Baseline | 0.438 | 0.808 |
+| CNN | B2 Class Weights | 0.448 | 0.826 |
+| CNN | B3 Weights+Aug | 0.432 | 0.760 |
+| FCNN | B1 Baseline | 0.422 | 0.695 |
+| FCNN | B2 Class Weights | 0.460 | 0.757 |
+| FCNN | B3 Weights+Aug | 0.421 | 0.702 |
+| Intermediate | B1 Baseline | 0.445 | 0.788 |
+| Intermediate | B2 Class Weights | 0.416 | 0.783 |
+| Intermediate | B3 Weights+Aug | 0.382 | 0.790 |
+| **Late Fusion** | **B1 Baseline** | **0.482** | 0.821 |
+
+#### 7-Class Transfer Learning
+
+| Model | Skenario | Macro F1 | Accuracy |
+|-------|----------|:--------:|:--------:|
+| CNN TL | B1 Baseline | 0.273 | 0.793 |
+| CNN TL | B2 Class Weights | 0.243 | 0.750 |
+| CNN TL | B3 Weights+Aug | 0.240 | 0.807 |
+| Intermediate TL | B1 Baseline | 0.277 | 0.792 |
+| Intermediate TL | B2 Class Weights | 0.283 | 0.825 |
+| Intermediate TL | B3 Weights+Aug | 0.292 | 0.825 |
+| **Late Fusion TL** | **B1 Baseline** | **0.301** | 0.830 |
+
+#### 4-Class Transfer Learning
+
+| Model | Skenario | Macro F1 | Accuracy |
+|-------|----------|:--------:|:--------:|
+| CNN TL | B1 Baseline | 0.456 | 0.747 |
+| CNN TL | B2 Class Weights | 0.447 | 0.742 |
+| CNN TL | B3 Weights+Aug | 0.507 | 0.799 |
+| Intermediate TL | B1 Baseline | 0.489 | 0.800 |
+| Intermediate TL | B2 Class Weights | 0.508 | 0.825 |
+| **Intermediate TL** | **B3 Weights+Aug** | **0.521** | 0.822 |
+| Late Fusion TL | B1 Baseline | 0.513 | 0.802 |
+
+### Temuan dari Confidence Filtering
+
+**Temuan 24: Confidence filtering 60% meningkatkan performa signifikan**
+> Best F1 naik dari 0.412 → 0.521 (+26%). Ini **breakthrough terbesar** sepanjang penelitian. Menunjukkan bahwa label noise (dari Face API confidence rendah) adalah penyebab utama performa rendah sebelumnya, bukan hanya karakteristik data natural.
+
+**Temuan 25: Hanya 4.2% data dihilangkan tapi kualitas label meningkat drastis**
+> Dengan threshold 60%, hanya 296 sampel (4.2%) dihilangkan. Tapi kelas minoritas kehilangan 50-57% — yang dihilangkan kemungkinan besar adalah label noise. Trade-off: sedikit data tapi lebih bersih vs banyak data tapi banyak noise. **Bersih menang.**
+
+**Temuan 26: Transfer Learning + Augmented (B3) jadi kombinasi terbaik**
+> Setelah confidence filtering, skenario B3 (weights + augmentasi) akhirnya memberikan manfaat nyata. Sebelumnya B3 justru menurun karena menguatkan noise. Sekarang dengan data lebih bersih, augmentasi efektif.
+
+**Temuan 27: Pattern arsitektur tetap konsisten**
+> Transfer Learning tetap dominan. Best model: Intermediate TL 4-class B3 (0.521). Ini memperkuat temuan sebelumnya bahwa ResNet18 TL adalah arsitektur terbaik.
+
+> **Penjelasan lisan:**
+> "Saya menganalisis confidence score dari Face API dan menemukan bahwa kelas minoritas (angry, fearful, disgusted) punya confidence rata-rata 0.56-0.67 — Face API sendiri tidak yakin dengan labelnya."
+>
+> "Ketika saya filter sampel dengan confidence < 60%, hanya 4.2% data yang hilang tapi Macro F1 naik signifikan. Best model dari 0.412 ke 0.521 — peningkatan 26%. Ini breakthrough terbesar sepanjang penelitian."
+>
+> "Temuan utama: masalah performa rendah sebelumnya bukan sepenuhnya karena karakteristik data natural, tapi karena **label noise** dari auto-detection Face API. Dengan membersihkan label yang tidak confident, model bisa belajar pola yang benar."
+>
+> "Ini juga memperkuat alasan penggunaan validasi ahli — untuk memastikan label yang digunakan benar-benar reliable."
+
+---
+
+## SLIDE 27: Diskusi dan Kesimpulan Sementara
 
 ### Jawaban terhadap Rumusan Masalah:
 
@@ -1074,6 +1191,8 @@ Model FCNN menghasilkan Macro F1 **0.158** (7-class) dan **0.361** (4-class). Fi
 | Tahap 1: 7-class | Late Fusion B3 | 0.175 | Baseline |
 | Tahap 2: 4-class | Late Fusion B3 | 0.394 | +125% dari 7-class |
 | Tahap 3: TL 4-class | **Intermediate TL B1** | **0.412** | +5% dari 4-class |
+| Tahap 4: Front-only | Intermediate TL B1 | 0.412 | Konsistensi > kuantitas |
+| **Tahap 5: Conf60 (BREAKTHROUGH)** | **Intermediate TL B3** | **0.521** | **+26% dari front-only** |
 | Tahap 4: Front-only vs Front+side | Front-only sedikit lebih baik | +0.005 | Konsistensi > kuantitas |
 
 ### **(KONSULTASI 5)** Pertanyaan untuk Pembimbing
