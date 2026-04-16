@@ -958,7 +958,42 @@ Hasil baru: `late_fusion_results.json` dan `late_fusion_tl_results.json` akan be
 
 ---
 
-## 19. Troubleshooting
+## 19. Undersampling + Conf60 (Kombinasi Strategi Terbaik)
+
+Menggabungkan 2 strategi terbukti efektif: conf60 + undersampling neutral (under_660 sweet spot).
+
+### Di VPS
+
+```bash
+cd MultimodalEmoLearn
+git pull
+
+tmux new -s under_conf60
+conda activate emotrain
+
+bash scripts/run_undersampled_conf60.sh
+```
+
+**Estimasi:** ~1-1.5 jam (3 model × 2 dataset = 6 eksperimen).
+
+### Scope
+
+Fokus **under_660 saja** (sweet spot dari eksperimen undersampling sebelumnya).
+Under-382 dan Under-114 tidak dijalankan karena hasil sebelumnya menurun signifikan.
+
+### Output:
+```
+models/frontonly_conf60/undersampled/
+├── IntTL_*.pth, FCNN_*.pth, LateFusion_*_cnn/fcnn.pth
+└── undersampled_conf60_results.json   # per-class F1
+
+notebooks/results/
+└── 58_undersampled_conf60_executed.ipynb
+```
+
+---
+
+## 20. Troubleshooting
 
 ### CUDA Out of Memory
 ```python
