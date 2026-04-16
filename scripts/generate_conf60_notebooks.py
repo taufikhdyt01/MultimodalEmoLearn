@@ -13,7 +13,7 @@ Notebooks:
 import json
 from pathlib import Path
 
-NB_DIR = Path("d:/MultimodalEmoLearn/notebooks")
+NB_DIR = Path(__file__).resolve().parent.parent / "notebooks"
 
 
 def make_nb():
@@ -85,18 +85,19 @@ print(f"Output: {{OUTPUT_DIR}}")"""
 def gen_loader(mode):
     if mode == "img":
         ds_class = "EmotionImageDataset"
-        files = 'dataset_dir / "X_{split}_images.npy", dataset_dir / "y_{split}.npy"'
+        # `{files}` below is an interpolation (raw insertion), so use single braces here
+        files = 'dataset_dir / f"X_{split}_images.npy", dataset_dir / f"y_{split}.npy"'
     elif mode == "lm":
         ds_class = "EmotionLandmarkDataset"
-        files = 'dataset_dir / "X_{split}_landmarks.npy", dataset_dir / "y_{split}.npy"'
+        files = 'dataset_dir / f"X_{split}_landmarks.npy", dataset_dir / f"y_{split}.npy"'
     else:
         ds_class = "EmotionMultimodalDataset"
-        files = 'dataset_dir / "X_{split}_images.npy", dataset_dir / "X_{split}_landmarks.npy", dataset_dir / "y_{split}.npy"'
+        files = 'dataset_dir / f"X_{split}_images.npy", dataset_dir / f"X_{split}_landmarks.npy", dataset_dir / f"y_{split}.npy"'
 
     return f"""def load_dataloaders(dataset_dir, batch_size=32):
     loaders = {{}}
     for split in ["train", "val", "test"]:
-        ds = {ds_class}({files.replace('{split}', '" + split + "')})
+        ds = {ds_class}({files})
         loaders[split] = DataLoader(ds, batch_size=batch_size, shuffle=(split=="train"), num_workers=2, pin_memory=True)
     y = np.load(dataset_dir / "y_train.npy")
     counts = Counter(y.tolist())
@@ -208,6 +209,7 @@ def gen_late_fusion_nb(num, title, prefix, num_classes, is_tl):
 
     cnn_prefix = "cnn_tl" if is_tl else "cnn"
     cnn_dir_suffix = f"{num_classes}class_tl" if is_tl else f"{num_classes}class"
+    fcnn_dir_suffix = f"{num_classes}class"  # FCNN always trained from scratch, not TL
 
     cell(nb, "code", f"""# Load test multimodal
 test_ds = EmotionMultimodalDataset(
@@ -217,7 +219,7 @@ test_ds = EmotionMultimodalDataset(
 test_loader = DataLoader(test_ds, batch_size=BATCH_SIZE, shuffle=False, num_workers=2, pin_memory=True)
 
 CNN_DIR = PROJECT_ROOT / "models" / "frontonly_conf60" / "{cnn_dir_suffix}"
-FCNN_DIR = CNN_DIR
+FCNN_DIR = PROJECT_ROOT / "models" / "frontonly_conf60" / "{fcnn_dir_suffix}"
 
 cnn_model = {cnn_class}(num_classes=NUM_CLASSES).to(device)
 fcnn_model = EmotionFCNN(num_classes=NUM_CLASSES).to(device)
