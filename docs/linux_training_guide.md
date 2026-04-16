@@ -925,7 +925,40 @@ notebooks/results/
 
 ---
 
-## 18. Troubleshooting
+## 18. Update: Late Fusion conf60 B1/B2/B3
+
+Notebook Late Fusion conf60 (45, 49, 52, 55) diupdate untuk evaluasi **B1, B2, dan B3** (sebelumnya hanya B1). Pre-trained CNN & FCNN B1/B2/B3 sudah ada, hanya perlu re-run evaluation.
+
+### Di VPS
+
+```bash
+cd MultimodalEmoLearn
+git pull  # ambil notebook Late Fusion yang sudah diupdate
+
+conda activate emotrain
+
+# Re-run hanya Late Fusion notebooks (cepat, ~5-10 menit karena tidak training)
+for nb in 45_late_fusion_conf60_7class 49_late_fusion_conf60_4class \
+          52_late_fusion_tl_conf60_7class 55_late_fusion_tl_conf60_4class; do
+    echo ">> $nb"
+    jupyter nbconvert --to notebook --execute "notebooks/${nb}.ipynb" \
+        --output "${nb}_executed.ipynb" --output-dir "notebooks/results/" \
+        --ExecutePreprocessor.timeout=1800
+done
+
+# Commit hasil
+git add models/frontonly_conf60/*/late_fusion*_results.json notebooks/results/*late_fusion*conf60*
+git commit -m "Update Late Fusion conf60 with B1/B2/B3 results"
+git push
+```
+
+**Estimasi:** ~5-10 menit (hanya evaluasi, tidak training ulang).
+
+Hasil baru: `late_fusion_results.json` dan `late_fusion_tl_results.json` akan berisi 3 skenario (B1, B2, B3) bukan hanya B1.
+
+---
+
+## 19. Troubleshooting
 
 ### CUDA Out of Memory
 ```python
