@@ -865,7 +865,67 @@ notebooks/results/
 
 ---
 
-## 17. Troubleshooting
+## 17. Confidence Filtering >= 60% (Lanjutan)
+
+Menghilangkan sampel dengan confidence score rendah (< 60%) dari Face API.
+Kelas minoritas (angry, fearful, disgusted) punya confidence rata-rata rendah (0.56-0.67) — kemungkinan label salah.
+
+### Step 1: Generate dataset conf60
+
+```bash
+cd MultimodalEmoLearn
+conda activate emotrain
+
+# Generate 7-class front-only dengan confidence >= 60%
+python src/preprocessing/prepare_dataset.py --min-confidence 0.6 --output data/dataset_frontonly_conf60
+
+# Generate augmented + 4-class
+python scripts/prepare_conf60_all.py
+```
+
+Menghasilkan 4 dataset:
+```
+data/dataset_frontonly_conf60/                  # 7-class (~6,795 sampel)
+data/dataset_frontonly_conf60_augmented/         # 7-class + augmentasi
+data/dataset_frontonly_conf60_4class/            # 4-class
+data/dataset_frontonly_conf60_4class_augmented/  # 4-class + augmentasi
+```
+
+### Step 2: Jalankan eksperimen
+
+```bash
+tmux new -s conf60
+bash scripts/run_conf60.sh
+```
+
+**Estimasi:** ~8-12 jam (14 notebook × 3 skenario per model).
+
+### Notebooks conf60 (43-57):
+
+| No | Model | Kelas | Skenario |
+|----|-------|:-----:|----------|
+| 43-46 | CNN, FCNN, Late Fusion, Intermediate | 7 | B1/B2/B3 |
+| 47-50 | CNN, FCNN, Late Fusion, Intermediate | 4 | B1/B2/B3 |
+| 51-53 | CNN TL, Late Fusion TL, Intermediate TL | 7 | B1/B2/B3 |
+| 54-56 | CNN TL, Late Fusion TL, Intermediate TL | 4 | B1/B2/B3 |
+| 57 | Comparison conf60 vs original | - | - |
+
+### Output:
+```
+models/frontonly_conf60/
+├── 7class/          # from scratch 7-class results
+├── 4class/          # from scratch 4-class results
+├── 7class_tl/       # transfer learning 7-class
+└── 4class_tl/       # transfer learning 4-class
+
+notebooks/results/
+├── 43-56_*_conf60_executed.ipynb
+└── 57_comparison_conf60_executed.ipynb
+```
+
+---
+
+## 18. Troubleshooting
 
 ### CUDA Out of Memory
 ```python
