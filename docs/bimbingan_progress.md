@@ -1085,7 +1085,7 @@ Filter semua sampel dengan confidence < 60% → `data/dataset_frontonly_conf60`
 | 7-class scratch | 0.175 | **0.289** (Late Fusion B1) | **+65%** |
 | 4-class scratch | 0.394 | **0.482** (Late Fusion B1) | **+22%** |
 | 7-class TL | 0.180 | **0.301** (Late Fusion TL B1) | **+67%** |
-| **4-class TL** | **0.412** | **0.521** (Intermediate TL B3) | **+27%** |
+| **4-class TL** | **0.412** | **0.567** (Late Fusion TL B3) | **+38%** |
 
 ### Hasil Lengkap Conf60
 
@@ -1117,7 +1117,9 @@ Filter semua sampel dengan confidence < 60% → `data/dataset_frontonly_conf60`
 | Intermediate | B1 Baseline | 0.445 | 0.788 |
 | Intermediate | B2 Class Weights | 0.416 | 0.783 |
 | Intermediate | B3 Weights+Aug | 0.382 | 0.790 |
-| **Late Fusion** | **B1 Baseline** | **0.482** | 0.821 |
+| Late Fusion | B1 Baseline | 0.482 | 0.821 |
+| **Late Fusion** | **B2 Class Weights** | **0.503** | 0.825 |
+| Late Fusion | B3 Weights+Aug | 0.463 | 0.798 |
 
 #### 7-Class Transfer Learning
 
@@ -1130,6 +1132,8 @@ Filter semua sampel dengan confidence < 60% → `data/dataset_frontonly_conf60`
 | Intermediate TL | B2 Class Weights | 0.283 | 0.825 |
 | Intermediate TL | B3 Weights+Aug | 0.292 | 0.825 |
 | **Late Fusion TL** | **B1 Baseline** | **0.301** | 0.830 |
+| Late Fusion TL | B2 Class Weights | 0.264 | 0.819 |
+| Late Fusion TL | B3 Weights+Aug | 0.260 | 0.849 |
 
 #### 4-Class Transfer Learning
 
@@ -1140,13 +1144,15 @@ Filter semua sampel dengan confidence < 60% → `data/dataset_frontonly_conf60`
 | CNN TL | B3 Weights+Aug | 0.507 | 0.799 |
 | Intermediate TL | B1 Baseline | 0.489 | 0.800 |
 | Intermediate TL | B2 Class Weights | 0.508 | 0.825 |
-| **Intermediate TL** | **B3 Weights+Aug** | **0.521** | 0.822 |
+| Intermediate TL | B3 Weights+Aug | 0.521 | 0.822 |
 | Late Fusion TL | B1 Baseline | 0.513 | 0.802 |
+| Late Fusion TL | B2 Class Weights | 0.519 | 0.818 |
+| **Late Fusion TL** | **B3 Weights+Aug** | **0.567** | 0.812 |
 
 ### Temuan dari Confidence Filtering
 
 **Temuan 24: Confidence filtering 60% meningkatkan performa signifikan**
-> Best F1 naik dari 0.412 → 0.521 (+26%). Ini **breakthrough terbesar** sepanjang penelitian. Menunjukkan bahwa label noise (dari Face API confidence rendah) adalah penyebab utama performa rendah sebelumnya, bukan hanya karakteristik data natural.
+> Best F1 naik dari 0.412 → **0.567** (+38%). Ini **breakthrough terbesar** sepanjang penelitian. Menunjukkan bahwa label noise (dari Face API confidence rendah) adalah penyebab utama performa rendah sebelumnya, bukan hanya karakteristik data natural.
 
 **Temuan 25: Hanya 4.2% data dihilangkan tapi kualitas label meningkat drastis**
 > Dengan threshold 60%, hanya 296 sampel (4.2%) dihilangkan. Tapi kelas minoritas kehilangan 50-57% — yang dihilangkan kemungkinan besar adalah label noise. Trade-off: sedikit data tapi lebih bersih vs banyak data tapi banyak noise. **Bersih menang.**
@@ -1154,13 +1160,15 @@ Filter semua sampel dengan confidence < 60% → `data/dataset_frontonly_conf60`
 **Temuan 26: Transfer Learning + Augmented (B3) jadi kombinasi terbaik**
 > Setelah confidence filtering, skenario B3 (weights + augmentasi) akhirnya memberikan manfaat nyata. Sebelumnya B3 justru menurun karena menguatkan noise. Sekarang dengan data lebih bersih, augmentasi efektif.
 
-**Temuan 27: Pattern arsitektur tetap konsisten**
-> Transfer Learning tetap dominan. Best model: Intermediate TL 4-class B3 (0.521). Ini memperkuat temuan sebelumnya bahwa ResNet18 TL adalah arsitektur terbaik.
+**Temuan 27: Late Fusion TL B3 menjadi best overall**
+> Best model: **Late Fusion TL 4-class B3 = 0.567**. Menggabungkan CNN TL dan FCNN dengan weighted average, ditambah augmentasi pada data conf60 yang bersih, memberikan hasil terbaik. Ini menunjukkan bahwa fusion multimodal efektif ketika kualitas label baik.
 
 > **Penjelasan lisan:**
 > "Saya menganalisis confidence score dari Face API dan menemukan bahwa kelas minoritas (angry, fearful, disgusted) punya confidence rata-rata 0.56-0.67 — Face API sendiri tidak yakin dengan labelnya."
 >
-> "Ketika saya filter sampel dengan confidence < 60%, hanya 4.2% data yang hilang tapi Macro F1 naik signifikan. Best model dari 0.412 ke 0.521 — peningkatan 26%. Ini breakthrough terbesar sepanjang penelitian."
+> "Ketika saya filter sampel dengan confidence < 60%, hanya 4.2% data yang hilang tapi Macro F1 naik signifikan. Best model dari 0.412 ke **0.567** — peningkatan 38%. Ini breakthrough terbesar sepanjang penelitian."
+>
+> "Best model bergeser dari Intermediate TL ke **Late Fusion TL 4-class B3** — fusion multimodal akhirnya menang karena data sudah bersih dan augmentasi efektif."
 >
 > "Temuan utama: masalah performa rendah sebelumnya bukan sepenuhnya karena karakteristik data natural, tapi karena **label noise** dari auto-detection Face API. Dengan membersihkan label yang tidak confident, model bisa belajar pola yang benar."
 >
@@ -1192,7 +1200,7 @@ Model FCNN menghasilkan Macro F1 **0.158** (7-class) dan **0.361** (4-class). Fi
 | Tahap 2: 4-class | Late Fusion B3 | 0.394 | +125% dari 7-class |
 | Tahap 3: TL 4-class | **Intermediate TL B1** | **0.412** | +5% dari 4-class |
 | Tahap 4: Front-only | Intermediate TL B1 | 0.412 | Konsistensi > kuantitas |
-| **Tahap 5: Conf60 (BREAKTHROUGH)** | **Intermediate TL B3** | **0.521** | **+26% dari front-only** |
+| **Tahap 5: Conf60 (BREAKTHROUGH)** | **Late Fusion TL B3** | **0.567** | **+38% dari front-only** |
 | Tahap 4: Front-only vs Front+side | Front-only sedikit lebih baik | +0.005 | Konsistensi > kuantitas |
 
 ### **(KONSULTASI 5)** Pertanyaan untuk Pembimbing
