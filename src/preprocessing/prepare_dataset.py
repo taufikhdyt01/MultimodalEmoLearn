@@ -49,6 +49,7 @@ LABEL_MAP = {emo: i for i, emo in enumerate(EMOTIONS)}
 IMG_SIZE = 224
 SPLIT_RATIO = (0.8, 0.1, 0.1)  # train, val, test
 RANDOM_SEED = 42
+MIN_CONFIDENCE = 0.0  # default: no filtering. Set via --min-confidence
 # ==========================================
 
 
@@ -137,13 +138,14 @@ def load_new_labels():
     return user_labels
 
 
-def collect_old_samples(user_labels):
+def collect_old_samples(user_labels, min_confidence=0.0):
     """Kumpulkan samples dari data lama.
     Returns: list of (user_id, face_path, landmark_path, emotion_scores)
     """
     samples = []
     matched = 0
     unmatched = 0
+    filtered = 0
 
     if not OLD_DIR.exists():
         return samples
@@ -165,22 +167,28 @@ def collect_old_samples(user_labels):
             lm_file = lm_dir / f"{stem}.csv"
 
             if time_key in labels and lm_file.exists():
-                samples.append((uid, str(face_file), str(lm_file), labels[time_key]))
+                scores = labels[time_key]
+                confidence = float(np.max(scores))
+                if confidence < min_confidence:
+                    filtered += 1
+                    continue
+                samples.append((uid, str(face_file), str(lm_file), scores))
                 matched += 1
             else:
                 unmatched += 1
 
-    print(f"  Old data: {matched} matched, {unmatched} unmatched")
+    print(f"  Old data: {matched} matched, {unmatched} unmatched, {filtered} filtered (conf < {min_confidence})")
     return samples
 
 
-def collect_new_samples(user_labels, include_side=False):
+def collect_new_samples(user_labels, include_side=False, min_confidence=0.0):
     """Kumpulkan samples dari data baru.
     Returns: list of (user_id, face_path, landmark_path, emotion_scores)
     """
     samples = []
     matched = 0
     unmatched = 0
+    filtered = 0
 
     if not NEW_DIR.exists():
         return samples
@@ -212,12 +220,17 @@ def collect_new_samples(user_labels, include_side=False):
                     continue
 
                 if emo_id in labels and lm_file.exists():
-                    samples.append((uid, str(face_file), str(lm_file), labels[emo_id]))
+                    scores = labels[emo_id]
+                    confidence = float(np.max(scores))
+                    if confidence < min_confidence:
+                        filtered += 1
+                        continue
+                    samples.append((uid, str(face_file), str(lm_file), scores))
                     matched += 1
                 else:
                     unmatched += 1
 
-    print(f"  New data: {matched} matched, {unmatched} unmatched")
+    print(f"  New data: {matched} matched, {unmatched} unmatched, {filtered} filtered (conf < {min_confidence})")
     return samples
 
 
@@ -352,6 +365,8 @@ def main():
                         help="Sertakan data side view dari user baru")
     parser.add_argument("--output", type=str, default=str(OUTPUT_DIR))
     parser.add_argument("--seed", type=int, default=RANDOM_SEED)
+    parser.add_argument("--min-confidence", type=float, default=0.0,
+                        help="Minimum confidence score (0-1). Samples below this are excluded.")
     args = parser.parse_args()
 
     output = Path(args.output)
@@ -369,9 +384,10 @@ def main():
           f"New: {len(new_labels)} users")
 
     # 2. Collect samples
-    print("\n[2/5] Collecting samples...")
-    old_samples = collect_old_samples(old_labels)
-    new_samples = collect_new_samples(new_labels, include_side=args.include_side)
+    min_conf = args.min_confidence
+    print(f"\n[2/5] Collecting samples... (min_confidence={min_conf})")
+    old_samples = collect_old_samples(old_labels, min_confidence=min_conf)
+    new_samples = collect_new_samples(new_labels, include_side=args.include_side, min_confidence=min_conf)
     all_samples = old_samples + new_samples
     print(f"  Total: {len(all_samples)} samples "
           f"({len(old_samples)} old + {len(new_samples)} new)")
