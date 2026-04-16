@@ -4,5 +4,17 @@
     "macro_f1": 0.5132590998630426,
     "weighted_f1": 0.8122284065999904,
     "best_cnn_weight": 0.6000000000000001
+  },
+  "B2 Class Weights": {
+    "accuracy": 0.8180839612486545,
+    "macro_f1": 0.5192294019569571,
+    "weighted_f1": 0.8240087073607502,
+    "best_cnn_weight": 0.5
+  },
+  "B3 Weights+Aug": {
+    "accuracy": 0.8116254036598493,
+    "macro_f1": 0.567416192513185,
+    "weighted_f1": 0.8207631943106043,
+    "best_cnn_weight": 0.55
   }
 }
