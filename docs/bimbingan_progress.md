@@ -985,7 +985,7 @@ Evaluasi yang lebih robust untuk perbandingan dengan paper lain:
 
 ---
 
-## SLIDE 25: Undersampling Neutral — Analisis Imbalance
+## SLIDE 25: Tahap 5A — Undersampling Neutral (Analisis Imbalance)
 
 ### Motivasi
 Neutral mendominasi 78% training dan 95% test. Imbalance ratio 36.8:1 (neutral vs negative). Model cenderung "malas" — prediksi semua neutral sudah dapat accuracy 95%.
@@ -1051,7 +1051,7 @@ Neutral mendominasi 78% training dan 95% test. Imbalance ratio 36.8:1 (neutral v
 
 ---
 
-## SLIDE 26: Confidence Filtering >= 60% — Breakthrough
+## SLIDE 26: Tahap 5B — Confidence Filtering >= 60% (BREAKTHROUGH)
 
 ### Motivasi
 
@@ -1176,7 +1176,7 @@ Filter semua sampel dengan confidence < 60% → `data/dataset_frontonly_conf60`
 
 ---
 
-## SLIDE 27: Undersampling + Conf60 (Kombinasi 2 Strategi Terbaik)
+## SLIDE 27: Tahap 5C — Conf60 + Undersampling (Kombinasi)
 
 ### Motivasi
 
@@ -1207,8 +1207,8 @@ Target: apakah kombinasi memberikan hasil lebih baik dari masing-masing?
 
 | Strategi | Best Model | Macro F1 |
 |----------|-----------|:--------:|
-| **Tahap 5A: Conf60 saja (TL+B3)** | **Late Fusion TL 4c B3** | **0.567** 🏆 |
-| Tahap 5B: Undersampling saja (under-660) | Late Fusion 4c | 0.405 |
+| Tahap 5A: Undersampling saja (under-660) | Late Fusion 4c | 0.405 |
+| **Tahap 5B: Conf60 saja (TL+B3)** | **Late Fusion TL 4c B3** | **0.567** 🏆 |
 | Tahap 5C: Conf60 + Under-660 (B1 only) | Late Fusion conf60 under-660 | 0.508 |
 
 **Best overall tetap: Late Fusion TL 4-class B3 conf60 = 0.567**
