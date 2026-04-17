@@ -1236,7 +1236,93 @@ Target: apakah kombinasi memberikan hasil lebih baik dari masing-masing?
 
 ---
 
-## SLIDE 28: Diskusi dan Kesimpulan Sementara
+## SLIDE 28: Analisis Mendalam Masalah Dataset (untuk Konsultasi)
+
+### Konteks
+Meskipun Conf60 sudah meningkatkan performa ke 0.567, angka ini masih relatif rendah. Analisis mendalam dilakukan untuk mencari akar masalah.
+
+### Masalah 1: Diversity Per-User yang Buruk
+
+Dari 37 user, **12 user (32%) bermasalah**:
+
+| Kategori | User ID | Masalah |
+|----------|---------|---------|
+| **Extreme Neutral** (100%) | 115, 209 | **Tidak ada variasi emosi sama sekali** |
+| **Extreme Neutral** (95%+) | 112, 200, 206, 207, 201, 203 | Hampir tidak ada ekspresi non-neutral |
+| **Too Few Non-Neutral** (< 10) | 101, 110, 118, 113, 197 | Tidak cukup untuk training |
+
+**Implikasi:** Model belajar dari user yang memang tidak ekspresif → sulit generalisasi.
+
+### Masalah 2: Kelas Minoritas Sangat Langka
+
+| Emosi | Total | Conf >= 60% | Conf >= 90% |
+|-------|:-----:|:-----------:|:-----------:|
+| Neutral | 6,054 | 5,906 | 5,242 |
+| Happy | 699 | 667 | 514 |
+| Sad | 451 | 373 | 212 |
+| **Angry** | 56 | 35 | **8** |
+| **Fearful** | **10** | 5 | 3 |
+| **Disgusted** | 21 | 17 | 5 |
+| **Surprised** | 55 | 39 | 19 |
+
+**Fearful hanya 10 sampel total** di seluruh dataset — bahkan sebelum split.
+
+### Masalah 3: Test Set Terlalu Kecil untuk Kelas Minoritas
+
+Test set 4-class conf60:
+- Neutral: ~950 sampel (stabil)
+- Happy: **10** sampel ⚠️
+- Sad: 29 sampel (batas minimum)
+- Negative: **16** sampel ⚠️
+
+**Mengapa tidak reliable?**
+
+| Jumlah Test | Stabilitas F1 |
+|:-----------:|---------------|
+| < 10 | Tidak reliable |
+| 10-30 | **Hati-hati** — 1 sampel = 3-10% perbedaan F1 |
+| 30-100 | Cukup reliable |
+| > 100 | Reliable |
+
+**Contoh:** Happy 10 sampel → 1 prediksi salah = F1 berubah 10%. Jadi Macro F1 yang rendah bisa dari variance bukan dari model.
+
+### Solusi yang Bisa Dikonsultasikan
+
+#### Opsi A: Drop Problem Users (Realistis)
+- Hilangkan 4 user extreme (115, 209, 112, 200)
+- Hasil: dataset lebih bersih, fokus ke user yang ekspresif
+- Trade-off: test set berkurang tapi kualitas evaluasi lebih baik
+
+#### Opsi B: Merge ke 3-Class (neutral / happy / negative)
+- Gabung sad + angry + fearful + disgusted + surprised + ke "negative"
+- Test set: neutral=950, happy=10, negative=55 → **negative lebih reliable**
+- Trade-off: kehilangan granularitas emosi
+
+#### Opsi C: Binary Classification (neutral vs non-neutral)
+- Hanya deteksi "ada emosi" vs "tidak"
+- Test set: neutral=950, non-neutral=65 (cukup)
+- Paling mudah dicapai, tapi scope lebih sempit dari proposal
+
+#### Opsi D: Tambah Data Eksternal
+- Gunakan CK+ / FER2013 untuk kelas minoritas (fearful, disgusted, angry)
+- Risiko: domain shift (lab vs natural)
+
+### **(KONSULTASI 6)** Pertanyaan untuk Pembimbing
+
+1. **Apakah acceptable** jika scope penelitian diubah ke 3-class atau binary karena keterbatasan data?
+2. **Apakah perlu drop problem users** (112, 115, 200, 209) atau tetap diinklude untuk representasi natural?
+3. **Apakah bisa menggunakan data eksternal** (CK+/FER2013) untuk melengkapi kelas minoritas?
+4. **Bagaimana melaporkan test set yang kecil** di tesis — pakai confidence interval atau tetap lapor F1 apa adanya?
+5. **Apakah F1 0.567 sudah acceptable** mengingat keterbatasan natural dataset ini?
+
+> **Penjelasan lisan:**
+> "Setelah menganalisis lebih dalam, saya menemukan masalah struktural di dataset: 32% user tidak ekspresif (95%+ neutral), kelas minoritas sangat langka (fearful hanya 10 sampel), dan test set kelas minoritas terlalu kecil untuk evaluasi yang reliable."
+>
+> "Macro F1 0.567 mungkin sudah batas yang bisa dicapai dengan dataset ini. Saya mohon arahan: apakah scope perlu diubah (3-class atau binary), drop problem users, atau tambah data eksternal? Atau terima bahwa ini adalah karakteristik dataset natural programming yang memang menantang?"
+
+---
+
+## SLIDE 29: Diskusi dan Kesimpulan Sementara
 
 ### Jawaban terhadap Rumusan Masalah:
 

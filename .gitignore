@@ -31,3 +31,10 @@ Thumbs.db
 
 # Compressed archives
 *.tar.gz
+*.zip
+
+# Kaggle metadata artifact
+dataset-metadata.json
+
+# Claude Code project settings
+.claude/

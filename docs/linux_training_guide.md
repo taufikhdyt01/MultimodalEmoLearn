@@ -993,7 +993,227 @@ notebooks/results/
 
 ---
 
-## 20. Troubleshooting
+## 21. Benchmark Lengkap: RAF-DB, KDEF, Cross-Dataset → Primer (Lanjutan)
+
+Eksperimen benchmark tambahan sesuai arahan pembimbing:
+
+- **Skema 1 (Self Train-Test):** Tiap dataset train & test di dirinya sendiri → CK+, JAFFE, RAF-DB, KDEF, Primer.
+- **Skema 2 (Cross-Dataset):** Train di dataset sekunder, test di data test **Primer**.
+- **Metrik:** Macro F1, Micro F1, Weighted F1 (ketiganya di-print, lewat update `src/training/utils.py`).
+- **Model:** Semua model (CNN, FCNN, Intermediate, CNN_TL, Intermediate_TL, Late_Fusion).
+
+### Step 1: Pull kode terbaru
+
+```bash
+cd MultimodalEmoLearn
+git pull origin master
+# Memastikan notebook 60-63, scripts/prepare_rafdb.py, scripts/prepare_kdef.py,
+# scripts/run_benchmark_all.sh, dan update utils.py (micro F1) ada di VPS.
+```
+
+### Step 2: Download data mentah ke VPS (via gdown dari Google Drive)
+
+Semua data mentah benchmark sudah di-host di Google Drive, download langsung di VPS (skip laptop):
+
+```bash
+# Install gdown (sekali saja)
+pip install gdown
+
+cd ~/MultimodalEmoLearn
+mkdir -p data/benchmark
+```
+
+**Download CK+ (zip):**
+```bash
+# https://drive.google.com/file/d/1KrytJOXvYlN43gdmD7HsWFqOGToU9wv0/view
+gdown "https://drive.google.com/uc?id=1KrytJOXvYlN43gdmD7HsWFqOGToU9wv0" -O ckplus_raw.zip
+unzip -q ckplus_raw.zip -d data/benchmark/
+# Hasilnya: data/benchmark/ck+/ (berisi folder Anger, Disgust, dst)
+ls data/benchmark/ck+
+
+rm ckplus_raw.zip   # hemat disk
+```
+
+**Download JAFFE (folder):**
+```bash
+# https://drive.google.com/drive/folders/1ymXCRJWVEfYaCA-AU0thfv4QSX8fxFcb
+gdown --folder "https://drive.google.com/drive/folders/1ymXCRJWVEfYaCA-AU0thfv4QSX8fxFcb" \
+      -O data/benchmark/jaffe
+# Hasilnya: data/benchmark/jaffe/ (berisi folder emosi atau file TIFF langsung)
+ls data/benchmark/jaffe
+```
+
+> Kalau struktur JAFFE-nya flat (semua TIFF di satu folder tanpa subfolder emosi), perlu diorganisir ke subfolder `Anger/`, `Disgust/`, `Fear/`, `Happy/`, `Neutral/`, `Sadness/`, `Surprised/` berdasarkan kode di filename (AN, DI, FE, HA, NE, SA, SU). `prepare_benchmark.py` mengharapkan struktur folder per-emosi.
+
+**Download KDEF (zip 524 MB):**
+```bash
+# https://drive.google.com/file/d/1kf9kiId-3UF3d6Xre9zgwoujAS7Tmsb4/view
+gdown "https://drive.google.com/uc?id=1kf9kiId-3UF3d6Xre9zgwoujAS7Tmsb4" -O KDEF_and_AKDEF.zip
+# TIDAK perlu diekstrak — script baca langsung dari zip
+ls -lh KDEF_and_AKDEF.zip   # harus ~524 MB
+```
+
+**RAF-DB — auto-download dari Kaggle (tidak perlu Drive):**
+```bash
+# Pastikan kaggle.json sudah di VPS:
+ls ~/.kaggle/kaggle.json   # harus ada (kalau belum, lihat section 15)
+chmod 600 ~/.kaggle/kaggle.json
+
+# Download + generate sekaligus di Step 3 nanti
+```
+
+**Primer conf60** — sudah diupload dari eksperimen sebelumnya. Kalau terhapus juga, download dari Drive dengan cara yang sama.
+
+### Step 3: Generate dataset benchmark di VPS
+
+```bash
+cd MultimodalEmoLearn
+conda activate emotrain
+
+# CK+ & JAFFE (dari folder mentah data/benchmark/{ck+,jaffe}/, ~3-5 menit)
+python scripts/prepare_benchmark.py
+
+# RAF-DB (auto download dari Kaggle, ~500MB, lalu extract landmarks ~15 menit)
+python scripts/prepare_rafdb.py
+
+# KDEF (baca langsung dari KDEF_and_AKDEF.zip, ~15-20 menit)
+python scripts/prepare_kdef.py
+```
+
+Output yang dihasilkan:
+```
+data/benchmark/
+├── ckplus_7class/         # 636 samples
+├── ckplus_4class/         # 636 samples (remap)
+├── ckplus_4class_contempt/ # 654 samples (with contempt)
+├── jaffe_7class/          # 213 samples
+├── jaffe_4class/          # 213 samples
+├── rafdb_7class/          # 11,565 train + 2,884 test
+├── rafdb_4class/          # same, remapped
+├── kdef_7class/           # 2,630 train + 340 val + 337 test
+└── kdef_4class/           # same, remapped
+```
+
+> **Hemat disk:** Kalau mau hapus file hasil download setelah prepare selesai:
+> ```bash
+> rm KDEF_and_AKDEF.zip                      # ~524 MB
+> rm -rf data/benchmark/rafdb_raw/           # ~600 MB
+> # ck+/ dan jaffe/ mentah (~120 MB) boleh dihapus kalau tidak butuh regenerate
+> ```
+
+### Step 4: Jalankan eksperimen benchmark
+
+```bash
+tmux new -s benchmark_full
+conda activate emotrain
+cd MultimodalEmoLearn
+
+# Jalankan semua (Skema 1 + Skema 2) — detach-able
+bash scripts/run_benchmark_all.sh
+
+# Detach: Ctrl+B lalu D
+# Re-attach: tmux attach -t benchmark_full
+```
+
+Atau jalankan per-notebook manual:
+```bash
+# Skema 1 (Self Train-Test)
+jupyter nbconvert --to notebook --execute notebooks/60_benchmark_rafdb.ipynb \
+    --output 60_executed.ipynb --output-dir notebooks/results/ \
+    --ExecutePreprocessor.timeout=21600
+jupyter nbconvert --to notebook --execute notebooks/61_benchmark_kdef.ipynb \
+    --output 61_executed.ipynb --output-dir notebooks/results/ \
+    --ExecutePreprocessor.timeout=21600
+jupyter nbconvert --to notebook --execute notebooks/62_benchmark_primer.ipynb \
+    --output 62_executed.ipynb --output-dir notebooks/results/ \
+    --ExecutePreprocessor.timeout=21600
+
+# Skema 2 (Cross-Dataset -> Primer test) — PALING LAMA
+jupyter nbconvert --to notebook --execute notebooks/63_crossdataset_to_primer.ipynb \
+    --output 63_executed.ipynb --output-dir notebooks/results/ \
+    --ExecutePreprocessor.timeout=43200
+```
+
+### Estimasi waktu (NVIDIA T4)
+
+| Notebook | Deskripsi | Estimasi |
+|----------|-----------|----------|
+| 60_benchmark_rafdb | RAF-DB self (11k train, 6 model × 2 config) | ~2-3 jam |
+| 61_benchmark_kdef | KDEF self (2.6k train, 6 model × 2 config) | ~30-45 menit |
+| 62_benchmark_primer | Primer conf60 self (6 model × 2 config) | ~45-60 menit |
+| 63_crossdataset_to_primer | Cross (CK+, JAFFE, RAF-DB, KDEF → Primer) × 2 config × 6 model | ~4-8 jam |
+| **Total** | | **~8-12 jam** |
+
+### Output hasil benchmark
+
+```
+models/benchmark/
+├── rafdb/
+│   ├── 7c/{CNN,FCNN,Intermediate,CNN_TL,Intermediate_TL,Late_Fusion}_B1/*.pth
+│   ├── 4c/...
+│   ├── rafdb_7c_results.json
+│   └── rafdb_4c_results.json
+├── kdef/
+│   ├── 7c/..., 4c/...
+│   ├── kdef_7c_results.json
+│   └── kdef_4c_results.json
+├── primer/
+│   ├── 7c/..., 4c/...
+│   ├── primer_7c_results.json
+│   └── primer_4c_results.json
+└── crossdataset/
+    ├── ckplus_7c/..., ckplus_4c/...
+    ├── jaffe_7c/..., jaffe_4c/...
+    ├── rafdb_7c/..., rafdb_4c/...
+    ├── kdef_7c/..., kdef_4c/...
+    ├── cross_{dataset}_{7,4}c.json  (8 files)
+    └── all_cross_results.json
+
+notebooks/results/
+├── 60_benchmark_rafdb_executed.ipynb
+├── 61_benchmark_kdef_executed.ipynb
+├── 62_benchmark_primer_executed.ipynb
+└── 63_crossdataset_to_primer_executed.ipynb
+```
+
+### Step 5: Transfer hasil balik ke laptop
+
+```bash
+# Di VPS:
+cd MultimodalEmoLearn
+tar -czf benchmark_full_results.tar.gz \
+    models/benchmark/rafdb/*.json models/benchmark/kdef/*.json \
+    models/benchmark/primer/*.json models/benchmark/crossdataset/*.json \
+    notebooks/results/6{0,1,2,3}_*_executed.ipynb
+```
+
+Download via MobaXterm atau:
+```bash
+scp USER@IP_VPS:/home/USER/MultimodalEmoLearn/benchmark_full_results.tar.gz D:/MultimodalEmoLearn/
+cd D:/MultimodalEmoLearn && tar -xzf benchmark_full_results.tar.gz
+```
+
+> **Tips:** File `.pth` (checkpoint model) biasanya tidak perlu ditransfer balik — ukurannya besar (~50-300 MB per model) dan tidak dibutuhkan untuk analisis. Cukup JSON + notebook executed.
+
+---
+
+## 22. Troubleshooting
+
+### CUDA Out of Memory untuk RAF-DB (nb 60, 63)
+
+RAF-DB images = 11,565 × 224×224×3 × 4 byte = ~7 GB. Kalau VRAM T4 (16GB) masih OOM:
+```python
+# Di notebook 60 / 63, ubah BATCH_SIZE:
+BATCH_SIZE = 16  # default 32
+```
+
+### Disk penuh setelah prepare RAF-DB
+
+File `.npy` raf-db bisa >10 GB. Hapus raw data setelah prepare selesai:
+```bash
+rm -rf data/benchmark/rafdb_raw/
+# dataset siap pakai tetap di data/benchmark/rafdb_{7,4}class/
+```
 
 ### CUDA Out of Memory
 ```python

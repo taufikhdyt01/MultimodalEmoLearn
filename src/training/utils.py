@@ -287,10 +287,12 @@ def full_evaluation(model, test_loader, criterion, device, model_type="cnn", emo
 
     macro_f1 = f1_score(labels, preds, average="macro", zero_division=0)
     weighted_f1 = f1_score(labels, preds, average="weighted", zero_division=0)
+    micro_f1 = f1_score(labels, preds, average="micro", zero_division=0)
 
     print(f"Test Loss: {test_loss:.4f}")
     print(f"Test Accuracy: {test_acc:.4f}")
-    print(f"Test Macro F1: {macro_f1:.4f}")
+    print(f"Test Macro F1:    {macro_f1:.4f}")
+    print(f"Test Micro F1:    {micro_f1:.4f}")
     print(f"Test Weighted F1: {weighted_f1:.4f}")
     print()
     print("Classification Report:")
@@ -303,6 +305,7 @@ def full_evaluation(model, test_loader, criterion, device, model_type="cnn", emo
         "test_loss": test_loss,
         "test_accuracy": test_acc,
         "test_macro_f1": macro_f1,
+        "test_micro_f1": micro_f1,
         "test_weighted_f1": weighted_f1,
         "predictions": preds,
         "labels": labels,
