@@ -1176,7 +1176,65 @@ Filter semua sampel dengan confidence < 60% → `data/dataset_frontonly_conf60`
 
 ---
 
-## SLIDE 27: Diskusi dan Kesimpulan Sementara
+## SLIDE 27: Undersampling + Conf60 (Kombinasi 2 Strategi Terbaik)
+
+### Motivasi
+
+Menggabungkan 2 strategi yang terbukti efektif sebelumnya:
+1. **Confidence Filtering >= 60%** — mengatasi label noise
+2. **Undersampling Neutral (under-660)** — mengatasi imbalance
+
+Target: apakah kombinasi memberikan hasil lebih baik dari masing-masing?
+
+### Hasil
+
+| Model | Conf60 Original | Conf60 + Under-660 | Kesimpulan |
+|-------|:---------------:|:------------------:|:----------:|
+| Intermediate TL | 0.478 | 0.401 | ❌ Turun -16% |
+| FCNN | 0.489 | 0.433 | ❌ Turun -11% |
+| **Late Fusion** | **0.466** | **0.508** | ✅ Naik +9% |
+
+### Per-Class F1 (Best Model: Late Fusion)
+
+| Dataset | Macro F1 | neutral | happy | sad | negative |
+|---------|:--------:|:-------:|:-----:|:---:|:--------:|
+| Conf60 Original | 0.466 | 0.899 | 0.761 | 0.203 | 0.000 |
+| **Conf60 + Under-660** | **0.508** | 0.895 | 0.713 | **0.424** | 0.000 |
+
+### Perbandingan dengan Best Overall
+
+| Strategi | Best Model | Macro F1 |
+|----------|-----------|:--------:|
+| **Tahap 5A: Conf60 saja (TL+B3)** | **Late Fusion TL 4c B3** | **0.567** 🏆 |
+| Tahap 5B: Undersampling saja (under-660) | Late Fusion 4c | 0.405 |
+| Tahap 5C: Conf60 + Under-660 (B1 only) | Late Fusion conf60 under-660 | 0.508 |
+
+**Best overall tetap: Late Fusion TL 4-class B3 conf60 = 0.567**
+
+### Temuan dari Kombinasi
+
+**Temuan 28: Undersampling + Conf60 hanya efektif untuk Late Fusion**
+> Late Fusion naik 0.466 → 0.508 (+9%) dengan under-660. Sad F1 naik dari 0.203 → 0.424. Tapi Intermediate TL dan FCNN justru turun signifikan (-11 s/d -16%).
+
+**Temuan 29: Model kompleks butuh data lebih banyak**
+> Intermediate TL (ResNet18 + FCNN + fusion head) memiliki banyak parameter, butuh data training yang cukup. Undersampling dari 6,795 → 1,816 membuat model kekurangan data. Late Fusion lebih robust karena CNN dan FCNN dilatih terpisah.
+
+**Temuan 30: Best overall masih Late Fusion TL B3 conf60 saja**
+> Kombinasi tidak mengalahkan Late Fusion TL B3 conf60 (0.567). Artinya **confidence filtering + augmentasi (B3)** lebih efektif dari **confidence filtering + undersampling**.
+
+**Temuan 31: Negative tetap F1 = 0.000 di semua strategi**
+> Konsisten dengan temuan sebelumnya — test set terlalu kecil (16 sampel negative). Apapun strateginya, evaluasi negative tidak reliable.
+
+> **Penjelasan lisan:**
+> "Saya coba gabungkan conf60 + undersampling. Hasilnya campuran — hanya Late Fusion yang membaik, Intermediate TL dan FCNN justru turun karena kekurangan data training."
+>
+> "Kesimpulan: kombinasi tidak selalu lebih baik. Late Fusion TL B3 dengan conf60 saja tetap best overall (0.567)."
+>
+> "Ini juga menunjukkan bahwa masalah utama kita sekarang bukan imbalance, tapi **label noise dan ukuran test set untuk kelas minoritas**."
+
+---
+
+## SLIDE 28: Diskusi dan Kesimpulan Sementara
 
 ### Jawaban terhadap Rumusan Masalah:
 
