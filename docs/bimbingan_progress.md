@@ -1186,6 +1186,8 @@ Menggabungkan 2 strategi yang terbukti efektif sebelumnya:
 
 Target: apakah kombinasi memberikan hasil lebih baik dari masing-masing?
 
+**Catatan:** Hanya 3 model teratas yang diuji (Intermediate TL, FCNN, Late Fusion). CNN tidak dimasukkan karena konsisten lebih rendah di eksperimen sebelumnya.
+
 ### Hasil
 
 | Model | Conf60 Original | Conf60 + Under-660 | Kesimpulan |
