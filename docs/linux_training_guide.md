@@ -1221,14 +1221,19 @@ git pull origin master
 ### Step 2: Generate landmark heatmaps
 
 Heatmap di-generate dari landmark 136-dim yang sudah ada → Gaussian blob 224×224 (sigma=3px).
-Dataset primer conf60 saja dulu, ~10 menit:
 
+**Wajib untuk nb 64:**
 ```bash
 conda activate emotrain
 cd ~/MultimodalEmoLearn
 
+# Base dataset (untuk B1 dan B2, ~10 menit)
 python scripts/generate_landmark_heatmaps.py --only "Primer conf60"
-# Output: data/dataset_frontonly_conf60/X_{train,val,test}_heatmaps.npy (~600MB total)
+# Output: data/dataset_frontonly_conf60/X_{train,val,test}_heatmaps.npy (~1.4 GB total)
+
+# Augmented dataset (untuk B3, ~5-10 menit)
+python scripts/generate_landmark_heatmaps.py --only "augmented"
+# Output: data/dataset_frontonly_conf60_augmented/X_train_heatmaps.npy
 ```
 
 Kalau mau semua (primer + benchmarks sekaligus, ~90 menit):
@@ -1253,16 +1258,20 @@ jupyter nbconvert --to notebook --execute notebooks/64_early_fusion_conf60.ipynb
 
 ### Konfigurasi yang dijalankan
 
-4 config × 2 class = **8 eksperimen** total:
+6 config × 2 class = **12 eksperimen** total:
 
-| Config | Backbone | Class Weights | Kelas |
-|--------|----------|:-------------:|:-----:|
-| EarlyFusion_B1 | scratch (EmotionEarlyFusion) | no | 7, 4 |
-| EarlyFusion_B2 | scratch | **yes** | 7, 4 |
-| EarlyFusion_TL_B1 | ResNet18 TL (4-ch) | no | 7, 4 |
-| EarlyFusion_TL_B2 | ResNet18 TL (4-ch) | **yes** | 7, 4 |
+| Config | Backbone | Class Weights | Augmented | Kelas |
+|--------|----------|:-------------:|:---------:|:-----:|
+| EarlyFusion_B1 | scratch | no | no | 7, 4 |
+| EarlyFusion_B2 | scratch | yes | no | 7, 4 |
+| EarlyFusion_B3 | scratch | yes | **yes** | 7, 4 |
+| EarlyFusion_TL_B1 | ResNet18 TL (4-ch) | no | no | 7, 4 |
+| EarlyFusion_TL_B2 | ResNet18 TL (4-ch) | yes | no | 7, 4 |
+| EarlyFusion_TL_B3 | ResNet18 TL (4-ch) | yes | **yes** | 7, 4 |
 
-**Estimasi**: ~1.5-2 jam di T4 (8 eksperimen × 10-15 menit each).
+**Estimasi**: ~2.5-3 jam di T4 (12 eksperimen × 10-15 menit each).
+
+Note: B3 akan otomatis di-skip kalau `data/dataset_frontonly_conf60_augmented/` atau heatmap-nya tidak ditemukan.
 
 ### Output
 

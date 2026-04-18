@@ -65,6 +65,9 @@ DATASETS = [
     ('Primer conf60',
      PROJECT_ROOT / 'data' / 'dataset_frontonly_conf60',
      ['train', 'val', 'test']),
+    ('Primer conf60 augmented',  # For B3 scenario in Early Fusion (nb 64)
+     PROJECT_ROOT / 'data' / 'dataset_frontonly_conf60_augmented',
+     ['train']),  # Only train is augmented; val/test copied from base
     ('Primer conf60 under_660',
      PROJECT_ROOT / 'data' / 'dataset_frontonly_conf60_under_660',
      ['train', 'val', 'test']),
