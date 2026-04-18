@@ -1053,8 +1053,35 @@ Dosen meminta benchmark diperluas ke **RAF-DB** (natural/in-the-wild) dan **KDEF
 | **Intermediate TL** | **0.292** | **0.808** | **0.819** | **0.808** |
 | Late Fusion | 0.244 | 0.778 | 0.777 | 0.778 |
 
+#### 4-Class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.476 | 0.803 | 0.802 | 0.803 |
+| FCNN | 0.459 | 0.763 | 0.774 | 0.763 |
+| Intermediate | 0.444 | 0.727 | 0.753 | 0.727 |
+| CNN TL | 0.378 | 0.721 | 0.682 | 0.721 |
+| **Intermediate TL** | **0.482** | **0.780** | **0.790** | **0.780** |
+| Late Fusion | 0.460 | 0.763 | 0.779 | 0.763 |
+
 > Accuracy/Micro F1 tinggi (~0.78-0.82) menyesatkan karena didominasi neutral.
-> Macro F1 (0.24-0.29) menunjukkan kesulitan sebenarnya di kelas minoritas.
+> Macro F1 (0.24-0.48) menunjukkan kesulitan sebenarnya di kelas minoritas.
+
+### Hasil Cross-Dataset (Skema 2, nb 63) — CK+ → Primer 7c
+
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.127 | 0.719 | 0.635 | 0.719 |
+| **FCNN** | **0.194** | 0.773 | 0.739 | 0.773 |
+| Intermediate | 0.153 | 0.536 | 0.593 | 0.536 |
+| CNN TL | 0.163 | 0.670 | 0.701 | 0.670 |
+| Intermediate TL | 0.103 | 0.152 | 0.238 | 0.152 |
+| Late Fusion | 0.160 | 0.529 | 0.580 | 0.529 |
+
+**Temuan 19: CK+ → Primer poor generalization**
+- Semua model Macro F1 0.10-0.19 → model yang dilatih di CK+ (lab posed) gagal generalize ke Primer (natural programming)
+- **FCNN paling tinggi (0.194)** — landmark geometric features lebih **domain-invariant** dibanding visual features
+- **Intermediate TL collapse (0.103)** — kemungkinan overfitting ke feature-level fusion yang CK+-specific
+- Konfirmasi: **domain gap lab vs natural ekstrem** — perlu fine-tuning / domain adaptation
 
 ### Progress Eksperimen
 
@@ -1065,8 +1092,10 @@ Dosen meminta benchmark diperluas ke **RAF-DB** (natural/in-the-wild) dan **KDEF
 | KDEF 7-class | ✅ Done |
 | KDEF 4-class | ✅ Done |
 | Primer 7-class (nb 62) | ✅ Done |
-| Primer 4-class (nb 62) | ⏳ Belum dijalankan |
-| Cross-dataset → Primer (nb 63) | ⏳ Belum dijalankan |
+| Primer 4-class (nb 62) | ✅ Done |
+| Cross CK+ → Primer 7c (nb 63) | ✅ Done |
+| Cross CK+ → Primer 4c (nb 63) | ⏳ Belum dijalankan |
+| Cross JAFFE/RAF-DB/KDEF → Primer (nb 63) | ⏳ Belum dijalankan |
 
 ### Temuan Awal
 
