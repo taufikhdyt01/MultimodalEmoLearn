@@ -35,5 +35,12 @@
     "weighted_f1": 0.8046341409963714,
     "accuracy": 0.8092926490984743,
     "best_cnn_weight": 0.55
+  },
+  "Late_Fusion_TL_B1": {
+    "macro_f1": 0.7350476367558858,
+    "micro_f1": 0.8294036061026352,
+    "weighted_f1": 0.8231182010551988,
+    "accuracy": 0.8294036061026352,
+    "best_cnn_tl_weight": 0.45
   }
 }
