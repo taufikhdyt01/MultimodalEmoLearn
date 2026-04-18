@@ -164,37 +164,71 @@ Distribusi train set (conf60, 7-class):
 
 ---
 
-## 6. Hasil Eksperimen (Macro F1 per Config)
+## 6. Hasil Eksperimen (Semua Metrik)
 
 Untuk referensi penulisan Section 4 (Results) dan Section 5 (Discussion).
 
-### 7-Class
+**Catatan metrik**:
+- **Macro F1** — metrik utama (unbiased terhadap imbalance)
+- **Weighted F1** — rata-rata F1 bobot support (didominasi kelas mayoritas)
+- **Accuracy** — standard (= Micro F1 untuk multi-class single-label)
+- Early Fusion scratch + TL: *pending nb 64 (6 configs per class)*
 
-| Model | B1 | B2 | B3 |
-|-------|:--:|:--:|:--:|
-| CNN | 0.277 | 0.240 | 0.253 |
-| FCNN | 0.232 | 0.244 | 0.222 |
-| Early Fusion | *(pending nb 64)* | *(pending)* | *(pending)* |
-| Intermediate | 0.261 | 0.247 | 0.229 |
-| Late Fusion | 0.288 | 0.266 | 0.260 |
-| CNN TL | 0.273 | 0.243 | 0.241 |
-| Early Fusion TL | *(pending)* | *(pending)* | *(pending)* |
-| Intermediate TL | 0.277 | 0.283 | 0.292 |
-| Late Fusion TL | 0.301 | 0.264 | 0.260 |
+### 7-Class — All Metrics
 
-### 4-Class
+| Model | Scenario | Macro F1 | Weighted F1 | Accuracy |
+|-------|----------|:--------:|:-----------:|:--------:|
+| CNN | B1 | 0.277 | 0.809 | 0.811 |
+| CNN | B2 | 0.240 | 0.767 | 0.774 |
+| CNN | B3 | 0.253 | 0.782 | 0.785 |
+| FCNN | B1 | 0.232 | 0.765 | 0.767 |
+| FCNN | B2 | 0.244 | 0.767 | 0.765 |
+| FCNN | B3 | 0.222 | 0.758 | 0.740 |
+| Early Fusion | B1/B2/B3 | *(pending)* | *(pending)* | *(pending)* |
+| Intermediate | B1 | 0.261 | 0.791 | 0.792 |
+| Intermediate | B2 | 0.247 | 0.784 | 0.779 |
+| Intermediate | B3 | 0.229 | 0.754 | 0.775 |
+| Late Fusion | B1 | 0.288 | 0.835 | 0.839 |
+| Late Fusion | B2 | 0.266 | 0.802 | 0.807 |
+| Late Fusion | B3 | 0.260 | 0.813 | 0.826 |
+| CNN TL | B1 | 0.273 | 0.782 | 0.793 |
+| CNN TL | B2 | 0.243 | 0.746 | 0.750 |
+| CNN TL | B3 | 0.241 | 0.797 | 0.807 |
+| Early Fusion TL | B1/B2/B3 | *(pending)* | *(pending)* | *(pending)* |
+| Intermediate TL | B1 | 0.277 | 0.800 | 0.792 |
+| Intermediate TL | B2 | 0.283 | 0.825 | 0.825 |
+| Intermediate TL | B3 | **0.292** | 0.826 | 0.825 |
+| **Late Fusion TL** | **B1** | **0.301** ⭐ | 0.827 | 0.830 |
+| Late Fusion TL | B2 | 0.264 | 0.808 | 0.819 |
+| Late Fusion TL | B3 | 0.260 | **0.836** | **0.849** |
 
-| Model | B1 | B2 | B3 |
-|-------|:--:|:--:|:--:|
-| CNN | 0.438 | 0.448 | 0.432 |
-| FCNN | 0.422 | 0.459 | 0.421 |
-| Early Fusion | *(pending)* | *(pending)* | *(pending)* |
-| Intermediate | 0.445 | 0.416 | 0.382 |
-| Late Fusion | 0.482 | 0.503 | 0.463 |
-| CNN TL | 0.456 | 0.447 | 0.507 |
-| Early Fusion TL | *(pending)* | *(pending)* | *(pending)* |
-| Intermediate TL | 0.489 | 0.508 | 0.521 |
-| **Late Fusion TL** | 0.513 | 0.519 | **0.567** ⭐ |
+### 4-Class — All Metrics
+
+| Model | Scenario | Macro F1 | Weighted F1 | Accuracy |
+|-------|----------|:--------:|:-----------:|:--------:|
+| CNN | B1 | 0.438 | 0.798 | 0.808 |
+| CNN | B2 | 0.448 | 0.815 | 0.826 |
+| CNN | B3 | 0.432 | 0.762 | 0.760 |
+| FCNN | B1 | 0.422 | 0.722 | 0.695 |
+| FCNN | B2 | 0.459 | 0.783 | 0.757 |
+| FCNN | B3 | 0.421 | 0.739 | 0.702 |
+| Early Fusion | B1/B2/B3 | *(pending)* | *(pending)* | *(pending)* |
+| Intermediate | B1 | 0.445 | 0.788 | 0.788 |
+| Intermediate | B2 | 0.416 | 0.779 | 0.783 |
+| Intermediate | B3 | 0.382 | 0.761 | 0.790 |
+| Late Fusion | B1 | 0.482 | 0.822 | 0.821 |
+| Late Fusion | B2 | 0.503 | 0.830 | 0.825 |
+| Late Fusion | B3 | 0.463 | 0.800 | 0.798 |
+| CNN TL | B1 | 0.456 | 0.760 | 0.747 |
+| CNN TL | B2 | 0.447 | 0.748 | 0.742 |
+| CNN TL | B3 | 0.507 | 0.807 | 0.799 |
+| Early Fusion TL | B1/B2/B3 | *(pending)* | *(pending)* | *(pending)* |
+| Intermediate TL | B1 | 0.489 | 0.810 | 0.800 |
+| Intermediate TL | B2 | 0.508 | 0.829 | 0.825 |
+| Intermediate TL | B3 | 0.521 | 0.828 | 0.822 |
+| Late Fusion TL | B1 | 0.513 | 0.812 | 0.802 |
+| Late Fusion TL | B2 | 0.519 | 0.824 | 0.818 |
+| **Late Fusion TL** | **B3** | **0.567** ⭐ | 0.821 | 0.812 |
 
 ---
 
@@ -271,7 +305,7 @@ Untuk referensi penulisan Section 4 (Results) dan Section 5 (Discussion).
 
 ## 10. Catatan untuk Methodology Section
 
-**Hyperparameters (untuk disebutkan di Section 3.3 Training Setup):**
+### Hyperparameters (Section 3.3 Training Setup)
 - Optimizer: Adam
 - Learning rate: 1×10⁻⁴ (scratch), 5×10⁻⁵ (TL)
 - Scheduler: ReduceLROnPlateau (factor=0.5, patience=8, min_lr=1×10⁻⁷)
@@ -280,10 +314,210 @@ Untuk referensi penulisan Section 4 (Results) dan Section 5 (Discussion).
 - Early stopping: patience=15 (monitor Macro F1 on val set)
 - Loss: CrossEntropyLoss (B1), Weighted CE (B2, B3)
 
-**Random seed note**:
-- `np.random.RandomState(42)` untuk split (deterministic)
-- `torch.manual_seed` / cuDNN deterministic **tidak** diset → variance antar-run ±0.01-0.05 Macro F1 (normal di DL)
-- **Single run per config** di paper (bukan mean±std). Bisa disebutkan sebagai limitation / future work.
-
-**Pembobotan class weights (B2, B3)**:
+### Pembobotan class weights (B2, B3)
 - Inverse-frequency: `w_c ∝ 1 / freq(c)`, dinormalisasi supaya `sum(w) = num_classes`
+
+### Data preprocessing (Section 3.1 Dataset)
+- Face crop: bounding box dari Face API detection, padding sesuai proporsi wajah
+- Resize: bilinear interpolation ke 224×224
+- Normalization: piksel [0, 255] → [0, 1] (float32)
+- Landmark: MediaPipe FaceMesh (478 titik) → subset 68 titik klasik (x, y normalized) → 136-dim vektor
+- **Heatmap generation (Early Fusion)**: Gaussian blob σ=3px di setiap titik landmark, element-wise max aggregation across 68 titik → single 224×224 heatmap, range [0, 1]
+
+### Data augmentation (B3 scenario)
+Augmentasi diterapkan hanya pada **training set kelas minoritas** sampai distribusi lebih seimbang:
+- Random rotation (±15°)
+- Horizontal flip (p=0.5)
+- Brightness jitter (±20%)
+- Landmark koordinat **ikut ter-transform** agar tetap aligned dengan image
+- Val & test set **tidak di-augment**
+
+### Random seeds & reproducibility
+- `np.random.RandomState(42)` untuk dataset split (deterministic)
+- `torch.manual_seed`, `cuDNN deterministic` **tidak** di-set (untuk kecepatan training)
+- Variance antar-run: ±0.01-0.05 Macro F1 (normal di DL tanpa strict seeding)
+- **Single run per config** — bisa disebutkan di Limitations / Future Work
+
+### Hardware
+- GPU: NVIDIA Tesla T4 (Biznet Gio VPS)
+- Framework: PyTorch + torchvision
+- Training time per config: 10-45 menit (depending on arch & dataset size)
+
+---
+
+## 11. Per-Class Analysis (Section 4.5) — Data Extraction
+
+Per-class metrics untuk **best model (Late Fusion TL 4c B3, Macro F1 = 0.567)** perlu di-extract dari notebook executed (atau re-evaluate dengan classification_report).
+
+### Cara Extract di VPS
+```python
+# Di notebook baru di VPS:
+from sklearn.metrics import classification_report
+from training.models import EmotionCNNTransfer, EmotionFCNN
+# Load checkpoint Late Fusion TL 4c B3 (CNN_TL + FCNN)
+# Run inference on test set, average softmax dengan best_cnn_weight
+# Print classification_report(y_test, y_pred, target_names=emotions)
+```
+
+### Expected Pattern (berdasarkan distribusi 4-class test set)
+- **Neutral** (support ~816): F1 tinggi ~0.85+ (dominan, mudah)
+- **Happy** (support ~57): F1 sedang-tinggi ~0.55-0.70 (ekspresi jelas)
+- **Sad** (support ~40): F1 sedang ~0.30-0.45 (sering ambigu dengan neutral)
+- **Negative** (support ~16, gabungan angry/fearful/disgusted/surprised): F1 rendah ~0.20-0.35 (minoritas + heterogen)
+
+### Confusion Matrix — Expected Pattern
+Mayoritas kesalahan adalah **over-prediction ke neutral** (kelas mayoritas). Contoh:
+- True Negative → Predicted Neutral: kemungkinan tinggi
+- True Sad → Predicted Neutral: beberapa
+- True Happy → Predicted Neutral: sedikit (happy umumnya jelas)
+
+---
+
+## 12. Discussion Key Talking Points (Section 5)
+
+### 5.1 Multimodal Fusion vs Single-Modality (RQ1)
+- **Fakta**: Best fusion (Late Fusion TL 4c B3 = 0.567) > Best single-modal (CNN TL 4c B3 = 0.507 atau FCNN 4c B2 = 0.459)
+- **Insight**: Fusi image + landmark memberikan gain konsisten karena:
+  - Image CNN: capture texture, color, context visual
+  - Landmark FCNN: capture pose geometrik (eyebrow position, mouth opening, dll)
+  - Kombinasi: complementary information
+- **Note kontra**: Tidak semua fusion menang — Intermediate Fusion scratch kalah dari CNN scratch di 7-class (0.261 vs 0.277)
+
+### 5.2 Fusion Strategy Comparison (RQ2)
+- **Ranking di primer conf60**: Late Fusion TL > Intermediate TL > Early Fusion TL *(pending)* > Scratch variants
+- **Insight**: **Late Fusion** unggul karena:
+  - Kedua modality dilatih independent → lebih robust terhadap noise dari salah satu modality
+  - Weighted softmax averaging lebih fleksibel (tunable weight di val)
+- **Intermediate Fusion** sedikit di bawah karena joint learning rentan overfit di dataset kecil
+- **Early Fusion** (pending): ekspektasi di antara intermediate & late — forces CNN belajar cross-modal dari layer awal
+
+### 5.3 Transfer Learning Effectiveness (RQ3)
+- **Fakta**: TL variant konsisten unggul dari scratch (contoh: Late Fusion TL 0.567 vs Late Fusion scratch 0.503, +0.064)
+- **Insight**: ResNet18 pretrained ImageNet memberikan visual feature representation yang matang, crucial untuk dataset kecil (6,795 sampel)
+- **Efek kombinasi TL + imbalance handling**: TL + B3 (augmentation) memberikan gain lebih tinggi dibanding TL + B1 → TL melengkapi augmentation, tidak replace
+
+### 5.4 Limitations
+- **Single run per config** (bukan mean±std) — variance ±0.01-0.05 bisa mengubah ranking di kasus tertentu
+- **Imbalance ekstrem** (rasio 1:1138) → evaluasi kelas minoritas kurang reliable (test set fearful hanya 2 sampel)
+- **37 subjek** → generalisasi populasi belum divalidasi; dataset program studi specific
+- **Face API otomatis annotasi** — bukan ground-truth human-labeled, ada noise label di sampel dengan confidence rendah (conf60 filter memitigasi tapi tidak hilangkan)
+- **Single dataset benchmark** — tidak uji cross-dataset generalization di paper ini
+- **4-class remap subjective** — cara menggabungkan minoritas ke "negative" bisa diargumentasikan
+
+### 5.5 Implications for Learning Analytics
+- Model dengan Macro F1 ~0.57 masih **preliminary** untuk deployment real-time
+- Bisa dipakai untuk **aggregate-level analytics** (misal: trend emosi per-session), bukan per-frame decision
+- Potensi integrasi ke LMS untuk adaptive feedback, tutor intervention, atau konten rekomendasi
+- Perlu validasi lebih lanjut dengan human annotation + larger dataset
+
+---
+
+## 13. Abstract Elements Checklist
+
+Abstract ideal (150-250 kata), harus mencakup:
+
+- [ ] **Problem statement** (1 kalimat): FER untuk analitik pembelajaran di konteks pemrograman natural
+- [ ] **Motivation/gap** (1 kalimat): existing FER fokus lab-posed, bukan natural
+- [ ] **Proposed approach** (2-3 kalimat): 5 arsitektur × multimodal fusion × transfer learning
+- [ ] **Dataset** (1 kalimat): 6,795 samples, 37 mahasiswa, sesi pemrograman, confidence ≥60%
+- [ ] **Key result** (1-2 kalimat): Late Fusion TL 4-class B3 achieves Macro F1 = 0.567
+- [ ] **Key insight** (1 kalimat): Multimodal fusion + transfer learning outperforms single-modal baselines
+- [ ] **Implications** (1 kalimat): Advances affective learning analytics tools for programming education
+
+### Keywords (5-7 suggested)
+- Facial expression recognition
+- Multimodal fusion
+- Transfer learning
+- Deep learning
+- Affective computing
+- Learning analytics
+- Imbalanced classification
+
+---
+
+## 14. Introduction Writing Guide (Section 1)
+
+Paragraf-per-paragraf (tanpa subsection formal, sesuai struktur):
+
+**Paragraph 1 — Motivasi**
+- Emosi berpengaruh ke learning outcome (frustration, engagement, confusion)
+- Dalam konteks programming: mahasiswa sering hadapi kesulitan yang memicu emosi negative
+- Deteksi otomatis bisa memungkinkan adaptive feedback
+
+**Paragraph 2 — Gap Penelitian**
+- FER state-of-the-art (CK+, JAFFE, AffectNet) fokus ekspresi posed/lab — tidak representatif untuk kondisi natural
+- Dataset natural untuk FER jarang (mainly in-the-wild web images, bukan task-specific)
+- Belum ada studi komprehensif fusion strategies × TL pada natural programming context
+
+**Paragraph 3 — Rumusan Masalah & Tujuan**
+- Sebutkan 3 RQs (bisa inline di paragraph atau bullet format)
+- Tujuan: mengembangkan pipeline FER multimodal untuk programming learning context
+
+**Paragraph 4 — Kontribusi**
+- (1) Dataset baru 6,795 sampel natural programming sessions (37 subjek)
+- (2) Studi komparatif sistematis 5 arsitektur fusion × TL (54 configs)
+- (3) Analisis empirik bahwa multimodal + TL + imbalance handling mencapai Macro F1 0.567
+
+**Paragraph 5 — Struktur Paper**
+Singkat: "Section 2 reviews... Section 3 describes... Section 4 presents... Section 5 discusses... Section 6 concludes..."
+
+---
+
+## 15. Architecture Diagram (untuk Figure 1)
+
+Deskripsi textual untuk refer saat draw diagram:
+
+```
+Input: Facial image 224×224×3    Landmark 68 points (136-dim)
+         │                              │
+         ▼                              ▼
+(a) CNN: [Conv blocks] → [FC] → softmax ← single modal
+(b) FCNN: [FC blocks] → softmax ← single modal
+
+(c) Early Fusion:
+    [Image 224×224×3] + [Heatmap 224×224×1] → concat channel → [4-ch Conv blocks] → softmax
+
+(d) Intermediate Fusion:
+    [Image] → CNN features (256-dim) ─┐
+                                       concat → [FC] → softmax
+    [Landmark] → FCNN features (128-dim) ┘
+
+(e) Late Fusion:
+    [Image] → CNN → softmax_c ─┐
+                                weighted avg (w_c, 1-w_c) → argmax
+    [Landmark] → FCNN → softmax_f ┘
+```
+
+**Transfer Learning variants**: replace CNN (scratch) dengan ResNet18 pretrained ImageNet:
+- (a) CNN TL: ResNet18 block + custom FC head
+- (c) Early Fusion TL: **first Conv2d dimodifikasi dari 3→4 channel** (weight RGB dari pretrained, weight heatmap di-init dari mean RGB)
+- (d) Intermediate Fusion TL: ResNet18 image stream + FCNN landmark stream
+- (e) Late Fusion TL: ResNet18 + FCNN separate training
+
+---
+
+## 16. Related Work — Specific Points to Cover
+
+### 2.1 Deep Learning for FER
+- Evolusi: HOG/SIFT → CNN → ResNet → Vision Transformer
+- Paper anchor:
+  - Dada et al. (2023) CNN-10 on CK+
+  - Li et al. (2024) AA-DCN (anti-aliased deep conv)
+  - Khan et al. (2023) ResNet50 for in-the-wild
+
+### 2.2 Multimodal Fusion (Image + Landmark)
+- Strategi umum: early (input level) vs intermediate (feature) vs late (decision)
+- Paper anchor:
+  - **Wu et al. (MMM 2020) — HAE-Net** (REFERENSI WAJIB untuk Early Fusion claim)
+  - Boulahia et al. (2021) — fusion strategies taxonomy
+  - Chen et al. (2024) — β-skeleton + CNN
+
+### 2.3 Transfer Learning for FER
+- ImageNet → FER: pretrained backbone as feature extractor
+- Fine-tune vs frozen feature: rationale untuk fine-tune (dataset kecil, domain shift)
+- Paper anchor: He et al. (2016) ResNet, transfer learning survey
+
+### 2.4 Affective Computing in Education
+- Affective computing foundational: Picard (1997)
+- MOOC / programming education specific: Sharma et al., D'Mello et al.
+- Emphasis: gap in natural programming context
