@@ -1503,6 +1503,361 @@ Model FCNN menghasilkan Macro F1 **0.158** (7-class) dan **0.361** (4-class). Fi
 
 ---
 
+## SLIDE 30: Tahap 6 — Early Fusion (Arahan Dosen)
+
+### Motivasi
+Dosen meminta implementasi **Early Fusion** di mana landmark "ditempel" ke gambar. Pendekatan yang dipilih: **HAE-Net style** (Wu et al., MMM 2020) — landmark dikonversi ke **Gaussian heatmap 224×224** dan di-concat sebagai channel ke-4 citra RGB. Pembeda dengan Intermediate Fusion: fusi terjadi di **level input (0%)**, bukan setelah feature extraction.
+
+### Arsitektur Early Fusion
+- **Input**: Image 224×224×3 + Heatmap 224×224×1 → 224×224×**4**
+- **Heatmap generation**: Setiap 68 landmark → Gaussian blob σ=3px → element-wise max aggregation → single channel [0,1]
+- **Scratch variant**: Conv2d pertama `in_channels=4` dari awal
+- **TL variant**: ResNet18 pretrained ImageNet, Conv2d pertama dimodifikasi 3→4 channel (weight RGB di-copy, channel ke-4 di-init dari mean RGB)
+
+### Hasil Early Fusion conf60 (12 configs, notebook 64)
+
+**7-class:**
+| Config | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|--------|:--------:|:--------:|:-----------:|:--------:|
+| EarlyFusion B1 | 0.246 | 0.794 | 0.786 | 0.794 |
+| EarlyFusion B2 | 0.205 | 0.520 | 0.552 | 0.520 |
+| EarlyFusion B3 | 0.264 | 0.680 | 0.726 | 0.680 |
+| EarlyFusion TL B1 | 0.253 | 0.713 | 0.722 | 0.713 |
+| EarlyFusion TL B2 | 0.247 | 0.636 | 0.663 | 0.636 |
+| **EarlyFusion TL B3** | **0.333** ⭐ | 0.753 | 0.773 | 0.753 |
+
+**4-class:**
+| Config | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|--------|:--------:|:--------:|:-----------:|:--------:|
+| EarlyFusion B1 | 0.457 | 0.822 | 0.816 | 0.822 |
+| EarlyFusion B2 | 0.427 | 0.690 | 0.728 | 0.690 |
+| EarlyFusion B3 | 0.427 | 0.728 | 0.752 | 0.728 |
+| **EarlyFusion TL B1** | **0.471** ⭐ | 0.770 | 0.770 | 0.770 |
+| EarlyFusion TL B2 | 0.424 | 0.642 | 0.668 | 0.642 |
+| EarlyFusion TL B3 | 0.433 | 0.678 | 0.709 | 0.678 |
+
+> **Catatan**: Micro F1 = Accuracy untuk multi-class single-label. Dicantumkan terpisah sesuai instruksi dosen (Macro/Micro/Weighted F1 semua wajib ada).
+
+### Perbandingan Semua Strategi Fusion (Best per Arsitektur, conf60)
+
+| Fusion Strategy | Best 7c Macro F1 | Best 4c Macro F1 |
+|-----------------|:----------------:|:----------------:|
+| Single CNN (TL) | 0.273 | 0.507 |
+| Single FCNN | 0.244 | 0.459 |
+| **Early Fusion** (HAE-Net) | **0.333** (TL B3) | 0.471 (TL B1) |
+| Intermediate Fusion | 0.292 (TL B3) | 0.521 (TL B3) |
+| **Late Fusion** | 0.301 (TL B1) | **0.567** (TL B3) ⭐ |
+
+### Temuan dari Early Fusion
+
+**Temuan 32: Early Fusion TL B3 tembus best di 7-class (0.333)**
+> Melampaui Intermediate TL B3 (0.292) dan Late Fusion TL B1 (0.301). Kombinasi heatmap channel + class weights + augmentation + TL bekerja sinergis untuk skenario kelas banyak + imbalance ekstrem.
+
+**Temuan 33: Early Fusion 4-class underperforms (0.471 vs 0.567 Late Fusion)**
+> Di 4-class, Early Fusion gagal tembus 0.50. Hipotesis: heatmap sparse (mostly zeros) kurang informatif ketika class granularity dikurangi; fusion di level feature/decision lebih optimal untuk kasus ini.
+
+**Temuan 34: B2 class weights merugikan Early Fusion secara konsisten**
+> Skenario B2 (class weights saja) drop accuracy ~30% dibanding B1 di semua Early Fusion config. Re-weighting di level loss tampak merusak learning ketika input adalah 4-channel concat. Sebaliknya, Intermediate/Late Fusion tetap stabil dengan B2.
+
+**Temuan 35: Ranking fusion strategy berbeda per granularitas kelas**
+> - 7-class: **Early TL B3 > Late TL B1 > Intermediate TL B3**
+> - 4-class: **Late TL B3 > Intermediate TL B3 > Early TL B1**
+>
+> Tidak ada single strategy yang dominan di semua setting — pemilihan arsitektur bergantung konteks task.
+
+> **Penjelasan lisan:**
+> "Pak, saya sudah implementasikan Early Fusion sesuai arahan. Pendekatan yang saya pakai adalah menjadikan landmark sebagai heatmap Gaussian 224×224, lalu di-concat sebagai channel ke-4 ke citra RGB. Referensi: HAE-Net (Wu et al., MMM 2020)."
+>
+> "Hasilnya menarik — Early Fusion TL B3 jadi best di 7-class (0.333), melampaui Intermediate dan Late Fusion. Tapi di 4-class, Early Fusion kalah dari Late Fusion (0.471 vs 0.567). Jadi ranking fusion strategy ternyata berbeda tergantung jumlah kelas."
+>
+> "Total eksperimen conf60 sekarang 54 config (5 arsitektur × B1/B2/B3 × scratch/TL × 7c/4c). Best overall tetap Late Fusion TL 4c B3 = 0.567."
+
+---
+
+## SLIDE 31: Cross-Dataset Evaluation Lengkap (Skema 2)
+
+Melengkapi cross-dataset yang sebelumnya hanya CK+→Primer 7c. Sekarang semua sumber (CK+/JAFFE/RAF-DB/KDEF) diuji → Primer conf60 untuk 7c dan 4c, semua 6 arsitektur.
+
+### Best per Source Dataset → Primer conf60
+
+| Source | Best Model | Acc | Macro F1 | Weighted F1 |
+|--------|-----------|:---:|:--------:|:-----------:|
+| **CK+ 7c** | FCNN B1 | 0.773 | 0.194 | 0.739 |
+| **CK+ 4c** | CNN B1 | 0.642 | **0.396** | 0.703 |
+| **JAFFE 7c** | Late Fusion B1 | 0.081 | 0.040 | 0.054 |
+| **JAFFE 4c** | Intermediate TL B1 | 0.160 | 0.093 | 0.073 |
+| **RAF-DB 7c** | FCNN B1 | 0.640 | 0.183 | 0.672 |
+| **RAF-DB 4c** | Intermediate B1 | 0.551 | **0.269** | 0.594 |
+| **KDEF 7c** | CNN TL B1 | 0.053 | 0.038 | 0.036 |
+| **KDEF 4c** | CNN B1 | 0.067 | 0.079 | 0.078 |
+
+### Temuan dari Cross-Dataset
+
+**Temuan 36: Semua source dataset gagal generalize ke Primer (catastrophic)**
+> Best cross-dataset Macro F1 hanya 0.269 (RAF-DB 4c). Bandingkan dengan Primer self-training best 0.567 — gap -0.30. Public FER benchmarks **tidak representatif** untuk setting natural programming learning.
+
+**Temuan 37: RAF-DB 4c paling robust untuk transfer ke Primer**
+> Dari semua source, RAF-DB (in-the-wild) paling mendekati Primer (natural). CK+ dan JAFFE (lab-posed) terjun bebas. KDEF (lab-posed high quality) bahkan lebih jelek (acc 5-7%).
+
+**Temuan 38: Landmark features lebih domain-invariant dari visual**
+> Di CK+/RAF-DB → Primer 7c, **FCNN (landmark-only)** yang best, bukan arsitektur yang menggunakan image. Konfirmasi: landmark geometry lebih tahan domain shift dibanding texture/color features.
+
+**Temuan 39: JAFFE → Primer total collapse (< 10% acc)**
+> JAFFE terlalu kecil (213 images, Japanese female only) dan sangat posed. Model overfit ke karakteristik spesifik dataset, tidak transferable sama sekali.
+
+**Temuan 40: Justifikasi kuat untuk Primer-only train/test di paper**
+> Hasil ini memperkuat argumen bahwa **transfer learning dari public FER dataset tidak viable** untuk domain natural programming. Paper JITeCS hanya pakai Primer conf60 — keputusan yang didukung data.
+
+### Progress Eksperimen Benchmark
+
+| Eksperimen | Status |
+|-----------|:------:|
+| Skema 1 self-train-test semua dataset (CK+/JAFFE/RAF-DB/KDEF/Primer × 7c+4c) | ✅ Done |
+| Skema 1 Late Fusion TL (sebelumnya terlewat, nb 65) | ✅ Done |
+| Skema 2 Cross-dataset semua source → Primer (nb 63) | ✅ Done |
+| Micro F1 untuk semua hasil lama (CK+/JAFFE) | ✅ Done |
+
+> **Penjelasan lisan:**
+> "Cross-dataset dari semua source (CK+, JAFFE, RAF-DB, KDEF) ke Primer sudah saya jalankan. Hasilnya konsisten: semua gagal generalize. Best hanya 0.269 dari RAF-DB 4c."
+>
+> "Ini memperkuat justifikasi kenapa paper JITeCS saya fokus hanya pada Primer. Dataset publik, meski performa di self-train tinggi (KDEF 0.84, RAF-DB 0.74), tidak transferable ke setting natural."
+
+---
+
+## SLIDE 32: Tabel Lengkap Skema 1 & Skema 2 (Sesuai Instruksi Dosen)
+
+### Konteks
+Instruksi dosen (konsultasi sebelumnya): print **semua metrik** (Macro/Micro/Weighted F1) untuk **semua model** (CNN, FCNN, Intermediate, Late Fusion, CNN TL, Intermediate TL, +Late Fusion TL) di **Skema 1** (self train-test tiap dataset) dan **Skema 2** (cross-dataset train → Primer test).
+
+Slide 24 (CK+/JAFFE) lama hanya Macro F1. Slide 24B belum lengkap Late Fusion TL. Slide ini **konsolidasi tabel lengkap** semua.
+
+---
+
+### Skema 1 — Self Train-Test (7 Model × 4 Metrik)
+
+#### CK+ 7-class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.461 | 0.729 | 0.659 | 0.729 |
+| FCNN | 0.395 | 0.678 | 0.614 | 0.678 |
+| Intermediate | 0.316 | 0.695 | 0.585 | 0.695 |
+| **CNN TL** | **0.913** ⭐ | 0.949 | 0.946 | 0.949 |
+| Intermediate TL | 0.833 | 0.881 | 0.886 | 0.881 |
+| Late Fusion | 0.498 | 0.780 | 0.694 | 0.780 |
+| Late Fusion TL | 0.835 | 0.881 | 0.890 | 0.881 |
+
+#### CK+ 4-class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.645 | 0.790 | 0.776 | 0.790 |
+| FCNN | 0.592 | 0.758 | 0.740 | 0.758 |
+| Intermediate | 0.567 | 0.758 | 0.740 | 0.758 |
+| CNN TL | 0.675 | 0.903 | 0.890 | 0.903 |
+| **Intermediate TL** | **0.837** ⭐ | 0.903 | 0.902 | 0.903 |
+| Late Fusion | 0.592 | 0.758 | 0.740 | 0.758 |
+| Late Fusion TL | 0.604 | 0.806 | 0.803 | 0.806 |
+
+#### JAFFE 7-class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.304 | 0.450 | 0.319 | 0.450 |
+| FCNN | 0.209 | 0.250 | 0.169 | 0.250 |
+| Intermediate | 0.037 | 0.150 | 0.039 | 0.150 |
+| CNN TL | 0.464 | 0.500 | 0.437 | 0.500 |
+| Intermediate TL | 0.447 | 0.450 | 0.420 | 0.450 |
+| **Late Fusion** | **0.545** ⭐ | 0.600 | 0.522 | 0.600 |
+| Late Fusion TL | 0.146 | 0.200 | 0.120 | 0.200 |
+
+#### JAFFE 4-class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.177 | 0.550 | 0.390 | 0.550 |
+| FCNN | 0.438 | 0.550 | 0.530 | 0.550 |
+| Intermediate | 0.177 | 0.550 | 0.390 | 0.550 |
+| CNN TL | 0.329 | 0.500 | 0.476 | 0.500 |
+| Intermediate TL | 0.375 | 0.650 | 0.558 | 0.650 |
+| Late Fusion | 0.396 | 0.650 | 0.552 | 0.650 |
+| **Late Fusion TL** | **0.492** ⭐ | 0.650 | 0.615 | 0.650 |
+
+#### RAF-DB 7-class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.729 | 0.815 | 0.813 | 0.815 |
+| FCNN | 0.578 | 0.714 | 0.703 | 0.714 |
+| Intermediate | 0.696 | 0.785 | 0.783 | 0.785 |
+| CNN TL | 0.741 | 0.830 | 0.826 | 0.830 |
+| **Intermediate TL** | **0.744** ⭐ | 0.833 | 0.832 | 0.833 |
+| Late Fusion | 0.719 | 0.809 | 0.805 | 0.809 |
+| Late Fusion TL | 0.735 | 0.829 | 0.823 | 0.829 |
+
+#### RAF-DB 4-class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.808 | 0.830 | 0.830 | 0.830 |
+| FCNN | 0.694 | 0.728 | 0.729 | 0.728 |
+| Intermediate | 0.792 | 0.818 | 0.818 | 0.818 |
+| CNN TL | 0.827 | 0.845 | 0.846 | 0.845 |
+| **Intermediate TL** | **0.836** ⭐ | 0.853 | 0.855 | 0.853 |
+| Late Fusion | 0.819 | 0.842 | 0.841 | 0.842 |
+| Late Fusion TL | 0.832 | 0.849 | 0.850 | 0.849 |
+
+#### KDEF 7-class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.798 | 0.801 | 0.798 | 0.801 |
+| FCNN | 0.666 | 0.680 | 0.663 | 0.680 |
+| Intermediate | 0.671 | 0.674 | 0.668 | 0.674 |
+| CNN TL | 0.833 | 0.831 | 0.833 | 0.831 |
+| **Intermediate TL** | **0.843** ⭐ | 0.843 | 0.843 | 0.843 |
+| Late Fusion | 0.776 | 0.777 | 0.775 | 0.777 |
+| Late Fusion TL | 0.836 | 0.834 | 0.836 | 0.834 |
+
+#### KDEF 4-class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.841 | 0.872 | 0.872 | 0.872 |
+| FCNN | 0.678 | 0.792 | 0.766 | 0.792 |
+| Intermediate | 0.776 | 0.831 | 0.828 | 0.831 |
+| CNN TL | 0.918 | 0.929 | 0.928 | 0.929 |
+| **Intermediate TL** | **0.923** ⭐ | 0.929 | 0.929 | 0.929 |
+| Late Fusion | 0.859 | 0.890 | 0.888 | 0.890 |
+| Late Fusion TL | 0.920 | 0.932 | 0.930 | 0.932 |
+
+#### Primer 7-class (conf60, B1 baseline — dari nb 62/65)
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.270 | 0.787 | 0.795 | 0.787 |
+| FCNN | 0.261 | 0.766 | 0.792 | 0.766 |
+| Intermediate | 0.260 | 0.799 | 0.793 | 0.799 |
+| CNN TL | 0.281 | 0.819 | 0.814 | 0.819 |
+| **Intermediate TL** | **0.292** ⭐ | 0.808 | 0.819 | 0.808 |
+| Late Fusion | 0.244 | 0.778 | 0.777 | 0.778 |
+| Late Fusion TL | 0.285 | 0.827 | 0.828 | 0.827 |
+
+#### Primer 4-class (conf60, B1 baseline — dari nb 62/65)
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.476 | 0.803 | 0.802 | 0.803 |
+| FCNN | 0.459 | 0.763 | 0.774 | 0.763 |
+| Intermediate | 0.444 | 0.727 | 0.753 | 0.727 |
+| CNN TL | 0.378 | 0.721 | 0.682 | 0.721 |
+| **Intermediate TL** | **0.482** ⭐ | 0.780 | 0.790 | 0.780 |
+| Late Fusion | 0.460 | 0.763 | 0.779 | 0.763 |
+| Late Fusion TL | 0.472 | 0.777 | 0.779 | 0.777 |
+
+> **Catatan Primer**: Tabel di atas B1 (baseline) saja, untuk perbandingan apple-to-apple dengan benchmark publik. Best Primer keseluruhan (B3 + TL + augmentation) = **Late Fusion TL 4c B3 = 0.567**.
+
+---
+
+### Skema 2 — Cross-Dataset (Train di Benchmark → Test di Primer)
+
+6 model (CNN, FCNN, Intermediate, CNN TL, Intermediate TL, Late Fusion) — Late Fusion TL belum dijalankan karena butuh checkpoint FCNN+CNN_TL yang cocok setiap combo.
+
+#### CK+ → Primer (7-class)
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.127 | 0.719 | 0.635 | 0.719 |
+| **FCNN** | **0.194** ⭐ | 0.773 | 0.739 | 0.773 |
+| Intermediate | 0.153 | 0.536 | 0.593 | 0.536 |
+| CNN TL | 0.163 | 0.670 | 0.701 | 0.670 |
+| Intermediate TL | 0.103 | 0.152 | 0.238 | 0.152 |
+| Late Fusion | 0.160 | 0.529 | 0.580 | 0.529 |
+
+#### CK+ → Primer (4-class)
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| **CNN** | **0.396** ⭐ | 0.642 | 0.703 | 0.642 |
+| FCNN | 0.072 | 0.102 | 0.093 | 0.102 |
+| Intermediate | 0.186 | 0.465 | 0.532 | 0.465 |
+| CNN TL | 0.258 | 0.386 | 0.527 | 0.386 |
+| Intermediate TL | 0.202 | 0.271 | 0.381 | 0.271 |
+| Late Fusion | 0.245 | 0.489 | 0.556 | 0.489 |
+
+#### JAFFE → Primer (7-class)
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.001 | 0.002 | 0.000 | 0.002 |
+| FCNN | 0.023 | 0.013 | 0.018 | 0.013 |
+| Intermediate | 0.017 | 0.014 | 0.020 | 0.014 |
+| CNN TL | 0.015 | 0.054 | 0.006 | 0.054 |
+| Intermediate TL | 0.023 | 0.028 | 0.045 | 0.028 |
+| **Late Fusion** | **0.040** ⭐ | 0.081 | 0.054 | 0.081 |
+
+#### JAFFE → Primer (4-class)
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.004 | 0.009 | 0.000 | 0.009 |
+| FCNN | 0.004 | 0.009 | 0.000 | 0.009 |
+| Intermediate | 0.005 | 0.010 | 0.002 | 0.010 |
+| CNN TL | 0.004 | 0.009 | 0.000 | 0.009 |
+| **Intermediate TL** | **0.093** ⭐ | 0.160 | 0.073 | 0.160 |
+| Late Fusion | 0.007 | 0.010 | 0.002 | 0.010 |
+
+#### RAF-DB → Primer (7-class)
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.076 | 0.099 | 0.132 | 0.099 |
+| **FCNN** | **0.183** ⭐ | 0.640 | 0.672 | 0.640 |
+| Intermediate | 0.109 | 0.237 | 0.287 | 0.237 |
+| CNN TL | 0.175 | 0.545 | 0.611 | 0.545 |
+| Intermediate TL | 0.180 | 0.479 | 0.562 | 0.479 |
+| Late Fusion | 0.091 | 0.166 | 0.212 | 0.166 |
+
+#### RAF-DB → Primer (4-class)
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.056 | 0.026 | 0.026 | 0.026 |
+| FCNN | 0.264 | 0.487 | 0.553 | 0.487 |
+| **Intermediate** | **0.269** ⭐ | 0.551 | 0.594 | 0.551 |
+| CNN TL | 0.206 | 0.256 | 0.357 | 0.256 |
+| Intermediate TL | 0.179 | 0.306 | 0.363 | 0.306 |
+| Late Fusion | 0.170 | 0.137 | 0.147 | 0.137 |
+
+#### KDEF → Primer (7-class)
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.024 | 0.040 | 0.024 | 0.040 |
+| FCNN | 0.007 | 0.008 | 0.008 | 0.008 |
+| Intermediate | 0.036 | 0.020 | 0.026 | 0.020 |
+| **CNN TL** | **0.038** ⭐ | 0.053 | 0.036 | 0.053 |
+| Intermediate TL | 0.034 | 0.056 | 0.023 | 0.056 |
+| Late Fusion | 0.015 | 0.008 | 0.005 | 0.008 |
+
+#### KDEF → Primer (4-class)
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| **CNN** | **0.079** ⭐ | 0.067 | 0.078 | 0.067 |
+| FCNN | 0.004 | 0.009 | 0.000 | 0.009 |
+| Intermediate | 0.037 | 0.020 | 0.021 | 0.020 |
+| CNN TL | 0.068 | 0.045 | 0.023 | 0.045 |
+| Intermediate TL | 0.076 | 0.054 | 0.030 | 0.054 |
+| Late Fusion | 0.004 | 0.009 | 0.000 | 0.009 |
+
+---
+
+### Summary Temuan Konsolidasi
+
+**Skema 1 — pola lintas dataset:**
+- **Best model umumnya Intermediate TL** (CK+ 4c, RAF-DB 7c/4c, KDEF 7c/4c, Primer 7c/4c)
+- **Kecuali**: CK+ 7c best CNN TL (0.913); JAFFE best Late Fusion / Late Fusion TL (dataset kecil)
+- **Late Fusion TL** (baru): kompetitif di RAF-DB/KDEF/Primer, tapi kolaps di CK+ 7c (0.835 vs 0.913) dan JAFFE 7c (0.146)
+- **Primer paling challenging**: best Primer 4c = 0.482 (Intermediate TL), sedangkan RAF-DB 4c = 0.836, KDEF 4c = 0.923, CK+ 4c = 0.837
+
+**Skema 2 — semua catastrophic:**
+- Best cross: CK+ 4c → Primer pakai CNN B1 = **0.396** (satu-satunya yang tembus > 0.30)
+- RAF-DB 4c → Primer dengan Intermediate = 0.269 (runner-up)
+- JAFFE → Primer total collapse (<10% acc untuk semua model di 4c)
+- KDEF → Primer catastrophic (<8% acc untuk 7c, <9% untuk 4c)
+- **Pola**: FCNN / Intermediate (landmark-heavy) paling robust untuk cross-domain
+
+**Justifikasi untuk tesis & paper:**
+1. Arsitektur **bekerja** di dataset standar (Macro F1 0.82-0.92 di RAF-DB/KDEF/CK+ 4c)
+2. Dataset primer **memang sulit** — bukan kelemahan arsitektur
+3. Transfer learning dari public FER **tidak viable** untuk natural programming setting
+4. Solusi: tetap pakai Primer self-training dengan confidence filtering (conf60) + fusion + augmentation
+
+---
+
 ## Ringkasan Poin Konsultasi
 
 | No | Topik | Status |
@@ -1516,6 +1871,9 @@ Model FCNN menghasilkan Macro F1 **0.158** (7-class) dan **0.361** (4-class). Fi
 | 7 | Validasi ahli — dataset 146 sampel | ✅ Dataset siap, butuh 3 validator |
 | 8 | Validasi ahli — Streamlit web app | ✅ App siap deploy |
 | 9 | Perubahan dlib → MediaPipe | ✅ Cukup dijelaskan di BAB 4 |
+| 10 | Benchmark CK+/JAFFE/RAF-DB/KDEF/Primer Skema 1 & 2 | ✅ Selesai (Apr 2026) |
+| 11 | Early Fusion (arahan dosen, HAE-Net style) | ✅ Selesai (nb 64, 12 configs) |
+| 12 | Cross-dataset semua source → Primer | ✅ Selesai (nb 63) |
 
 ### Pertanyaan yang Perlu Didiskusikan
 

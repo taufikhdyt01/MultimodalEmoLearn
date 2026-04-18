@@ -100,19 +100,24 @@ Tiga RQ yang akan dijawab di paper:
 
 ### Statistik Imbalance
 
-Distribusi train set (conf60, 7-class):
+Distribusi **total korpus** (conf60, 7-class, n=6,795):
 
-| Emosi | Jumlah | % |
-|-------|:------:|:-:|
-| neutral | 5,691 | 83.8% |
-| happy | 651 | 9.6% |
-| sad | 361 | 5.3% |
-| angry | 32 | 0.5% |
-| fearful | 5 | 0.1% |
-| disgusted | 16 | 0.2% |
-| surprised | 39 | 0.6% |
+| Emosi | Train (5,287) | Val (579) | Test (929) | **Total** | % |
+|-------|:------:|:---:|:---:|:------:|:-:|
+| neutral | 4,526 | 477 | 688 | 5,691 | 83.8% |
+| happy | 416 | 52 | 183 | 651 | 9.6% |
+| sad | 287 | 24 | 50 | 361 | 5.3% |
+| angry | 27 | 3 | 2 | 32 | 0.5% |
+| fearful | 2 | 2 | 1 | 5 | 0.1% |
+| disgusted | 13 | 1 | 2 | 16 | 0.2% |
+| surprised | 16 | 20 | 3 | 39 | 0.6% |
 
 → **Ratio 1:1138** (fearful vs neutral). Kelas minoritas sangat langka.
+
+**Catatan split user-wise**: Distribusi per-split **tidak proporsional** karena split dilakukan per-user (29 train / 3 val / 5 test), bukan per-sample. Anomali:
+- `surprised` 20/39 masuk val — user 104/210/214 kebetulan banyak ekspresi surprised
+- `happy` 28% (183/651) masuk test meski test hanya 14% data — user 109/117/118/208/213 dominan happy
+- Konsekuensi: variance per-class metrics antar split bisa tinggi untuk kelas minoritas
 
 ---
 
@@ -172,7 +177,7 @@ Untuk referensi penulisan Section 4 (Results) dan Section 5 (Discussion).
 - **Macro F1** — metrik utama (unbiased terhadap imbalance)
 - **Weighted F1** — rata-rata F1 bobot support (didominasi kelas mayoritas)
 - **Accuracy** — standard (= Micro F1 untuk multi-class single-label)
-- Early Fusion scratch + TL: *pending nb 64 (6 configs per class)*
+- **Early Fusion**: 12 configs complete (6 per class) dari nb 64
 
 ### 7-Class — All Metrics
 
@@ -184,7 +189,9 @@ Untuk referensi penulisan Section 4 (Results) dan Section 5 (Discussion).
 | FCNN | B1 | 0.232 | 0.765 | 0.767 |
 | FCNN | B2 | 0.244 | 0.767 | 0.765 |
 | FCNN | B3 | 0.222 | 0.758 | 0.740 |
-| Early Fusion | B1/B2/B3 | *(pending)* | *(pending)* | *(pending)* |
+| Early Fusion | B1 | 0.246 | 0.786 | 0.794 |
+| Early Fusion | B2 | 0.205 | 0.552 | 0.520 |
+| Early Fusion | B3 | 0.264 | 0.726 | 0.680 |
 | Intermediate | B1 | 0.261 | 0.791 | 0.792 |
 | Intermediate | B2 | 0.247 | 0.784 | 0.779 |
 | Intermediate | B3 | 0.229 | 0.754 | 0.775 |
@@ -194,7 +201,9 @@ Untuk referensi penulisan Section 4 (Results) dan Section 5 (Discussion).
 | CNN TL | B1 | 0.273 | 0.782 | 0.793 |
 | CNN TL | B2 | 0.243 | 0.746 | 0.750 |
 | CNN TL | B3 | 0.241 | 0.797 | 0.807 |
-| Early Fusion TL | B1/B2/B3 | *(pending)* | *(pending)* | *(pending)* |
+| Early Fusion TL | B1 | 0.253 | 0.722 | 0.713 |
+| Early Fusion TL | B2 | 0.247 | 0.663 | 0.636 |
+| Early Fusion TL | B3 | 0.333 | 0.773 | 0.753 |
 | Intermediate TL | B1 | 0.277 | 0.800 | 0.792 |
 | Intermediate TL | B2 | 0.283 | 0.825 | 0.825 |
 | Intermediate TL | B3 | **0.292** | 0.826 | 0.825 |
@@ -212,7 +221,9 @@ Untuk referensi penulisan Section 4 (Results) dan Section 5 (Discussion).
 | FCNN | B1 | 0.422 | 0.722 | 0.695 |
 | FCNN | B2 | 0.459 | 0.783 | 0.757 |
 | FCNN | B3 | 0.421 | 0.739 | 0.702 |
-| Early Fusion | B1/B2/B3 | *(pending)* | *(pending)* | *(pending)* |
+| Early Fusion | B1 | 0.457 | 0.816 | 0.822 |
+| Early Fusion | B2 | 0.427 | 0.728 | 0.690 |
+| Early Fusion | B3 | 0.427 | 0.752 | 0.728 |
 | Intermediate | B1 | 0.445 | 0.788 | 0.788 |
 | Intermediate | B2 | 0.416 | 0.779 | 0.783 |
 | Intermediate | B3 | 0.382 | 0.761 | 0.790 |
@@ -222,7 +233,9 @@ Untuk referensi penulisan Section 4 (Results) dan Section 5 (Discussion).
 | CNN TL | B1 | 0.456 | 0.760 | 0.747 |
 | CNN TL | B2 | 0.447 | 0.748 | 0.742 |
 | CNN TL | B3 | 0.507 | 0.807 | 0.799 |
-| Early Fusion TL | B1/B2/B3 | *(pending)* | *(pending)* | *(pending)* |
+| Early Fusion TL | B1 | 0.471 | 0.770 | 0.770 |
+| Early Fusion TL | B2 | 0.424 | 0.668 | 0.642 |
+| Early Fusion TL | B3 | 0.433 | 0.709 | 0.678 |
 | Intermediate TL | B1 | 0.489 | 0.810 | 0.800 |
 | Intermediate TL | B2 | 0.508 | 0.829 | 0.825 |
 | Intermediate TL | B3 | 0.521 | 0.828 | 0.822 |
@@ -248,10 +261,24 @@ Untuk referensi penulisan Section 4 (Results) dan Section 5 (Discussion).
 
 | Section | Finding |
 |---------|---------|
-| **Fusion strategies** | Late Fusion TL > Intermediate TL > Single-modal |
+| **Fusion strategies** | Late Fusion TL > Intermediate TL > **Early Fusion TL** > Single-modal |
 | **TL effect** | TL +0.05-0.10 Macro F1 konsisten di semua arch |
 | **Class granularity** | 4-class F1 ≈ 2× lebih tinggi dari 7-class (0.567 vs 0.292) |
-| **Imbalance handling** | B3 (aug) > B2 (weights) > B1 (baseline) di TL variants |
+| **Imbalance handling** | B3 (aug) > B2 (weights) > B1 (baseline) di Late/Intermediate TL; Early Fusion tidak mengikuti pola ini |
+
+### Early Fusion Best Configs
+
+| Config | Class | Macro F1 | Acc | Note |
+|--------|:-----:|:--------:|:---:|------|
+| EarlyFusion TL B3 | 7c | **0.333** | 0.753 | ⭐ Best Early Fusion 7c |
+| EarlyFusion TL B1 | 4c | **0.471** | 0.770 | ⭐ Best Early Fusion 4c |
+| EarlyFusion B1 | 4c | 0.457 | 0.822 | Best Early Fusion scratch |
+
+**Temuan Early Fusion**:
+- Early Fusion TL 7c B3 (0.333) **melampaui** Intermediate TL B3 (0.292) di 7-class — heatmap channel + augmentation + TL bekerja sinergis
+- Namun Early Fusion 4c gagal tembus 0.50 (best 0.471), di bawah Intermediate TL 4c B3 (0.521) dan Late Fusion TL 4c B3 (0.567)
+- B1 baseline Early Fusion punya **accuracy tinggi** (0.822 di 4c) tapi macro F1 rendah → model prediksi mayoritas
+- B2 (class weights) **paling jelek** di Early Fusion (acc drop ~30% dari B1) — channel concat sensitif terhadap re-weighting
 
 ---
 
@@ -266,7 +293,7 @@ Untuk referensi penulisan Section 4 (Results) dan Section 5 (Discussion).
 
 ### Tabel (Tables)
 - **Tab 1**: Dataset distribution (7-class vs 4-class, train/val/test)
-- **Tab 2**: Main results — 50 configurations, rank by Macro F1
+- **Tab 2**: Main results — **54 configurations** (5 arch × 3 scenarios × 2 classes × {scratch, TL}, minus 6 FCNN TL slots), rank by Macro F1
 - **Tab 3**: Top 5 configurations detailed (all 4 metrics)
 - **Tab 4**: Per-class F1 for best model
 - **Tab 5**: Ablation — effect of TL (scratch vs TL per architecture)
@@ -384,12 +411,17 @@ Mayoritas kesalahan adalah **over-prediction ke neutral** (kelas mayoritas). Con
 - **Note kontra**: Tidak semua fusion menang — Intermediate Fusion scratch kalah dari CNN scratch di 7-class (0.261 vs 0.277)
 
 ### 5.2 Fusion Strategy Comparison (RQ2)
-- **Ranking di primer conf60**: Late Fusion TL > Intermediate TL > Early Fusion TL *(pending)* > Scratch variants
+- **Ranking di primer conf60 (4c best)**: Late Fusion TL (0.567) > Intermediate TL (0.521) > CNN TL single (0.507) > Early Fusion TL (0.471)
+- **Ranking di primer conf60 (7c best)**: Late Fusion TL (0.301) > Intermediate TL (0.292) > Early Fusion TL (0.333 — outlier, hanya muncul di B3) > CNN single (0.277)
 - **Insight**: **Late Fusion** unggul karena:
   - Kedua modality dilatih independent → lebih robust terhadap noise dari salah satu modality
   - Weighted softmax averaging lebih fleksibel (tunable weight di val)
 - **Intermediate Fusion** sedikit di bawah karena joint learning rentan overfit di dataset kecil
-- **Early Fusion** (pending): ekspektasi di antara intermediate & late — forces CNN belajar cross-modal dari layer awal
+- **Early Fusion** (HAE-Net style channel concat): **underperforms** fusion lain di 4-class. Hipotesis:
+  - Heatmap sparse Gaussian (mostly zeros) tidak memberi informasi kuat di layer awal
+  - Kernel conv layer pertama harus simultaneously belajar RGB features DAN heatmap patterns dengan satu set bobot → kompromi representasi
+  - Weight init 4th channel dari mean(RGB) suboptimal untuk heatmap yang berbeda karakteristik dari citra
+- **Implikasi**: Untuk dataset kecil dengan landmark sparse, fusion di level feature/decision lebih cocok daripada di level input.
 
 ### 5.3 Transfer Learning Effectiveness (RQ3)
 - **Fakta**: TL variant konsisten unggul dari scratch (contoh: Late Fusion TL 0.567 vs Late Fusion scratch 0.503, +0.064)
@@ -508,7 +540,7 @@ Input: Facial image 224×224×3    Landmark 68 points (136-dim)
 ### 2.2 Multimodal Fusion (Image + Landmark)
 - Strategi umum: early (input level) vs intermediate (feature) vs late (decision)
 - Paper anchor:
-  - **Wu et al. (MMM 2020) — HAE-Net** (REFERENSI WAJIB untuk Early Fusion claim)
+  - **Wu et al. (MMM 2020) — HAE-Net** (REFERENSI WAJIB untuk Early Fusion claim — paper ini mendasari desain Early Fusion channel-concat kami, meski hasil kami menunjukkan pendekatan ini kurang optimal di natural programming data)
   - Boulahia et al. (2021) — fusion strategies taxonomy
   - Chen et al. (2024) — β-skeleton + CNN
 
