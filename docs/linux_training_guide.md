@@ -1379,7 +1379,128 @@ git push
 
 ---
 
-## 24. Troubleshooting
+## 24. Early Fusion di Benchmark Dataset (Lanjutan)
+
+Melengkapi Skema 1 benchmark (CK+, JAFFE, RAF-DB, KDEF) dengan **Early Fusion** — sebelumnya hanya Primer yang sudah di-train (nb 64). Notebook 66 menambahkan row `EarlyFusion_B1` dan `EarlyFusion_TL_B1` ke `{dataset}_{num}c_results.json` existing.
+
+### Prerequisite
+
+Heatmap benchmark harus sudah di-generate. Cek dengan:
+```bash
+cd ~/MultimodalEmoLearn
+ls data/benchmark/ckplus_7class/X_heatmaps.npy \
+   data/benchmark/ckplus_4class_contempt/X_heatmaps.npy \
+   data/benchmark/jaffe_7class/X_heatmaps.npy \
+   data/benchmark/jaffe_4class/X_heatmaps.npy \
+   data/benchmark/rafdb_7class/X_train_heatmaps.npy \
+   data/benchmark/kdef_7class/X_train_heatmaps.npy 2>&1 | head
+```
+
+Kalau ada file yang missing, generate:
+```bash
+conda activate emotrain
+python scripts/generate_landmark_heatmaps.py --only "CK+"
+python scripts/generate_landmark_heatmaps.py --only "JAFFE"
+python scripts/generate_landmark_heatmaps.py --only "RAF-DB"
+python scripts/generate_landmark_heatmaps.py --only "KDEF"
+# Atau semua sekaligus:
+# python scripts/generate_landmark_heatmaps.py
+```
+
+### Step 1: Pull kode terbaru
+
+```bash
+cd ~/MultimodalEmoLearn
+git pull origin master
+# Ambil: notebooks/66_early_fusion_benchmarks.ipynb
+```
+
+### Step 2: Jalankan notebook 66
+
+```bash
+tmux new -s ef_bench
+conda activate emotrain
+cd ~/MultimodalEmoLearn
+
+jupyter nbconvert --to notebook --execute notebooks/66_early_fusion_benchmarks.ipynb \
+    --output 66_early_fusion_benchmarks_executed.ipynb \
+    --output-dir notebooks/results/ \
+    --ExecutePreprocessor.timeout=18000
+
+# Detach: Ctrl+B lalu D
+```
+
+### Konfigurasi yang dijalankan
+
+4 dataset × 2 class × 2 backbone = **16 eksperimen** total (B1 baseline saja, apple-to-apple dengan Skema 1 benchmark):
+
+| Config | Backbone | Kelas |
+|--------|----------|:-----:|
+| EarlyFusion_B1 | scratch (`EmotionEarlyFusion`) | 7, 4 |
+| EarlyFusion_TL_B1 | ResNet18 TL 4-ch (`EmotionEarlyFusionTransfer`) | 7, 4 |
+
+Dataset yang dijalankan: **CK+, JAFFE, RAF-DB, KDEF** (Primer tidak, sudah ada di nb 64 dengan skenario lengkap B1/B2/B3 × scratch/TL).
+
+### Estimasi waktu
+
+| Dataset | Scratch + TL (per kelas) | Total (7c + 4c) |
+|---------|:------------------------:|:---------------:|
+| CK+ (subject-wise split) | ~10-15 menit | ~25-30 menit |
+| JAFFE (subject-wise split) | ~5-8 menit | ~12-18 menit |
+| RAF-DB (11,565 train) | ~40-60 menit | ~90-120 menit |
+| KDEF (2,630 train + 340 val) | ~15-20 menit | ~35-45 menit |
+
+**Total estimasi**: ~2.5-4 jam di T4.
+
+### Output
+
+```
+models/benchmark/ckplus/ckplus_7c/EarlyFusion_B1/model.pth
+models/benchmark/ckplus/ckplus_7c/EarlyFusion_TL_B1/model.pth
+models/benchmark/ckplus/ckplus_4c/EarlyFusion_{B1,TL_B1}/model.pth
+models/benchmark/jaffe/jaffe_{7c,4c}/EarlyFusion_{B1,TL_B1}/model.pth
+models/benchmark/rafdb/{7c,4c}/EarlyFusion_{B1,TL_B1}/model.pth
+models/benchmark/kdef/{7c,4c}/EarlyFusion_{B1,TL_B1}/model.pth
+
+# Update file JSON existing dengan 2 key baru per dataset:
+models/benchmark/ckplus/ckplus_{7,4}c_results.json  (+ EarlyFusion_B1, EarlyFusion_TL_B1)
+models/benchmark/jaffe/jaffe_{7,4}c_results.json    (+ ...)
+models/benchmark/rafdb/rafdb_{7,4}c_results.json    (+ ...)
+models/benchmark/kdef/kdef_{7,4}c_results.json      (+ ...)
+
+notebooks/results/66_early_fusion_benchmarks_executed.ipynb
+```
+
+### Catatan Naming Convention
+
+Sama seperti nb 65, struktur folder berbeda antara dataset lama & baru:
+- **ckplus, jaffe** (nb 36/37 style): `models/benchmark/{ds}/{ds}_{num}c/EarlyFusion_{B1,TL_B1}/`
+- **rafdb, kdef** (nb 60/61 style): `models/benchmark/{ds}/{num}c/EarlyFusion_{B1,TL_B1}/`
+
+Kedua pattern di-handle otomatis oleh helper `checkpoint_dir()` di notebook.
+
+### Auto-skip & Idempotency
+
+- **Skip kalau heatmap missing**: notebook cek existence `X_heatmaps.npy` (atau `X_train/val/test_heatmaps.npy` untuk rafdb/kdef) — print warning lalu skip combo tsb
+- **Skip kalau checkpoint ada**: kalau `model.pth` sudah ada, load saja → re-run safe untuk resume
+
+### Commit hasil
+
+```bash
+cd ~/MultimodalEmoLearn
+git add models/benchmark/*/*.json \
+        "models/benchmark/ckplus/*/EarlyFusion_*/" \
+        "models/benchmark/jaffe/*/EarlyFusion_*/" \
+        "models/benchmark/rafdb/*/EarlyFusion_*/" \
+        "models/benchmark/kdef/*/EarlyFusion_*/" \
+        notebooks/results/66_*
+git commit -m "Add Early Fusion results across all benchmarks (nb 66)"
+git push
+```
+
+---
+
+## 25. Troubleshooting
 
 ### CUDA Out of Memory untuk RAF-DB (nb 60, 63)
 
