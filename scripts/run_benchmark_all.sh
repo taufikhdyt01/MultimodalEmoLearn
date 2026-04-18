@@ -21,7 +21,7 @@ run_nb() {
     echo "=========================================="
     jupyter nbconvert --to notebook --execute "notebooks/$nb" \
         --output "${nb%.ipynb}_executed.ipynb" --output-dir "$OUTDIR" \
-        --ExecutePreprocessor.timeout=21600
+        --ExecutePreprocessor.timeout=43200
 }
 
 # Skema 1: self train-test
