@@ -1019,8 +1019,9 @@ Dosen meminta benchmark diperluas ke **RAF-DB** (natural/in-the-wild) dan **KDEF
 | **Intermediate TL** | **0.836** | **0.853** | **0.855** | **0.853** |
 | Late Fusion | 0.819 | 0.842 | 0.841 | 0.842 |
 
-### Hasil KDEF 7-Class (Self Train-Test, B1)
+### Hasil KDEF (Self Train-Test, B1)
 
+#### 7-Class
 | Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
 |-------|:--------:|:--------:|:-----------:|:--------:|
 | CNN | 0.798 | 0.801 | 0.798 | 0.801 |
@@ -1030,6 +1031,31 @@ Dosen meminta benchmark diperluas ke **RAF-DB** (natural/in-the-wild) dan **KDEF
 | **Intermediate TL** | **0.843** | **0.843** | **0.843** | **0.843** |
 | Late Fusion | 0.776 | 0.777 | 0.775 | 0.777 |
 
+#### 4-Class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.841 | 0.872 | 0.872 | 0.872 |
+| FCNN | 0.678 | 0.792 | 0.766 | 0.792 |
+| Intermediate | 0.776 | 0.831 | 0.828 | 0.831 |
+| CNN TL | 0.918 | 0.929 | 0.928 | 0.929 |
+| **Intermediate TL** | **0.923** | **0.929** | **0.929** | **0.929** |
+| Late Fusion | 0.859 | 0.890 | 0.888 | 0.890 |
+
+### Hasil Primer Self Benchmark (nb 62, B1 only)
+
+#### 7-Class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.270 | 0.787 | 0.795 | 0.787 |
+| FCNN | 0.261 | 0.766 | 0.792 | 0.766 |
+| Intermediate | 0.260 | 0.799 | 0.793 | 0.799 |
+| CNN TL | 0.281 | 0.819 | 0.814 | 0.819 |
+| **Intermediate TL** | **0.292** | **0.808** | **0.819** | **0.808** |
+| Late Fusion | 0.244 | 0.778 | 0.777 | 0.778 |
+
+> Accuracy/Micro F1 tinggi (~0.78-0.82) menyesatkan karena didominasi neutral.
+> Macro F1 (0.24-0.29) menunjukkan kesulitan sebenarnya di kelas minoritas.
+
 ### Progress Eksperimen
 
 | Eksperimen | Status |
@@ -1037,8 +1063,9 @@ Dosen meminta benchmark diperluas ke **RAF-DB** (natural/in-the-wild) dan **KDEF
 | RAF-DB 7-class | ✅ Done |
 | RAF-DB 4-class | ✅ Done |
 | KDEF 7-class | ✅ Done |
-| KDEF 4-class | ⏳ Belum dijalankan |
-| Primer self train-test (nb 62) | ⏳ Belum dijalankan |
+| KDEF 4-class | ✅ Done |
+| Primer 7-class (nb 62) | ✅ Done |
+| Primer 4-class (nb 62) | ⏳ Belum dijalankan |
 | Cross-dataset → Primer (nb 63) | ⏳ Belum dijalankan |
 
 ### Temuan Awal
@@ -1047,8 +1074,8 @@ Dosen meminta benchmark diperluas ke **RAF-DB** (natural/in-the-wild) dan **KDEF
 
 Pola arsitektur terbaik (Intermediate Fusion + Transfer Learning) konsisten:
 - RAF-DB 7c: 0.744 | 4c: 0.836
-- KDEF 7c: 0.843
-- Dataset primer 4c: 0.412 (Intermediate TL B1)
+- KDEF 7c: 0.843 | 4c: 0.923
+- **Primer 7c: 0.292** (nb 62 B1) | 4c (lama): 0.412 (Intermediate TL B1)
 
 **Temuan 17: Gap besar vs primer → konfirmasi hipotesis karakteristik data**
 

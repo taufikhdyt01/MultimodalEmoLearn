@@ -1,7 +1,8 @@
 """
 Model Architectures for Emotion Recognition
 =============================================
-CNN, FCNN, Intermediate Fusion (Feature-Level Fusion) - PyTorch implementation.
+CNN, FCNN, Early Fusion (Input-Level), Intermediate Fusion (Feature-Level),
+Late Fusion (Decision-Level) — PyTorch implementation.
 Includes Transfer Learning variants (ResNet18).
 """
 
@@ -97,6 +98,106 @@ class EmotionFCNN(nn.Module):
     def extract_features(self, x):
         """Extract 128-dim feature vector (untuk fusion)."""
         return self.features(x)
+
+
+class EmotionEarlyFusion(nn.Module):
+    """Early Fusion (Input-Level Fusion): landmark heatmap di-stack sebagai channel
+    tambahan ke citra wajah, diproses oleh single CNN.
+
+    Input: 4-channel tensor (R, G, B, landmark_heatmap) 224x224.
+    Arsitektur sama dengan EmotionCNN, hanya first Conv2d menerima 4 channel.
+
+    Referensi: HAE-Net (Wu et al., 2020) — landmark heatmap sebagai additional channel.
+    """
+
+    def __init__(self, num_classes=7):
+        super().__init__()
+
+        self.features = nn.Sequential(
+            # Block 1: 224x224x4 -> 112x112x32  (first conv accepts 4 channels)
+            nn.Conv2d(4, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
+            nn.Conv2d(32, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
+            nn.MaxPool2d(2), nn.Dropout2d(0.25),
+
+            # Block 2: 112x112x32 -> 56x56x64
+            nn.Conv2d(32, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
+            nn.Conv2d(64, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
+            nn.MaxPool2d(2), nn.Dropout2d(0.25),
+
+            # Block 3: 56x56x64 -> 28x28x128
+            nn.Conv2d(64, 128, 3, padding=1), nn.BatchNorm2d(128), nn.ReLU(),
+            nn.Conv2d(128, 128, 3, padding=1), nn.BatchNorm2d(128), nn.ReLU(),
+            nn.MaxPool2d(2), nn.Dropout2d(0.25),
+
+            # Block 4: 28x28x128 -> 14x14x256
+            nn.Conv2d(128, 256, 3, padding=1), nn.BatchNorm2d(256), nn.ReLU(),
+            nn.Conv2d(256, 256, 3, padding=1), nn.BatchNorm2d(256), nn.ReLU(),
+            nn.MaxPool2d(2), nn.Dropout2d(0.25),
+        )
+
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(256 * 14 * 14, 512),
+            nn.BatchNorm1d(512), nn.ReLU(), nn.Dropout(0.5),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256), nn.ReLU(), nn.Dropout(0.5),
+        )
+
+        self.head = nn.Linear(256, num_classes)
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.classifier(x)
+        return self.head(x)
+
+
+class EmotionEarlyFusionTransfer(nn.Module):
+    """Early Fusion TL: ResNet18 pretrained dengan first conv dimodifikasi
+    menerima 4-channel input (RGB + landmark heatmap).
+
+    Strategy:
+    - First conv (Conv2d) diubah dari in_channels=3 ke in_channels=4.
+    - Weight 3 channel pertama (RGB) di-copy dari pretrained.
+    - Weight channel ke-4 (heatmap) diinisialisasi dari rata-rata 3 channel
+      pretrained → memberikan starting point yang reasonable.
+    """
+
+    def __init__(self, num_classes=7, pretrained=True):
+        super().__init__()
+
+        weights = tv_models.ResNet18_Weights.DEFAULT if pretrained else None
+        resnet = tv_models.resnet18(weights=weights)
+
+        # Modify first conv: 3 -> 4 channels
+        old_conv = resnet.conv1  # Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        new_conv = nn.Conv2d(
+            in_channels=4, out_channels=old_conv.out_channels,
+            kernel_size=old_conv.kernel_size, stride=old_conv.stride,
+            padding=old_conv.padding, bias=(old_conv.bias is not None),
+        )
+
+        if pretrained:
+            with torch.no_grad():
+                # Copy RGB channel weights
+                new_conv.weight[:, :3, :, :] = old_conv.weight
+                # Initialize 4th channel from mean of RGB (reasonable starting point)
+                new_conv.weight[:, 3:4, :, :] = old_conv.weight.mean(dim=1, keepdim=True)
+
+        resnet.conv1 = new_conv
+        self.features = nn.Sequential(*list(resnet.children())[:-1])  # output: 512-dim
+
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256), nn.ReLU(), nn.Dropout(0.5),
+        )
+
+        self.head = nn.Linear(256, num_classes)
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.classifier(x)
+        return self.head(x)
 
 
 class IntermediateFusion(nn.Module):

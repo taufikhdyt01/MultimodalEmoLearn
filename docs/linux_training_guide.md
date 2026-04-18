@@ -1197,7 +1197,180 @@ cd D:/MultimodalEmoLearn && tar -xzf benchmark_full_results.tar.gz
 
 ---
 
-## 22. Troubleshooting
+## 22. Early Fusion (Input-Level Channel Concatenation) — Lanjutan
+
+Sesuai arahan dosen, tambah **Early Fusion** yang melengkapi spektrum arsitektur:
+
+| Fusion Level | % Depth | Arsitektur |
+|--------------|:-------:|-----------|
+| **Early** (NEW) | 0% (input) | Landmark heatmap sebagai channel ke-4 pada CNN |
+| Intermediate | 50% (feature) | CNN + FCNN features concat di hidden layer |
+| Late | 95% (decision) | Softmax averaging 2 model terpisah |
+
+**Referensi**: Wu et al. (MMM 2020) — *Emotion Recognition with Facial Landmark Heatmaps* (HAE-Net).
+
+### Step 1: Pull kode terbaru di VPS
+
+```bash
+cd ~/MultimodalEmoLearn
+git pull origin master
+# Ambil: src/training/models.py (EmotionEarlyFusion + EmotionEarlyFusionTransfer),
+#        scripts/generate_landmark_heatmaps.py, notebooks/64_early_fusion_conf60.ipynb
+```
+
+### Step 2: Generate landmark heatmaps
+
+Heatmap di-generate dari landmark 136-dim yang sudah ada → Gaussian blob 224×224 (sigma=3px).
+Dataset primer conf60 saja dulu, ~10 menit:
+
+```bash
+conda activate emotrain
+cd ~/MultimodalEmoLearn
+
+python scripts/generate_landmark_heatmaps.py --only "Primer conf60"
+# Output: data/dataset_frontonly_conf60/X_{train,val,test}_heatmaps.npy (~600MB total)
+```
+
+Kalau mau semua (primer + benchmarks sekaligus, ~90 menit):
+```bash
+python scripts/generate_landmark_heatmaps.py
+```
+
+### Step 3: Jalankan training Early Fusion
+
+```bash
+tmux new -s early_fusion
+conda activate emotrain
+cd ~/MultimodalEmoLearn
+
+jupyter nbconvert --to notebook --execute notebooks/64_early_fusion_conf60.ipynb \
+    --output 64_early_fusion_conf60_executed.ipynb \
+    --output-dir notebooks/results/ \
+    --ExecutePreprocessor.timeout=14400
+
+# Detach: Ctrl+B lalu D
+```
+
+### Konfigurasi yang dijalankan
+
+4 config × 2 class = **8 eksperimen** total:
+
+| Config | Backbone | Class Weights | Kelas |
+|--------|----------|:-------------:|:-----:|
+| EarlyFusion_B1 | scratch (EmotionEarlyFusion) | no | 7, 4 |
+| EarlyFusion_B2 | scratch | **yes** | 7, 4 |
+| EarlyFusion_TL_B1 | ResNet18 TL (4-ch) | no | 7, 4 |
+| EarlyFusion_TL_B2 | ResNet18 TL (4-ch) | **yes** | 7, 4 |
+
+**Estimasi**: ~1.5-2 jam di T4 (8 eksperimen × 10-15 menit each).
+
+### Output
+
+```
+models/frontonly_conf60/early_fusion/
+├── 7c/
+│   ├── EarlyFusion_B1/model.pth
+│   ├── EarlyFusion_B2/model.pth
+│   ├── EarlyFusion_TL_B1/model.pth
+│   └── EarlyFusion_TL_B2/model.pth
+├── 4c/ (same structure)
+├── early_fusion_7c_results.json
+└── early_fusion_4c_results.json
+
+notebooks/results/
+└── 64_early_fusion_conf60_executed.ipynb
+```
+
+### Catatan Implementasi
+
+- **First Conv modifikasi (TL variant)**: ResNet18 `conv1` diubah dari `Conv2d(3, 64, 7)` ke `Conv2d(4, 64, 7)`. Weight channel RGB di-copy dari pretrained, channel ke-4 (heatmap) diinisialisasi dari rata-rata RGB — reasonable starting point.
+- **Heatmap**: Gaussian std=3px per landmark, element-wise MAX (bukan sum) untuk menjaga range [0, 1].
+- **Format**: `X_{split}_images.npy (N, 224, 224, 3)` + `X_{split}_heatmaps.npy (N, 224, 224)` → di-stack ke (N, 224, 224, 4) di notebook.
+
+### Kenapa ini berbeda dari Intermediate Fusion?
+
+Meski sama-sama "concat landmark + image", beda fundamental:
+
+- **Intermediate**: landmark jadi vector 136-dim, fusi di feature level (setelah CNN dan FCNN extract features terpisah). Info spasial landmark **hilang** saat di-flatten.
+- **Early**: landmark tetap 2D heatmap 224×224, fusi di input level (channel concat). Info spasial **dipertahankan**, CNN joint-learn visual + geometric dari layer pertama.
+
+---
+
+## 23. Late Fusion TL (melengkapi benchmark) — Lanjutan
+
+Late Fusion TL (ResNet18 CNN_TL + FCNN, weighted softmax averaging) terlewat dari
+benchmark notebooks 60-62. Notebook 65 melengkapinya **tanpa re-train** jika
+checkpoint `CNN_TL_B1` dan `FCNN_B1` sudah ada dari run sebelumnya.
+
+### Step 1: Pull kode terbaru
+
+```bash
+cd ~/MultimodalEmoLearn
+git pull origin master
+# Ambil: notebooks/65_late_fusion_tl_benchmarks.ipynb
+```
+
+### Step 2: Jalankan notebook 65
+
+```bash
+tmux new -s latefusion_tl
+conda activate emotrain
+cd ~/MultimodalEmoLearn
+
+jupyter nbconvert --to notebook --execute notebooks/65_late_fusion_tl_benchmarks.ipynb \
+    --output 65_late_fusion_tl_benchmarks_executed.ipynb \
+    --output-dir notebooks/results/ \
+    --ExecutePreprocessor.timeout=14400
+```
+
+### Cara kerja notebook
+
+Untuk tiap dataset × num_classes (6 variants total):
+
+1. **Check checkpoint existing**:
+   - `models/benchmark/{dataset}/{num_class}c/CNN_TL_B1/model.pth` → load kalau ada
+   - `models/benchmark/{dataset}/{num_class}c/FCNN_B1/model.pth` → load kalau ada
+2. **Train kalau belum ada** (fallback)
+3. **Softmax averaging**:
+   - Inference di val set untuk tune weight w ∈ [0, 1]
+   - Pilih w yang max Macro F1 di val
+   - Evaluate di test set dengan best w
+4. **Update `{dataset}_{num_class}c_results.json`** dengan key `Late_Fusion_TL_B1`
+
+### Estimasi waktu
+
+| Skenario | Estimasi |
+|----------|----------|
+| **Kalau semua checkpoint sudah ada** (most likely) | ~15 menit total (inference saja) |
+| Kalau harus train beberapa | 30-90 menit |
+| Worst case (train semua) | 2-3 jam |
+
+### Output
+
+Update file existing + tambah 1 key baru per dataset:
+```
+models/benchmark/rafdb/rafdb_7c_results.json   (+ Late_Fusion_TL_B1)
+models/benchmark/rafdb/rafdb_4c_results.json   (+ Late_Fusion_TL_B1)
+models/benchmark/kdef/kdef_7c_results.json     (+ Late_Fusion_TL_B1)
+models/benchmark/kdef/kdef_4c_results.json     (+ Late_Fusion_TL_B1)
+models/benchmark/primer/primer_7c_results.json (+ Late_Fusion_TL_B1)
+models/benchmark/primer/primer_4c_results.json (+ Late_Fusion_TL_B1)
+
+notebooks/results/65_late_fusion_tl_benchmarks_executed.ipynb
+```
+
+### Commit hasil
+
+```bash
+cd ~/MultimodalEmoLearn
+git add models/benchmark/*/*.json notebooks/results/65_*
+git commit -m "Add Late Fusion TL results across all benchmarks (nb 65)"
+git push
+```
+
+---
+
+## 24. Troubleshooting
 
 ### CUDA Out of Memory untuk RAF-DB (nb 60, 63)
 

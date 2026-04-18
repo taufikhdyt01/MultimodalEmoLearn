@@ -193,7 +193,7 @@ left.text_frame.word_wrap = True
 
 sec_line(left.text_frame, 'Abstract', '', sz=11.5, first=True)
 point_line(left.text_frame, 'Problem: FER di konteks programming natural')
-point_line(left.text_frame, 'Method: 4 arsitektur × fusion × transfer learning')
+point_line(left.text_frame, 'Method: 5 arsitektur (CNN/FCNN/Early/Intermediate/Late) × TL')
 point_line(left.text_frame, 'Data: 7.091 samples dari 37 mahasiswa')
 point_line(left.text_frame, 'Best: Intermediate Fusion TL 4c B1 = F1 0.412')
 point_line(left.text_frame, 'Insight: Intermediate + TL unggul di data natural')
@@ -335,11 +335,12 @@ para(b3.text_frame,
      'selama sesi pemrograman natural.',
      sz=10, color=COLOR_TEXT)
 para(b3.text_frame,
-     '2. Studi komparatif sistematis 4 arsitektur (CNN, FCNN, '
-     'Intermediate Fusion, Late Fusion) dengan/tanpa transfer learning.',
+     '2. Studi komparatif sistematis 5 arsitektur (CNN, FCNN, Early Fusion, '
+     'Intermediate Fusion, Late Fusion) dengan/tanpa transfer learning — '
+     'mencakup seluruh spektrum fusion point (input → feature → decision).',
      sz=10, color=COLOR_TEXT)
 para(b3.text_frame,
-     '3. Evaluasi menyeluruh 48 konfigurasi dengan 3 metrik F1 '
+     '3. Evaluasi menyeluruh 60 konfigurasi dengan 3 metrik F1 '
      '(Macro, Micro, Weighted) untuk data imbalanced.',
      sz=10, color=COLOR_TEXT)
 
@@ -549,39 +550,38 @@ para(pp.text_frame,
 s = new_slide(prs)
 title(s, 'Proposed Method — Arsitektur Model (Section 3.2)')
 
-table(s, ['Model', 'Input', 'Backbone', 'Fusion Point', 'Keterangan'],
+table(s, ['Model', 'Input', 'Fusion Point', 'Keterangan'],
       [
-          ['CNN', 'Citra wajah 224×224',
-           'Custom Conv (scratch) / ResNet18 (TL)',
-           '—', 'Single modal: visual'],
-          ['FCNN', 'Landmark 136-dim', '4 FC layers (64-128-64-32)',
-           '—', 'Single modal: geometric'],
-          ['Intermediate Fusion',
-           'Citra + Landmark',
-           'CNN + FCNN (feat concat di hidden)',
-           'After feat extraction',
-           'Joint optimization end-to-end'],
+          ['CNN', 'Citra 224×224×3', '—',
+           'Single modal: visual'],
+          ['FCNN', 'Landmark 136-dim', '—',
+           'Single modal: geometric'],
+          ['Early Fusion', 'Citra + heatmap (224×224×4)',
+           'Input level (0%)',
+           'Landmark Gaussian heatmap sbg channel ke-4'],
+          ['Intermediate Fusion', 'Citra + Landmark',
+           'Feature level (50%)',
+           'CNN+FCNN concat di hidden layer'],
           ['Late Fusion', 'Citra + Landmark',
-           'CNN + FCNN (softmax averaging)',
-           'After softmax', 'Independent training, weighted avg'],
+           'Decision level (95%)',
+           'Softmax averaging 2 model terpisah'],
       ],
-      0.3, 0.85, 9.4, 1.85, cw=[1.8, 2.0, 2.3, 1.5, 1.8], hsz=9, rsz=8.5)
+      0.3, 0.85, 9.4, 2.0, cw=[1.6, 2.2, 1.8, 3.0], hsz=9, rsz=8)
 
 # TL note
-tl = tb(s, 0.3, 2.9, 9.4, 1.2)
+tl = tb(s, 0.3, 3.05, 9.4, 1.1)
 tl.text_frame.word_wrap = True
 set_fill(tl, 'E8F0FE')
 para(tl.text_frame, 'Transfer Learning Backbone', sz=11, bold=True,
      color=COLOR_BLUE, first=True)
-para(tl.text_frame, '', sz=3)
+para(tl.text_frame, '', sz=2)
 para(tl.text_frame,
-     '• ResNet18 pretrained di ImageNet (1000-class) → fine-tune '
-     'final FC layer ke 7/4 kelas emosi.',
-     sz=10, color=COLOR_TEXT)
+     '• ResNet18 pretrained ImageNet (1000-class) → fine-tune untuk FER',
+     sz=9.5, color=COLOR_TEXT)
 para(tl.text_frame,
-     '• Learning rate lebih kecil (5e-5 vs 1e-4 scratch) untuk preserve '
-     'pretrained features.',
-     sz=10, color=COLOR_TEXT)
+     '• Early Fusion TL: first Conv2d dimodifikasi dari 3→4 channel; '
+     'weight RGB di-copy, weight heatmap diinisialisasi dari mean(RGB)',
+     sz=9.5, color=COLOR_TEXT)
 
 # Training setup
 tr = tb(s, 0.3, 4.25, 9.4, 1.1)
@@ -609,17 +609,18 @@ set_fill(dm, 'E8F0FE')
 para(dm.text_frame, 'Dimensi Eksperimen', sz=11, bold=True,
      color=COLOR_BLUE, first=True)
 para(dm.text_frame, '', sz=3)
-para(dm.text_frame, '4 arsitektur × 2 backbone × 3 skenario × 2 kelas',
+para(dm.text_frame, '5 arsitektur × 2 backbone × 3 skenario × 2 kelas',
      sz=10, bold=True, color=COLOR_TEXT)
-para(dm.text_frame, '= 48 total konfigurasi', sz=10, bold=True,
+para(dm.text_frame, '= 60 total konfigurasi', sz=10, bold=True,
      color=COLOR_GREEN)
 para(dm.text_frame, '', sz=4)
-para(dm.text_frame, 'Arsitektur: CNN, FCNN, Intermediate, Late',
-     sz=10, color=COLOR_TEXT)
+para(dm.text_frame, 'Arsitektur:', sz=10, bold=True, color=COLOR_TEXT)
+para(dm.text_frame, '  CNN, FCNN, Early, Intermediate, Late',
+     sz=9.5, color=COLOR_TEXT)
 para(dm.text_frame, 'Backbone: from-scratch, ResNet18 TL',
-     sz=10, color=COLOR_TEXT)
-para(dm.text_frame, 'Skenario: B1, B2, B3', sz=10, color=COLOR_TEXT)
-para(dm.text_frame, 'Kelas: 7-class, 4-class', sz=10, color=COLOR_TEXT)
+     sz=9.5, color=COLOR_TEXT)
+para(dm.text_frame, 'Skenario: B1, B2, B3', sz=9.5, color=COLOR_TEXT)
+para(dm.text_frame, 'Kelas: 7-class, 4-class', sz=9.5, color=COLOR_TEXT)
 
 # Scenarios
 sc = tb(s, 5.1, 0.85, 4.6, 2.5)
