@@ -32,6 +32,10 @@ Thumbs.db
 # Compressed archives
 *.tar.gz
 *.zip
+*.rar
+
+# Office lock files
+~$*
 
 # Kaggle metadata artifact
 dataset-metadata.json
