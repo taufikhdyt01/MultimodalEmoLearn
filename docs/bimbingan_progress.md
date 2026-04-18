@@ -985,6 +985,88 @@ Evaluasi yang lebih robust untuk perbandingan dengan paper lain:
 
 ---
 
+## SLIDE 24B: Benchmark Tambahan — RAF-DB & KDEF (arahan dosen)
+
+### Motivasi
+Dosen meminta benchmark diperluas ke **RAF-DB** (natural/in-the-wild) dan **KDEF** (lab/posed). Skema 1 (self train-test) + Skema 2 (cross-dataset → Primer). Metrik wajib: Macro/Micro/Weighted F1 (semua).
+
+### Setup Dataset
+
+| Dataset | Train / Test | Subjek | Karakteristik |
+|---------|:-------------:|:------:|---------------|
+| RAF-DB | 11,565 / 2,884 (official split) | ~8,000+ | In-the-wild dari web, 7 basic emotions |
+| KDEF | 2,630 / 337 (+340 val, subject-wise) | 70 | Lab posed, 5 angle → filter MediaPipe keep ~3,307 dari 4,900 |
+
+### Hasil RAF-DB (Self Train-Test, B1)
+
+#### 7-Class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.729 | 0.815 | 0.813 | 0.815 |
+| FCNN | 0.578 | 0.714 | 0.703 | 0.714 |
+| Intermediate | 0.696 | 0.785 | 0.783 | 0.785 |
+| CNN TL | 0.741 | 0.830 | 0.826 | 0.830 |
+| **Intermediate TL** | **0.744** | **0.833** | **0.832** | **0.833** |
+| Late Fusion | 0.719 | 0.809 | 0.805 | 0.809 |
+
+#### 4-Class
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.808 | 0.830 | 0.830 | 0.830 |
+| FCNN | 0.694 | 0.728 | 0.729 | 0.728 |
+| Intermediate | 0.792 | 0.818 | 0.818 | 0.818 |
+| CNN TL | 0.827 | 0.845 | 0.846 | 0.845 |
+| **Intermediate TL** | **0.836** | **0.853** | **0.855** | **0.853** |
+| Late Fusion | 0.819 | 0.842 | 0.841 | 0.842 |
+
+### Hasil KDEF 7-Class (Self Train-Test, B1)
+
+| Model | Macro F1 | Micro F1 | Weighted F1 | Accuracy |
+|-------|:--------:|:--------:|:-----------:|:--------:|
+| CNN | 0.798 | 0.801 | 0.798 | 0.801 |
+| FCNN | 0.666 | 0.680 | 0.663 | 0.680 |
+| Intermediate | 0.671 | 0.674 | 0.668 | 0.674 |
+| CNN TL | 0.833 | 0.831 | 0.833 | 0.831 |
+| **Intermediate TL** | **0.843** | **0.843** | **0.843** | **0.843** |
+| Late Fusion | 0.776 | 0.777 | 0.775 | 0.777 |
+
+### Progress Eksperimen
+
+| Eksperimen | Status |
+|-----------|:------:|
+| RAF-DB 7-class | ✅ Done |
+| RAF-DB 4-class | ✅ Done |
+| KDEF 7-class | ✅ Done |
+| KDEF 4-class | ⏳ Belum dijalankan |
+| Primer self train-test (nb 62) | ⏳ Belum dijalankan |
+| Cross-dataset → Primer (nb 63) | ⏳ Belum dijalankan |
+
+### Temuan Awal
+
+**Temuan 16: Intermediate TL konsisten best di semua dataset**
+
+Pola arsitektur terbaik (Intermediate Fusion + Transfer Learning) konsisten:
+- RAF-DB 7c: 0.744 | 4c: 0.836
+- KDEF 7c: 0.843
+- Dataset primer 4c: 0.412 (Intermediate TL B1)
+
+**Temuan 17: Gap besar vs primer → konfirmasi hipotesis karakteristik data**
+
+RAF-DB (0.836 4c) dan KDEF (0.843 7c) jauh lebih tinggi dari primer (0.412 4c). Gap ini memperkuat argumen: performa rendah di primer bukan karena **kelemahan arsitektur**, tapi karena **karakteristik data** — natural expression + imbalanced ekstrem + minoritas langka.
+
+**Temuan 18: CNN TL sudah kompetitif, fusion memberi gain marginal di dataset besar**
+
+Di RAF-DB/KDEF, selisih CNN TL vs Intermediate TL kecil (~0.3-1%), karena dataset cukup besar untuk CNN belajar features. Tapi di primer dataset kecil + imbalanced, fusion memberi manfaat lebih signifikan.
+
+> **Penjelasan lisan:**
+> "Saya perluas benchmark sesuai arahan ke RAF-DB (dataset in-the-wild 15k images) dan KDEF (dataset lab 4.9k). Hasilnya konsisten dengan pola sebelumnya: Intermediate TL selalu best, dengan Macro F1 0.744-0.843."
+>
+> "Yang menarik, gap antara dataset primer (0.412) dan benchmark (0.84) sangat besar. Ini memperkuat argumen bahwa kesulitan di primer bukan karena arsitektur, tapi karena data natural + imbalanced ekstrem. Di dataset yang lebih seimbang, arsitektur yang sama bekerja sangat baik."
+>
+> "Eksperimen KDEF 4-class, Primer self, dan Cross-dataset masih berjalan. Hasil akan saya update setelah selesai."
+
+---
+
 ## SLIDE 25: Tahap 5A — Undersampling Neutral (Analisis Imbalance)
 
 ### Motivasi
